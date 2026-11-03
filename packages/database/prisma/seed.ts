@@ -2,7 +2,9 @@
 // Usage: pnpm db:seed   (loads the root .env; refuses to run when NODE_ENV=production)
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { addDays, dateInTimeZone, isoWeekday, toDbDate } from "@branch/shared/calendar";
 import { catalogSchema, roadmapDefinitionSchema } from "@branch/shared/catalog";
+import { generateAssignments } from "@branch/shared/schedule";
 import { hashPassword } from "better-auth/crypto";
 import { importCuratedRoadmap, syncCatalog } from "../src/catalog-import";
 import { createPrismaClient } from "../src/index";
@@ -78,14 +80,14 @@ async function main() {
     );
 
     const [ada, grace] = devUsers;
-    const existingGroup = await prisma.group.findFirst({
+    let group = await prisma.group.findFirst({
       where: {
         name: "Interview prep crew",
         memberships: { some: { userId: ada.id, role: "ADMIN" } },
       },
     });
-    if (!existingGroup) {
-      await prisma.group.create({
+    if (!group) {
+      group = await prisma.group.create({
         data: {
           name: "Interview prep crew",
           description: "Weekly practice before fall interviews.",
@@ -107,6 +109,49 @@ async function main() {
       });
     }
     console.log('Group: "Interview prep crew" (Ada admin, Grace member)');
+
+    // A plan on the sample roadmap that started last Monday, so week 2 is in progress.
+    if (
+      !(await prisma.groupRoadmapPlan.findFirst({ where: { groupId: group.id, status: "ACTIVE" } }))
+    ) {
+      const version = await prisma.roadmapVersion.findFirstOrThrow({
+        where: { roadmap: { slug: "starter-sample" }, publishedAt: { not: null } },
+        orderBy: { number: "desc" },
+        include: {
+          sections: {
+            orderBy: { position: "asc" },
+            include: { items: { orderBy: { position: "asc" } } },
+          },
+        },
+      });
+      const today = dateInTimeZone(new Date(), group.timezone);
+      const startDate = addDays(today, -(isoWeekday(today) - 1) - 7); // Monday of last week
+      const assignments = generateAssignments(
+        version.sections.map((s) => ({ itemIds: s.items.map((i) => i.id) })),
+        { mode: "PER_WEEK", problemsPerWeek: 4 },
+      );
+      await prisma.$transaction(async (tx) => {
+        const plan = await tx.groupRoadmapPlan.create({
+          data: {
+            groupId: group.id,
+            roadmapVersionId: version.id,
+            startDate: toDbDate(startDate),
+            pacing: "PER_WEEK",
+            problemsPerWeek: 4,
+            createdById: ada.id,
+          },
+        });
+        await tx.weeklyAssignment.createMany({
+          data: assignments.map((a) => ({
+            planId: plan.id,
+            versionId: version.id,
+            roadmapItemId: a.itemId,
+            weekNumber: a.weekNumber,
+          })),
+        });
+      });
+    }
+    console.log("Plan: Starter sample, 4 problems a week, started last Monday");
   } finally {
     await prisma.$disconnect();
   }

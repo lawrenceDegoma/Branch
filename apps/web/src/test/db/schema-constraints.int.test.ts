@@ -194,7 +194,12 @@ describe("plans and assignments", () => {
     const group = await createTestGroup([{ userId: admin.id, role: "ADMIN" }]);
     const version = await createPublishedRoadmap();
     const plan = await prisma.groupRoadmapPlan.create({
-      data: { groupId: group.id, roadmapVersionId: version.id, startDate: new Date("2026-11-02") },
+      data: {
+        groupId: group.id,
+        roadmapVersionId: version.id,
+        startDate: new Date("2026-11-02"),
+        pacing: "PER_SECTION" as const,
+      },
     });
     return { group, version, plan };
   }
@@ -207,6 +212,7 @@ describe("plans and assignments", () => {
           groupId: group.id,
           roadmapVersionId: version.id,
           startDate: new Date("2026-12-07"),
+          pacing: "PER_SECTION" as const,
         },
       }),
     ).rejects.toThrow();
@@ -216,7 +222,12 @@ describe("plans and assignments", () => {
       data: { status: "ARCHIVED", archivedAt: new Date() },
     });
     await prisma.groupRoadmapPlan.create({
-      data: { groupId: group.id, roadmapVersionId: version.id, startDate: new Date("2026-12-07") },
+      data: {
+        groupId: group.id,
+        roadmapVersionId: version.id,
+        startDate: new Date("2026-12-07"),
+        pacing: "PER_SECTION" as const,
+      },
     });
   });
 
@@ -248,6 +259,35 @@ describe("plans and assignments", () => {
         data: { planId: plan.id, versionId: other.id, roadmapItemId: foreign.id, weekNumber: 1 },
       }),
     ).rejects.toThrow();
+  });
+
+  it("keeps pacing and problems-per-week consistent", async () => {
+    const { group, version, plan } = await groupWithPlan();
+    await prisma.groupRoadmapPlan.update({
+      where: { id: plan.id },
+      data: { status: "ARCHIVED", archivedAt: new Date() },
+    });
+    const base = {
+      groupId: group.id,
+      roadmapVersionId: version.id,
+      startDate: new Date("2026-11-02"),
+    };
+    await expect(
+      prisma.groupRoadmapPlan.create({ data: { ...base, pacing: "PER_WEEK" } }),
+    ).rejects.toThrow();
+    await expect(
+      prisma.groupRoadmapPlan.create({
+        data: { ...base, pacing: "PER_WEEK", problemsPerWeek: 51 },
+      }),
+    ).rejects.toThrow();
+    await expect(
+      prisma.groupRoadmapPlan.create({
+        data: { ...base, pacing: "PER_SECTION", problemsPerWeek: 3 },
+      }),
+    ).rejects.toThrow();
+    await prisma.groupRoadmapPlan.create({
+      data: { ...base, pacing: "PER_WEEK", problemsPerWeek: 4 },
+    });
   });
 
   it("rejects week numbers below 1", async () => {

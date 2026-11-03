@@ -14,8 +14,8 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 | M3 Domain schema and seed data | Done |
 | M4 Groups, membership, invites, admin | Done |
 | M5 Roadmaps (curated, custom, versions) | Done |
-| M6 Group plans and weekly schedules | **Next** |
-| M7 Progress, completion, Home, branch graph | Planned |
+| M6 Group plans and weekly schedules | Done |
+| M7 Progress, completion, Home, branch graph | **Next** |
 | M8 E2E journeys, accessibility pass, docs | Planned |
 
 **Approved Phase 1 decisions** (details in `docs/DECISIONS.md`): verified seed catalog plus a JSON importer, with NeetCode 150 / Blind 75 / Grind 75 drafted from cited public sources for owner review before being marked curated; email/password plus optional GitHub OAuth with no email delivery; group members see each other's status on assigned problems only; users may add problems by LeetCode URL (`source: USER`); exactly one admin per group; link-based hashed invites; weeks computed from the plan's start date and IANA timezone (Monday default); Review nav hidden until Phase 4; commit at the end of each milestone and push `main`.
@@ -30,7 +30,9 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 - **Authorization:** every app page and server action starts from `requireViewer()` (`apps/web/src/modules/auth/session.ts`). `src/proxy.ts` is an optimistic cookie check only. Never accept user IDs from the client. Return paths go through `safeNextPath()`.
 - **Private resources return 404.** Services throw `NotFoundError` for non-members and `ForbiddenError` for members lacking a role; pages wrap reads in `orNotFound()` so both render the 404 page with a real 404 status. Never put a route-level `loading.tsx` above a page that can 404 (a Suspense boundary starts streaming with status 200); `home/` is the only one.
 - **Roadmap access** lives in `modules/roadmaps/service.ts` (`requireViewableRoadmap`, `requireOwnedRoadmap`): curated → every signed-in user; custom → owner, members of a group whose plan uses one of its versions, or a share-link holder (via `/roadmaps/shared/[token]` only). Drafts are owner-only. Editing replaces the single draft's content wholesale; publishing freezes it as the next version.
-- **Curated lists:** NeetCode 150 and Blind 75 are drafted in `packages/database/prisma/data/curated-drafts/` from MIT-licensed NeetCode data and **must not be imported or shown as curated until the owner approves** (see that folder's README). Grind 75 has no openly licensed source; do not scrape it. `src/test/data-files.test.ts` validates every data file.
+- **Curated lists:** NeetCode 150 and Blind 75 are drafted in `packages/database/prisma/data/curated-drafts/` from MIT-licensed NeetCode data and **must not be imported or shown as curated until the owner approves** (see that folder's README). Grind 75 is out of scope by owner decision (2026-11-03): no openly licensed source. `src/test/data-files.test.ts` validates every data file.
+- **Dates and weeks:** use `@branch/shared/calendar`. Weeks are computed on calendar dates (`YYYY-MM-DD`) in the group's IANA timezone, never on instants, so DST can't shift them; week n starts `startDate + 7(n−1)`. Plan services accept a `now` argument so tests are deterministic. Schedule generation is `@branch/shared/schedule`, shared by the app and the seed.
+- **SQL CHECK constraints must handle NULL explicitly** (a CHECK that evaluates to NULL passes). Write `col IS NOT NULL AND ...` or `col IS NULL OR ...`, and add a test with the NULL case.
 - **Group authorization** lives in `modules/groups/access.ts` (`requireMembership`, `requireAdmin`). Every group-scoped service function calls one of them first.
 - **Module shape:** `apps/web/src/modules/<domain>/` holds `schemas.ts` (Zod), `service.ts` (server-only domain logic and authorization), `actions.ts` (server actions returning `FormState`), and colocated `*.test.ts` / `*.int.test.ts`.
 - **UI pieces to reuse:** `ConfirmAction` (dialog that runs a server action), `CopyField`, `FormField`, `SettingsSection`, `MemberList`. Style links as buttons with `buttonVariants()` (it merges classes so variants override the base).

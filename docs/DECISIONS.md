@@ -171,10 +171,32 @@ graphic. Re-check after changing any token.
   approves; the README there lists what to check (title casing, seven Premium problems, naming).
 - Cross-check: every seed problem that appears in NeetCode 150 has the same difficulty in both
   sources; three titles differ only in capitalization.
-- **Grind 75 is not drafted:** there is no openly licensed, machine-readable source (the Tech
-  Interview Handbook repo only proxies to a separately hosted site).
+- **Grind 75 is out of scope** (owner decision, 2026-11-03): there is no openly licensed,
+  machine-readable source (the Tech Interview Handbook repo only proxies to a separately hosted
+  site). Branch ships NeetCode 150 and Blind 75 once approved.
 - `pnpm db:import-curated` imports approved files into any environment, refuses `curated-drafts/`
   without `--allow-draft`, and is idempotent.
+
+## Plans and weekly schedules
+
+- **Calendar dates, not instants.** A plan stores a start date (`DATE`); the group stores an IANA
+  timezone. Today is the calendar date in that timezone, and week n runs from
+  `startDate + 7(n−1)` to six days later. Because the arithmetic is on dates, daylight saving
+  changes (23- or 25-hour days) never move a boundary; tests cover both US transitions,
+  half-hour offsets, and the date line. Weeks advance by computation; there is no scheduler.
+- **Any start day.** The start date need not be a Monday (week boundaries follow it); the UI
+  suggests the next Monday in the group's timezone. Start dates must be within a year of today.
+- **Pacing** is stored on the plan (N problems a week, or one section a week) so "switch to the
+  newer version" can regenerate the schedule the same way. Generation is a pure function in
+  `@branch/shared/schedule`, used by both the app and the seed.
+- **One active plan.** Choosing or switching a roadmap archives the current plan in the same
+  transaction and records `PLAN_CHANGED`; concurrent replacements leave exactly one active plan.
+  Completions belong to people and problems, so members keep all progress.
+- **Admin adjustments:** move any problem to another week (1–104), change the start date, switch
+  to a newer published version (manual moves reset, with a warning), or end the plan. Moving uses
+  an explicit button, not a select that acts on change (WCAG 3.2.2).
+- **Eligible roadmaps:** curated, the admin's own, and ones the admin's groups already use;
+  published versions only.
 
 ## Milestone log
 
@@ -286,6 +308,26 @@ stable across consecutive runs (create → publish → revise with version histo
 publish validation, private vs shared access with 404s, deletion, curated read-only, axe scans of
 roadmap pages and the editor in both themes); curated import verified against the test database
 (idempotent, refuses drafts without the flag). Taste-skill lint: 0 FAIL.
+
+### M6 — Group plans and weekly schedules (complete)
+
+- Group page "Roadmap" block: where the group is ("Week 2 of 6 · Nov 2 – Nov 8"), the pace, and
+  this week's problems; empty states for admins and members.
+- Schedule page with every week, "This week" marker, and admin controls (move, start date,
+  switch version, end plan); roadmap setup page with a live preview of weeks and end date.
+- Calendar and schedule logic moved to `@branch/shared`; the dev seed now gives the sample group
+  a plan that started last Monday.
+- Fixed: the pacing CHECK let a NULL problems-per-week through (`NULL BETWEEN …` is NULL, and a
+  NULL CHECK passes); corrected in a follow-up migration. All other CHECKs were audited for the
+  same pattern.
+
+Verified: 21 shared tests (calendar math across DST, offsets, and the date line; schedule
+generation); 71 unit tests; 79 integration tests, including 12 for plans (identical schedules for
+all members, week advancement at local midnight, admin-only changes, outsiders 404, drafts and
+others' private roadmaps refused, archive on replace, racing replacements, moves, start-date
+change, version upgrade, ending); 151 E2E tests stable across consecutive runs (scheduling with
+two members seeing the same week-1 problems, moving a problem, member read-only access and 404 on
+setup, future start, pace validation, ending, axe scans of plan pages in both themes).
 
 ## Known limitations
 

@@ -73,7 +73,12 @@ describe("visibility", () => {
     ]);
     const version = await prisma.roadmapVersion.findFirstOrThrow({ where: { roadmapId: id } });
     await prisma.groupRoadmapPlan.create({
-      data: { groupId: group.id, roadmapVersionId: version.id, startDate: new Date("2026-11-02") },
+      data: {
+        groupId: group.id,
+        roadmapVersionId: version.id,
+        startDate: new Date("2026-11-02"),
+        pacing: "PER_SECTION" as const,
+      },
     });
 
     expect((await getRoadmapView(member.id, id)).roadmap.title).toBe("My plan");
@@ -193,7 +198,12 @@ describe("deleting", () => {
     const group = await createTestGroup([{ userId: owner.id, role: "ADMIN" }]);
     const version = await prisma.roadmapVersion.findFirstOrThrow({ where: { roadmapId: used } });
     await prisma.groupRoadmapPlan.create({
-      data: { groupId: group.id, roadmapVersionId: version.id, startDate: new Date("2026-11-02") },
+      data: {
+        groupId: group.id,
+        roadmapVersionId: version.id,
+        startDate: new Date("2026-11-02"),
+        pacing: "PER_SECTION" as const,
+      },
     });
     await expect(deleteRoadmap(owner.id, used)).rejects.toMatchObject({ code: "ROADMAP_IN_USE" });
   });

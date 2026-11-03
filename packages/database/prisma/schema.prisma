@@ -374,6 +374,11 @@ enum PlanStatus {
   ARCHIVED
 }
 
+enum PlanPacing {
+  PER_WEEK
+  PER_SECTION
+}
+
 /// A group's schedule over one roadmap version. Week n runs from startDate + 7(n-1) days, in the
 /// group's timezone. At most one ACTIVE plan per group (partial unique index).
 model GroupRoadmapPlan {
@@ -383,6 +388,10 @@ model GroupRoadmapPlan {
   roadmapVersionId String             @db.Uuid
   roadmapVersion   RoadmapVersion     @relation(fields: [roadmapVersionId], references: [id], onDelete: Restrict)
   startDate        DateTime           @db.Date
+  /// How assignments were generated; kept so a version upgrade can regenerate the same way.
+  pacing           PlanPacing
+  /// Set exactly when pacing is PER_WEEK, 1-50 (CHECK).
+  problemsPerWeek  Int?
   status           PlanStatus         @default(ACTIVE)
   createdById      String?
   createdBy        User?              @relation(fields: [createdById], references: [id], onDelete: SetNull)

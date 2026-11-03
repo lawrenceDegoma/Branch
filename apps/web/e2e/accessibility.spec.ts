@@ -88,6 +88,17 @@ for (const colorScheme of ["dark", "light"] as const) {
       await expectNoViolations(page);
     });
 
+    test("plan pages have no detectable WCAG A/AA violations", async ({ page, viewer }) => {
+      const group = await createGroupInDb(viewer.id, "Planned crew");
+      await page.goto(`/groups/${group.id}/plan/new`);
+      await expectNoViolations(page);
+      await page.getByRole("button", { name: "Start plan" }).click();
+      await expect(page.getByRole("heading", { level: 2, name: /^Week 1/ })).toBeVisible();
+      await expectNoViolations(page);
+      await page.goto(`/groups/${group.id}`);
+      await expectNoViolations(page);
+    });
+
     test("/onboarding has no detectable WCAG A/AA violations", async ({ page, baseURL }) => {
       await signUpViaApi(page.context().request, baseURL!, undefined, { onboard: false });
       await page.goto("/onboarding");
