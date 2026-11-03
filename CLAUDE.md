@@ -8,11 +8,11 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 
 | Milestone | Status |
 |---|---|
-| M0 Workspace and tooling | Done (`6c5ef2c`) |
-| M1 Design system and app shell | Done (`4c28447`) |
-| M2 Authentication and profiles | Done (`41ed593`) |
-| M3 Domain schema and seed data | **Next** |
-| M4 Groups, membership, invites, admin | Planned |
+| M0 Workspace and tooling | Done |
+| M1 Design system and app shell | Done |
+| M2 Authentication and profiles | Done |
+| M3 Domain schema and seed data | Done |
+| M4 Groups, membership, invites, admin | **Next** |
 | M5 Roadmaps (curated, custom, versions) | Planned |
 | M6 Group plans and weekly schedules | Planned |
 | M7 Progress, completion, Home, branch graph | Planned |
@@ -24,7 +24,9 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 
 - **Checks before any milestone commit:** `pnpm check` (typecheck, lint, format, unit, integration), `pnpm build`, `pnpm test:e2e`. Requires `pnpm db:up`.
 - **Pinned versions:** TypeScript 6.0 (typescript-eslint caps below 6.1), Prisma 7.10 (npm `latest` is an 8.0 RC; Better Auth supports ≤7), ESLint 9 (Next's lint plugins). Do not bump these without checking compatibility.
-- **Prisma 7:** `pnpm db:migrate` regenerates the client; Prisma no longer does it on its own. Constraints Prisma can't express (CHECK, partial unique indexes) go in the migration SQL.
+- **Prisma 7:** `pnpm db:migrate` regenerates the client; Prisma no longer does it on its own. Constraints Prisma can't express (CHECK, partial unique indexes, triggers) go in the migration SQL, with an integration test proving each one.
+- **Data invariants enforced by the database:** one admin per group, one active plan per group, one draft per roadmap, one completion per user and problem, published roadmap versions immutable (triggers), weekly assignments only from the plan's own version (composite foreign keys). Services should translate these violations into friendly errors, not re-implement them.
+- **Seed and catalog:** `pnpm db:seed` (idempotent) loads `packages/database/prisma/data/` through the validated contracts in `@branch/shared/catalog` and the importer in `@branch/database/catalog-import`. Dev accounts: `ada@example.test` / `grace@example.test`, password `branch-dev-password`.
 - **Authorization:** every app page and server action starts from `requireViewer()` (`apps/web/src/modules/auth/session.ts`). `src/proxy.ts` is an optimistic cookie check only. Never accept user IDs from the client. Return paths go through `safeNextPath()`.
 - **Module shape:** `apps/web/src/modules/<domain>/` holds `schemas.ts` (Zod), `service.ts` (server-only domain logic and authorization), `actions.ts` (server actions returning `FormState`), and colocated `*.test.ts` / `*.int.test.ts`.
 - **Tests:** unit tests need no database; `*.int.test.ts` run against `TEST_DATABASE_URL`, which is reset before each test; E2E creates a fresh account per test through the `viewer` fixture (`apps/web/e2e/support/fixtures.ts`). The reset helper refuses any database not ending in `_test`.

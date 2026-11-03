@@ -16,6 +16,7 @@
   "dependencies": {
     "@base-ui/react": "^1.9.0",
     "@branch/database": "workspace:*",
+    "@branch/shared": "workspace:*",
     "better-auth": "1.7.15",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.2",

@@ -17,7 +17,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  transpilePackages: ["@branch/database"],
+  transpilePackages: ["@branch/database", "@branch/shared"],
   outputFileTracingRoot: repoRoot,
   turbopack: { root: repoRoot },
   async headers() {

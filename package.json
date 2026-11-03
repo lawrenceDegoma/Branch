@@ -24,7 +24,8 @@
     "db:deploy": "pnpm --filter @branch/database migrate:deploy",
     "db:reset": "pnpm --filter @branch/database migrate:reset",
     "db:studio": "pnpm --filter @branch/database studio",
-    "test:integration": "pnpm --filter @branch/web test:integration"
+    "test:integration": "pnpm --filter @branch/web test:integration",
+    "db:seed": "pnpm --filter @branch/database seed"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

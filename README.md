@@ -26,10 +26,18 @@ pnpm install                 # installs dependencies and generates the Prisma cl
 cp .env.example .env         # then set BETTER_AUTH_SECRET (see below)
 pnpm db:up                   # starts PostgreSQL 18 and waits until it is healthy
 pnpm db:migrate              # applies migrations to the development database
+pnpm db:seed                 # sample catalog, roadmap, dev accounts, and a group (idempotent)
 pnpm dev                     # http://localhost:3000
 ```
 
 `pnpm db:down` stops the database; data persists in the `branch_postgres-data` Docker volume.
+
+Seeded development accounts (local only; the seed refuses to run with `NODE_ENV=production`):
+
+| Account              | Password              | Role in "Interview prep crew" |
+| -------------------- | --------------------- | ----------------------------- |
+| `ada@example.test`   | `branch-dev-password` | Admin                         |
+| `grace@example.test` | `branch-dev-password` | Member                        |
 
 ## Environment variables
 
@@ -68,6 +76,7 @@ Run from the repository root.
 | `pnpm db:deploy`         | Apply committed migrations (production/CI)                     |
 | `pnpm db:reset`          | Drop, recreate, and re-migrate the development database        |
 | `pnpm db:generate`       | Regenerate the Prisma client                                   |
+| `pnpm db:seed`           | Load development seed data (idempotent)                        |
 | `pnpm db:studio`         | Browse data in Prisma Studio                                   |
 
 First-time E2E setup: `pnpm --filter @branch/web exec playwright install chromium`. Integration and
@@ -81,7 +90,8 @@ client; Prisma 7 no longer does this automatically).
 
 ```text
 apps/web/            Next.js App Router app (UI, server actions, route handlers, domain modules)
-packages/database/   Prisma schema, migrations, and the shared Prisma client
+packages/database/   Prisma schema, migrations, seed data, catalog importer, Prisma client
+packages/shared/     Validated contracts shared across apps (problem catalog, roadmap definitions)
 infra/docker/        Docker Compose for local PostgreSQL (dev + test databases)
 docs/                Architecture decisions and milestone log
 ```

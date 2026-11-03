@@ -101,6 +101,28 @@ graphic. Re-check after changing any token.
 - **Password change** revokes other sessions and confirms via a URL parameter, because the rotated
   session cookie re-renders the page and would discard client-side form state.
 
+## Domain schema
+
+- **IDs:** domain tables use UUIDv7 (`@default(uuid(7))`, time-ordered for index locality); auth
+  tables keep Better Auth's text IDs.
+- **Canonical problems** are independent of roadmaps and store identifiers and metadata only
+  (LeetCode slug, title, difficulty, pattern tags); the URL is derived from the slug.
+- **Roadmaps** have versions. A version is a draft (at most one per roadmap) or published.
+  Published versions are immutable, enforced by triggers on sections and items and on the version
+  row itself. Groups attach to a published version, so editing a roadmap never rewrites a group's
+  plan.
+- **Plans:** week _n_ runs from `startDate + 7(n−1)` days in the group's timezone, so there is no
+  separate week-start setting that could disagree with the start date (the UI will suggest the
+  next Monday). Timezone lives on the group, as the PRD recommends. At most one active plan per
+  group; replacing a plan archives the old one.
+- **Weekly assignments** carry the plan's version ID and reference both the plan and the roadmap
+  item by composite foreign keys, so a plan can only schedule items from its own version.
+- **Completions:** one row per user and problem (unique), shared by every group and roadmap. The
+  external submission ID belongs to the `Submission` table that arrives with the extension in
+  Phase 3.
+- **Deletion:** removing a user cascades their memberships, profile, and completions, and nulls
+  authorship fields; a roadmap version used by any plan cannot be deleted.
+
 ## Milestone log
 
 ### M0 — Workspace and tooling (complete)
@@ -153,6 +175,26 @@ protected-route round trip, wrong password, duplicate email and username, open-r
 incomplete account sent to onboarding, profile edit, password change, sign-out, appearance synced
 to a second browser, axe scans of every public and signed-in page in both themes). Taste-skill
 lint: 0 FAIL.
+
+### M3 — Domain schema and seed data (complete)
+
+- Schema for groups, memberships, invites, audit events, problems and tags, roadmaps with
+  versions, sections and items, group plans, weekly assignments, and completions, with the
+  invariants above enforced in the database.
+- `@branch/shared/catalog`: validated contracts for the problem catalog and roadmap definitions.
+- `@branch/database/catalog-import`: idempotent catalog sync, and a curated-roadmap importer that
+  publishes changed content as a new version.
+- Idempotent dev seed: 31 well-known problems (identifiers and metadata only), a "Starter sample"
+  roadmap labeled as a development sample, two dev accounts with real password hashes, and one
+  group. Verified the seeded accounts sign in through Better Auth.
+
+Verified: 7 shared-contract tests; 45 unit tests; 31 integration tests, including 21 new ones
+covering each database invariant with the application bypassed, cascade deletion through the
+immutability triggers, and importer versioning; 97 E2E tests; production build.
+
+The seed catalog lists problems from memory of their public LeetCode identifiers; spot-check slugs
+and difficulties before any public launch. Curated NeetCode 150 / Blind 75 / Grind 75 lists are
+drafted for review in M5.
 
 ## Known limitations
 

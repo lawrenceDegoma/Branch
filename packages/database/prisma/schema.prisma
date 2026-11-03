@@ -18,16 +18,26 @@ datasource db {
 // ---------------------------------------------------------------------------------------------
 
 model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
-  profile       Profile?
+  id               String              @id
+  name             String
+  email            String
+  emailVerified    Boolean             @default(false)
+  image            String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  sessions         Session[]
+  accounts         Account[]
+  // Branch relations (back-references only; no domain columns on this table).
+  profile          Profile?
+  memberships      GroupMembership[]
+  groupsCreated    Group[]             @relation("GroupCreatedBy")
+  invitesCreated   GroupInvite[]
+  auditEventsActed GroupAuditEvent[]   @relation("AuditActor")
+  auditEventsAbout GroupAuditEvent[]   @relation("AuditSubject")
+  problemsAdded    Problem[]
+  roadmapsOwned    Roadmap[]
+  plansCreated     GroupRoadmapPlan[]
+  completions      ProblemCompletion[]
 
   @@unique([email])
   @@map("user")
@@ -117,4 +127,313 @@ model Profile {
   updatedAt  DateTime   @updatedAt
 
   @@map("profile")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Groups
+// ---------------------------------------------------------------------------------------------
+
+enum GroupRole {
+  ADMIN
+  MEMBER
+}
+
+/// A private, invite-only group. Week boundaries for its plan use `timezone`.
+model Group {
+  id          String             @id @default(uuid(7)) @db.Uuid
+  /// 1-60 characters (CHECK).
+  name        String
+  /// At most 280 characters (CHECK).
+  description String?
+  /// IANA timezone name, validated by the application.
+  timezone    String
+  createdById String?
+  createdBy   User?              @relation("GroupCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  memberships GroupMembership[]
+  invites     GroupInvite[]
+  auditEvents GroupAuditEvent[]
+  plans       GroupRoadmapPlan[]
+
+  @@map("group")
+}
+
+/// Exactly one ADMIN per group: at most one is enforced by a partial unique index; the service
+/// layer keeps it at exactly one (transfer before leaving, transfer is one transaction).
+model GroupMembership {
+  groupId  String    @db.Uuid
+  group    Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     GroupRole @default(MEMBER)
+  joinedAt DateTime  @default(now())
+
+  @@id([groupId, userId])
+  @@index([userId])
+  @@map("group_membership")
+}
+
+/// Link invite. Only a SHA-256 hash of the token is stored.
+model GroupInvite {
+  id          String    @id @default(uuid(7)) @db.Uuid
+  groupId     String    @db.Uuid
+  group       Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  tokenHash   String    @unique
+  createdById String?
+  createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  expiresAt   DateTime
+  /// Null means unlimited. CHECK: positive, and useCount never exceeds it.
+  maxUses     Int?
+  useCount    Int       @default(0)
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([groupId])
+  @@map("group_invite")
+}
+
+enum GroupAuditAction {
+  GROUP_CREATED
+  GROUP_UPDATED
+  MEMBER_JOINED
+  MEMBER_LEFT
+  MEMBER_REMOVED
+  ADMIN_TRANSFERRED
+  INVITE_CREATED
+  INVITE_REVOKED
+  PLAN_CHANGED
+}
+
+/// Record of sensitive group administration actions (PRD §7).
+model GroupAuditEvent {
+  id            String           @id @default(uuid(7)) @db.Uuid
+  groupId       String           @db.Uuid
+  group         Group            @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  action        GroupAuditAction
+  actorId       String?
+  actor         User?            @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  subjectUserId String?
+  subjectUser   User?            @relation("AuditSubject", fields: [subjectUserId], references: [id], onDelete: SetNull)
+  metadata      Json?
+  createdAt     DateTime         @default(now())
+
+  @@index([groupId, createdAt])
+  @@map("group_audit_event")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Problem catalog. Canonical problems are independent of roadmaps.
+// ---------------------------------------------------------------------------------------------
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum ProblemSource {
+  SEED
+  CURATED
+  USER
+}
+
+/// A canonical LeetCode problem. The URL is derived from the slug. Stores identifiers and
+/// metadata only, never problem statements.
+model Problem {
+  id           String              @id @default(uuid(7)) @db.Uuid
+  /// Lowercase kebab-case (CHECK).
+  leetcodeSlug String              @unique
+  title        String
+  difficulty   Difficulty
+  source       ProblemSource
+  createdById  String?
+  createdBy    User?               @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  tags         ProblemTag[]
+  roadmapItems RoadmapItem[]
+  completions  ProblemCompletion[]
+
+  @@map("problem")
+}
+
+model Tag {
+  id       String       @id @default(uuid(7)) @db.Uuid
+  slug     String       @unique
+  name     String
+  problems ProblemTag[]
+
+  @@map("tag")
+}
+
+model ProblemTag {
+  problemId String  @db.Uuid
+  problem   Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  tagId     String  @db.Uuid
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([problemId, tagId])
+  @@index([tagId])
+  @@map("problem_tag")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Roadmaps. Groups attach to an immutable published version, never to the live roadmap.
+// ---------------------------------------------------------------------------------------------
+
+enum RoadmapKind {
+  CURATED
+  CUSTOM
+}
+
+enum RoadmapVisibility {
+  PRIVATE
+  LINK
+}
+
+model Roadmap {
+  id          String            @id @default(uuid(7)) @db.Uuid
+  kind        RoadmapKind
+  /// Stable identifier for curated roadmaps, used by the importer.
+  slug        String?           @unique
+  /// Null for curated roadmaps (CHECK); custom roadmaps keep working if the owner is deleted.
+  ownerId     String?
+  owner       User?             @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  /// 1-80 characters (CHECK).
+  title       String
+  description String?
+  visibility  RoadmapVisibility @default(PRIVATE)
+  /// Random token for link sharing; present only while visibility is LINK.
+  shareToken  String?           @unique
+  /// Attribution for curated lists (where the problem mapping came from).
+  sourceUrl   String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  versions    RoadmapVersion[]
+
+  @@index([ownerId])
+  @@map("roadmap")
+}
+
+/// A draft (publishedAt null, at most one per roadmap) or an immutable published snapshot.
+/// Database triggers reject changes to a published version's sections and items.
+model RoadmapVersion {
+  id          String             @id @default(uuid(7)) @db.Uuid
+  roadmapId   String             @db.Uuid
+  roadmap     Roadmap            @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  number      Int
+  publishedAt DateTime?
+  createdAt   DateTime           @default(now())
+  sections    RoadmapSection[]
+  items       RoadmapItem[]
+  plans       GroupRoadmapPlan[]
+
+  @@unique([roadmapId, number])
+  @@map("roadmap_version")
+}
+
+model RoadmapSection {
+  id        String         @id @default(uuid(7)) @db.Uuid
+  versionId String         @db.Uuid
+  version   RoadmapVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  position  Int
+  title     String
+  items     RoadmapItem[]
+
+  @@unique([versionId, position])
+  @@unique([id, versionId])
+  @@map("roadmap_section")
+}
+
+model RoadmapItem {
+  id          String             @id @default(uuid(7)) @db.Uuid
+  versionId   String             @db.Uuid
+  version     RoadmapVersion     @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  sectionId   String             @db.Uuid
+  /// Composite key keeps an item's section inside the same version.
+  section     RoadmapSection     @relation(fields: [sectionId, versionId], references: [id, versionId], onDelete: Cascade)
+  problemId   String             @db.Uuid
+  problem     Problem            @relation(fields: [problemId], references: [id], onDelete: Restrict)
+  position    Int
+  assignments WeeklyAssignment[]
+
+  @@unique([sectionId, position])
+  @@unique([versionId, problemId])
+  @@unique([id, versionId])
+  @@index([problemId])
+  @@map("roadmap_item")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Group plans and weekly assignments
+// ---------------------------------------------------------------------------------------------
+
+enum PlanStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+/// A group's schedule over one roadmap version. Week n runs from startDate + 7(n-1) days, in the
+/// group's timezone. At most one ACTIVE plan per group (partial unique index).
+model GroupRoadmapPlan {
+  id               String             @id @default(uuid(7)) @db.Uuid
+  groupId          String             @db.Uuid
+  group            Group              @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  roadmapVersionId String             @db.Uuid
+  roadmapVersion   RoadmapVersion     @relation(fields: [roadmapVersionId], references: [id], onDelete: Restrict)
+  startDate        DateTime           @db.Date
+  status           PlanStatus         @default(ACTIVE)
+  createdById      String?
+  createdBy        User?              @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt        DateTime           @default(now())
+  archivedAt       DateTime?
+  assignments      WeeklyAssignment[]
+
+  @@unique([id, roadmapVersionId])
+  @@index([groupId])
+  @@map("group_roadmap_plan")
+}
+
+/// Places one roadmap item in one week of a plan. The composite keys guarantee the item belongs
+/// to the plan's roadmap version.
+model WeeklyAssignment {
+  planId        String           @db.Uuid
+  versionId     String           @db.Uuid
+  plan          GroupRoadmapPlan @relation(fields: [planId, versionId], references: [id, roadmapVersionId], onDelete: Cascade)
+  roadmapItemId String           @db.Uuid
+  roadmapItem   RoadmapItem      @relation(fields: [roadmapItemId, versionId], references: [id, versionId], onDelete: Restrict)
+  /// 1-based (CHECK).
+  weekNumber    Int
+
+  @@id([planId, roadmapItemId])
+  @@index([planId, weekNumber])
+  @@map("weekly_assignment")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Progress. One canonical completion per user and problem, shared by every group and roadmap.
+// ---------------------------------------------------------------------------------------------
+
+enum CompletionSource {
+  MANUAL
+  EXTENSION
+  IMPORT
+}
+
+model ProblemCompletion {
+  id          String           @id @default(uuid(7)) @db.Uuid
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problemId   String           @db.Uuid
+  problem     Problem          @relation(fields: [problemId], references: [id], onDelete: Restrict)
+  source      CompletionSource
+  completedAt DateTime
+  /// Optional language the user solved it in (free text, at most 40 characters; CHECK).
+  language    String?
+  createdAt   DateTime         @default(now())
+
+  @@unique([userId, problemId])
+  @@index([problemId])
+  @@map("problem_completion")
 }
