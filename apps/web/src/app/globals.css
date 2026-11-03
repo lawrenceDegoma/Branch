@@ -1,1 +1,212 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Branch design tokens.
+ *
+ * Branch's semantic tokens (ground, surface, ink, brand, ...) are the source of truth; shadcn's
+ * variable names are mapped onto them below so generated components stay compatible.
+ *
+ * Rules (see docs/DECISIONS.md, "Design system"):
+ * - Elevation is a lightness step (ground → surface → raised); cards carry no border or shadow in
+ *   dark mode. Only floating layers (menus, popovers, dialogs) get a shadow.
+ * - Orange (--brand) marks progress data only, plus the focus ring. It never fills buttons, tabs
+ *   or navigation. The primary action is an inverted pill.
+ * - Every text colour holds at least 4.5:1, and control outlines at least 3:1, on every surface
+ *   in its theme. Re-check contrast after changing any value here.
+ */
+
+:root {
+  /* Light theme */
+  --ground: #f7f7f5;
+  --surface: #ffffff;
+  --raised: #efefec;
+  --line: #e4e4e1; /* structural lines and card edges */
+  --rule: #efefec; /* row rules inside lists */
+  --control: #80858c; /* input and outline-button borders (3:1) */
+
+  --ink: #16181c;
+  --ink-muted: #52565d;
+  --ink-faint: #64686f;
+
+  --brand: #d9480f; /* data marks; 3:1 as a graphic on light surfaces */
+  --brand-ink: #b83d0d; /* orange text on light surfaces (4.5:1) */
+  --brand-soft: #fbe4da; /* pale tint behind brand marks */
+
+  --primary-fill: #1d1f23;
+  --primary-ink: #ffffff;
+
+  --positive: #247b50;
+  --positive-soft: #dcfae5;
+  --negative: #c4242a;
+  --negative-soft: #ffedea;
+  --warning-ink: #92400e;
+  --warning-soft: #fffbeb;
+
+  --focus: #d9480f;
+  --overlay: rgb(22 24 28 / 0.4);
+  --shadow-float: 0 8px 24px rgb(22 24 28 / 0.12), 0 1px 3px rgb(22 24 28 / 0.08);
+
+  /* Shape, motion, layout */
+  --radius: 1rem; /* cards; controls are full pills */
+  --radius-inner: 0.625rem; /* nested panels and inputs */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --sidebar-width: 232px;
+  --rail-width: 320px;
+
+  color-scheme: light;
+}
+
+.dark {
+  /* Dark theme (primary design) */
+  --ground: #17191d;
+  --surface: #1e2125;
+  --raised: #262a30;
+  --line: #2c3036;
+  --rule: #24272c;
+  --control: #70757e;
+
+  --ink: #f3f4f6;
+  --ink-muted: #b3b6bc;
+  --ink-faint: #9a9ea5;
+
+  --brand: #ff683b;
+  --brand-ink: #ff683b;
+  --brand-soft: #3a2219;
+
+  --primary-fill: #f3f4f6;
+  --primary-ink: #17191d;
+
+  --positive: #3fc07a;
+  --positive-soft: #172a1d;
+  --negative: #f0677d;
+  --negative-soft: #2c1a20;
+  --warning-ink: #f5c26b;
+  --warning-soft: #2e2615;
+
+  --focus: #ff683b;
+  --overlay: rgb(0 0 0 / 0.6);
+  --shadow-float: 0 12px 32px rgb(0 0 0 / 0.45), 0 1px 3px rgb(0 0 0 / 0.3);
+
+  color-scheme: dark;
+}
+
+/* shadcn/ui variable contract, mapped onto Branch tokens. */
+:root,
+.dark {
+  --background: var(--ground);
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --popover: var(--surface);
+  --popover-foreground: var(--ink);
+  --primary: var(--primary-fill);
+  --primary-foreground: var(--primary-ink);
+  --secondary: var(--raised);
+  --secondary-foreground: var(--ink);
+  --muted: var(--raised);
+  --muted-foreground: var(--ink-muted);
+  --accent: var(--raised);
+  --accent-foreground: var(--ink);
+  --destructive: var(--negative);
+  --border: var(--line);
+  --input: var(--control);
+  --ring: var(--focus);
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-sans);
+
+  --color-ground: var(--ground);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-line: var(--line);
+  --color-rule: var(--rule);
+  --color-control: var(--control);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-positive: var(--positive);
+  --color-positive-soft: var(--positive-soft);
+  --color-negative: var(--negative);
+  --color-negative-soft: var(--negative-soft);
+  --color-warning-ink: var(--warning-ink);
+  --color-warning-soft: var(--warning-soft);
+  --color-overlay: var(--overlay);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius-inner) * 0.6);
+  --radius-md: calc(var(--radius-inner) * 0.8);
+  --radius-lg: var(--radius-inner);
+  --radius-xl: var(--radius);
+  --radius-2xl: calc(var(--radius) * 1.25);
+
+  --shadow-float: var(--shadow-float);
+  --ease-out: var(--ease-out);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring;
+  }
+  html {
+    @apply font-sans antialiased;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-ground text-ink;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--brand-soft);
+    color: var(--ink);
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Keep feedback, drop travel: users who ask for less motion get instant state changes. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

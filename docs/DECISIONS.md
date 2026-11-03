@@ -46,6 +46,42 @@ at our own localhost. `assets.mjs` is not run, its gallery links are not followe
 GSAP/Lenis CDN recommendations are not adopted. Where its landing-page rules (heavy motion, imagery
 floors) conflict with the PRD's restraint, the PRD wins.
 
+## Design system
+
+Tokens live in `apps/web/src/app/globals.css`. Branch's semantic names (`ground`, `surface`,
+`raised`, `line`, `control`, `ink`, `ink-muted`, `ink-faint`, `brand`, status pairs) are the
+source of truth; shadcn/ui's variable contract (`--background`, `--primary`, ...) is mapped onto
+them so generated components stay compatible. Components use the Base UI primitives (shadcn
+`base-nova`).
+
+The taste skill dealt the `true-black-flat` app style (seed 518019275, kind `community`, dark),
+applied with Branch's brand palette kept:
+
+| Rule                   | Application                                                                                                                                              |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Elevation by lightness | Ground `#17191D` → surface `#1E2125` → raised `#262A30`. Dark cards have no border or shadow; only floating layers get `--shadow-float`.                 |
+| Colour on data only    | Orange (`#FF683B` dark, `#D9480F` light) marks progress data, the logo, and the focus ring. It never fills buttons, tabs, or navigation.                 |
+| Inverted primary       | The one primary action per screen is an inverted pill (light on dark, near-black on light).                                                              |
+| Navigation             | Dark: the active label brightens. Light: a neutral grey pill.                                                                                            |
+| Type                   | Geist, one family (400/500/600). Body 14px, titles 24px/600, tabular figures via the `tabular` utility. Geist Mono is added with code blocks in Phase 2. |
+| Radius                 | Cards 16px, nested panels and inputs 10px, controls full pills.                                                                                          |
+
+Deviations from the sheet, with reasons:
+
+- **Charcoal, not true black.** The PRD fixes a charcoal canvas; it is a cool near-black, which the
+  sheet allows as "a ground with the product's temperature".
+- **Geist, not the dealt Inter.** The product brief names Vercel's typography as a reference.
+- **Shell redrawn to the "open plane" (no 64px top bar with a scope switcher).** Branch's Home is a
+  union of all the viewer's groups (PRD §4), so a global group switcher would wrongly scope the
+  whole app. Desktop uses a labelled sidebar and the PRD's right rail; mobile uses a compact header
+  and a bottom bar.
+- **Planned signature element (M7):** a git-style branch graph, with the group's calendar as the
+  main line and each member's progress branching ahead of or behind it.
+
+Contrast was computed for every text and data colour against every surface in its theme: all text
+is at least 4.5:1, control outlines at least 3:1 (WCAG 1.4.11), and the light-mode orange 3:1 as a
+graphic. Re-check after changing any token.
+
 ## Milestone log
 
 ### M0 — Workspace and tooling (complete)
@@ -60,6 +96,26 @@ floors) conflict with the PRD's restraint, the PRD wins.
 
 Verified: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm test` (4 unit tests),
 `pnpm build`, `pnpm test:e2e` (4 tests: title and heading, health endpoint, on desktop and mobile).
+
+### M1 — Design system and app shell (complete)
+
+- Semantic light and dark tokens, the Base UI button restyled to the system, shared skeleton,
+  empty, and error states.
+- Temporary original branch mark, `branch.` wordmark, SVG favicon, page metadata with the
+  `%s · Branch` title template, theme-coloured browser chrome.
+- Dark / Light / System appearance (default System, persisted per device with `next-themes`);
+  account-level sync arrives with profiles in M2.
+- Responsive shell: sidebar on desktop, header and bottom bar below 1024px, skip link, branded
+  404 (also used for resources the viewer may not access), loading and error boundaries.
+- Reduced motion collapses transitions and animations to 1ms; touch devices get 44px targets.
+- Home, Roadmaps, Groups, and Profile currently render only their titles; their content arrives
+  in M2–M7. The landing page becomes the sign-in entry point in M2.
+
+Verified: 8 unit tests; 55 E2E tests on desktop and mobile (1 desktop-only test skipped on mobile),
+including axe WCAG 2.2 A/AA scans of every route in both themes with no violations; theme default,
+override, persistence, and keyboard control; navigation state; skip link; 404; reduced motion.
+Taste-skill lint: 0 FAIL. Inspector on `/settings`: 0 FAIL, 2 WARN (empty canvas on a one-section
+page, expected until more settings exist).
 
 ## Known limitations
 
