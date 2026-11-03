@@ -15,7 +15,7 @@ test.describe("appearance", () => {
 
   test("an explicit choice overrides the system and persists across reloads", async ({
     page,
-    viewer: _viewer,
+    viewer,
   }) => {
     await page.emulateMedia({ colorScheme: "dark" });
     await page.goto("/settings");
@@ -26,6 +26,12 @@ test.describe("appearance", () => {
     await page.locator("label", { hasText: "Light" }).click();
     await expect(page.getByRole("radio", { name: "Light" })).toBeChecked();
     await expect(html).not.toHaveClass(/\bdark\b/);
+    // The account is the source of truth after a reload; wait for the background save.
+    await expect
+      .poll(
+        async () => (await prisma.profile.findUnique({ where: { userId: viewer.id } }))?.appearance,
+      )
+      .toBe("LIGHT");
 
     await page.reload();
     await expect(page.getByRole("radio", { name: "Light" })).toBeChecked();

@@ -143,6 +143,39 @@ graphic. Re-check after changing any token.
   creation and revocation are recorded and shown to the admin as "Admin activity". Deleting a group
   removes its audit trail with it, so deletion is also written to the server log.
 
+## Roadmaps
+
+- **Who sees what:** curated roadmaps are visible to every signed-in user. A custom roadmap is
+  visible to its owner, to members of any group whose plan uses one of its versions, and to anyone
+  signed in who holds its share link (through the share URL only). Everyone else gets a 404.
+  Drafts are visible only to the owner.
+- **Editing model:** a roadmap has at most one draft. "Edit" copies the latest published version
+  into a draft; saving replaces the draft's content in one transaction; publishing validates it
+  (at least one section, no empty sections, no duplicate problems, at most 50 sections and 500
+  problems) and freezes it as the next version. Groups keep the version they attached to.
+- **Editor accessibility:** reordering uses "move up / move down" buttons rather than
+  drag-and-drop, so it works by keyboard and screen reader. Add buttons keep their visible word at
+  the start of the accessible name (WCAG 2.5.3).
+- **Adding problems by link:** only `leetcode.com` / `leetcode.cn` `/problems/<slug>` URLs (or a
+  bare slug) are accepted. Unknown problems are added to the shared catalog as `source: USER` with
+  the title and difficulty the user enters; at most 50 per person per day.
+- **Sharing:** link sharing uses a 192-bit random token shown in the roadmap's settings; turning it
+  off invalidates the link. Share pages require sign-in and are `noindex`.
+- **Deletion:** a roadmap can be deleted only while no group's plan uses any of its versions.
+
+## Curated lists
+
+- NeetCode 150 and Blind 75 are drafted in `packages/database/prisma/data/curated-drafts/` from
+  `neetcode-gh/leetcode`'s `.problemSiteData.json` (MIT), pinned to a commit and cited on each
+  roadmap. Only identifiers and metadata were taken. They are not imported until the owner
+  approves; the README there lists what to check (title casing, seven Premium problems, naming).
+- Cross-check: every seed problem that appears in NeetCode 150 has the same difficulty in both
+  sources; three titles differ only in capitalization.
+- **Grind 75 is not drafted:** there is no openly licensed, machine-readable source (the Tech
+  Interview Handbook repo only proxies to a separately hosted site).
+- `pnpm db:import-curated` imports approved files into any environment, refuses `curated-drafts/`
+  without `--allow-draft`, and is idempotent.
+
 ## Milestone log
 
 ### M0 — Workspace and tooling (complete)
@@ -234,12 +267,35 @@ friends joining through an invite link from sign-up, 404 status for non-members 
 admin pages, removal, transfer, leaving, deletion, a turned-off link, and axe scans of every group
 page and an open dialog in both themes. Taste-skill lint: 0 FAIL.
 
+### M5 — Roadmaps (complete)
+
+- Roadmaps page (yours, used by your groups, curated), roadmap view with version history and
+  LeetCode links, custom roadmap creation, the draft editor (sections, catalog search, add by
+  LeetCode link, keyboard reordering, save, publish, discard), settings (details, link sharing,
+  delete), and the shared-link view.
+- Curated NeetCode 150 and Blind 75 drafts with provenance, an import command, and data-file
+  validation tests. Grind 75 deliberately not drafted.
+- Mobile: scroll padding keeps focused elements clear of the sticky header and bottom bar.
+
+Verified: 71 unit tests (LeetCode URL parsing, publish rules, all data files valid with the
+expected 150/75 sizes and pinned sources); 66 integration tests, including 16 for roadmaps
+(visibility for strangers, group members, and share links; drafts owner-only; version 2 leaving
+version 1 intact; concurrent draft start; publish validation; delete blocked while in use;
+catalog search; add by URL with deduplication under concurrency and a daily limit); 135 E2E tests
+stable across consecutive runs (create → publish → revise with version history, draft save and
+publish validation, private vs shared access with 404s, deletion, curated read-only, axe scans of
+roadmap pages and the editor in both themes); curated import verified against the test database
+(idempotent, refuses drafts without the flag). Taste-skill lint: 0 FAIL.
+
 ## Known limitations
 
 - Phase 1 has no email delivery, so there is no email verification or password reset. Sign-up
   reveals whether an email is already registered; acceptable for invite-only groups of friends,
   to revisit before public sign-up.
 - Accounts cannot yet be deleted from the UI.
+- Problems have no Premium flag; Premium problems link to LeetCode like any other.
+- User-added problems become part of the shared catalog with user-entered titles; there is no
+  moderation of catalog edits yet.
 - Other people's profile pages don't exist yet; members see each other's name and username in the
   group's member list only.
 - ESLint 9 is end-of-life upstream (see dependency choices).

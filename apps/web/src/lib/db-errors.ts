@@ -9,3 +9,8 @@ export function isUniqueViolation(error: unknown, field?: string): boolean {
   if (!field) return true;
   return JSON.stringify(error.meta ?? {}).includes(field);
 }
+
+/** True when a delete or update was blocked by a foreign key (for example, a row still in use). */
+export function isForeignKeyViolation(error: unknown): boolean {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003";
+}

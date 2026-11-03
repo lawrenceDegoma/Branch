@@ -180,6 +180,14 @@
     @apply font-sans antialiased;
     -webkit-text-size-adjust: 100%;
   }
+  /* Below the desktop breakpoint a sticky header and a bottom bar overlay the page; keep focused
+     and scrolled-to elements clear of both (WCAG 2.4.11, 2.5.8). */
+  @media (width < 64rem) {
+    html {
+      scroll-padding-top: 4.5rem;
+      scroll-padding-bottom: 5.5rem;
+    }
+  }
   body {
     @apply bg-ground text-ink;
     font-size: 0.875rem;

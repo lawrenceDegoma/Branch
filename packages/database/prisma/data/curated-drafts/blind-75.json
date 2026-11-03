@@ -1,0 +1,147 @@
+{
+  "slug": "blind-75",
+  "title": "Blind 75",
+  "description": "The Blind 75 list as organized by NeetCode, grouped by pattern. Not affiliated with Blind, NeetCode, or LeetCode.",
+  "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/5a3c1b2d59b4e5c6252006343d73849ebc75f796/.problemSiteData.json",
+  "sections": [
+    {
+      "title": "Arrays & Hashing",
+      "problems": [
+        "contains-duplicate",
+        "valid-anagram",
+        "two-sum",
+        "group-anagrams",
+        "top-k-frequent-elements",
+        "product-of-array-except-self",
+        "encode-and-decode-strings",
+        "longest-consecutive-sequence"
+      ]
+    },
+    {
+      "title": "Two Pointers",
+      "problems": ["valid-palindrome", "3sum", "container-with-most-water"]
+    },
+    {
+      "title": "Sliding Window",
+      "problems": [
+        "best-time-to-buy-and-sell-stock",
+        "longest-substring-without-repeating-characters",
+        "longest-repeating-character-replacement",
+        "minimum-window-substring"
+      ]
+    },
+    {
+      "title": "Stack",
+      "problems": ["valid-parentheses"]
+    },
+    {
+      "title": "Binary Search",
+      "problems": ["find-minimum-in-rotated-sorted-array", "search-in-rotated-sorted-array"]
+    },
+    {
+      "title": "Linked List",
+      "problems": [
+        "reverse-linked-list",
+        "merge-two-sorted-lists",
+        "reorder-list",
+        "remove-nth-node-from-end-of-list",
+        "linked-list-cycle",
+        "merge-k-sorted-lists"
+      ]
+    },
+    {
+      "title": "Trees",
+      "problems": [
+        "invert-binary-tree",
+        "maximum-depth-of-binary-tree",
+        "same-tree",
+        "subtree-of-another-tree",
+        "lowest-common-ancestor-of-a-binary-search-tree",
+        "binary-tree-level-order-traversal",
+        "validate-binary-search-tree",
+        "kth-smallest-element-in-a-bst",
+        "construct-binary-tree-from-preorder-and-inorder-traversal",
+        "binary-tree-maximum-path-sum",
+        "serialize-and-deserialize-binary-tree"
+      ]
+    },
+    {
+      "title": "Tries",
+      "problems": [
+        "implement-trie-prefix-tree",
+        "design-add-and-search-words-data-structure",
+        "word-search-ii"
+      ]
+    },
+    {
+      "title": "Heap / Priority Queue",
+      "problems": ["find-median-from-data-stream"]
+    },
+    {
+      "title": "Backtracking",
+      "problems": ["combination-sum", "word-search"]
+    },
+    {
+      "title": "Graphs",
+      "problems": [
+        "number-of-islands",
+        "clone-graph",
+        "pacific-atlantic-water-flow",
+        "course-schedule",
+        "number-of-connected-components-in-an-undirected-graph",
+        "graph-valid-tree"
+      ]
+    },
+    {
+      "title": "Advanced Graphs",
+      "problems": ["alien-dictionary"]
+    },
+    {
+      "title": "1-D Dynamic Programming",
+      "problems": [
+        "climbing-stairs",
+        "house-robber",
+        "house-robber-ii",
+        "longest-palindromic-substring",
+        "palindromic-substrings",
+        "decode-ways",
+        "coin-change",
+        "maximum-product-subarray",
+        "word-break",
+        "longest-increasing-subsequence"
+      ]
+    },
+    {
+      "title": "2-D Dynamic Programming",
+      "problems": ["unique-paths", "longest-common-subsequence"]
+    },
+    {
+      "title": "Greedy",
+      "problems": ["maximum-subarray", "jump-game"]
+    },
+    {
+      "title": "Intervals",
+      "problems": [
+        "insert-interval",
+        "merge-intervals",
+        "non-overlapping-intervals",
+        "meeting-rooms",
+        "meeting-rooms-ii"
+      ]
+    },
+    {
+      "title": "Math & Geometry",
+      "problems": ["rotate-image", "spiral-matrix", "set-matrix-zeroes"]
+    },
+    {
+      "title": "Bit Manipulation",
+      "problems": [
+        "number-of-1-bits",
+        "counting-bits",
+        "reverse-bits",
+        "missing-number",
+        "sum-of-two-integers"
+      ]
+    }
+  ]
+}

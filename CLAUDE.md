@@ -13,8 +13,8 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 | M2 Authentication and profiles | Done |
 | M3 Domain schema and seed data | Done |
 | M4 Groups, membership, invites, admin | Done |
-| M5 Roadmaps (curated, custom, versions) | **Next** |
-| M6 Group plans and weekly schedules | Planned |
+| M5 Roadmaps (curated, custom, versions) | Done |
+| M6 Group plans and weekly schedules | **Next** |
 | M7 Progress, completion, Home, branch graph | Planned |
 | M8 E2E journeys, accessibility pass, docs | Planned |
 
@@ -29,6 +29,8 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 - **Seed and catalog:** `pnpm db:seed` (idempotent) loads `packages/database/prisma/data/` through the validated contracts in `@branch/shared/catalog` and the importer in `@branch/database/catalog-import`. Dev accounts: `ada@example.test` / `grace@example.test`, password `branch-dev-password`.
 - **Authorization:** every app page and server action starts from `requireViewer()` (`apps/web/src/modules/auth/session.ts`). `src/proxy.ts` is an optimistic cookie check only. Never accept user IDs from the client. Return paths go through `safeNextPath()`.
 - **Private resources return 404.** Services throw `NotFoundError` for non-members and `ForbiddenError` for members lacking a role; pages wrap reads in `orNotFound()` so both render the 404 page with a real 404 status. Never put a route-level `loading.tsx` above a page that can 404 (a Suspense boundary starts streaming with status 200); `home/` is the only one.
+- **Roadmap access** lives in `modules/roadmaps/service.ts` (`requireViewableRoadmap`, `requireOwnedRoadmap`): curated → every signed-in user; custom → owner, members of a group whose plan uses one of its versions, or a share-link holder (via `/roadmaps/shared/[token]` only). Drafts are owner-only. Editing replaces the single draft's content wholesale; publishing freezes it as the next version.
+- **Curated lists:** NeetCode 150 and Blind 75 are drafted in `packages/database/prisma/data/curated-drafts/` from MIT-licensed NeetCode data and **must not be imported or shown as curated until the owner approves** (see that folder's README). Grind 75 has no openly licensed source; do not scrape it. `src/test/data-files.test.ts` validates every data file.
 - **Group authorization** lives in `modules/groups/access.ts` (`requireMembership`, `requireAdmin`). Every group-scoped service function calls one of them first.
 - **Module shape:** `apps/web/src/modules/<domain>/` holds `schemas.ts` (Zod), `service.ts` (server-only domain logic and authorization), `actions.ts` (server actions returning `FormState`), and colocated `*.test.ts` / `*.int.test.ts`.
 - **UI pieces to reuse:** `ConfirmAction` (dialog that runs a server action), `CopyField`, `FormField`, `SettingsSection`, `MemberList`. Style links as buttons with `buttonVariants()` (it merges classes so variants override the base).

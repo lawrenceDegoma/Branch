@@ -7,6 +7,10 @@ const appRoutes = ["/home", "/roadmaps", "/groups", "/profile", "/settings"];
 
 async function expectNoViolations(page: Page) {
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  // Scan from the top: otherwise whatever Playwright last scrolled to can sit under the sticky
+  // mobile header and be reported as obscured. (Focused elements are kept clear by
+  // scroll-padding in globals.css.)
+  await page.evaluate(() => window.scrollTo(0, 0));
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
     .analyze();
@@ -57,6 +61,31 @@ for (const colorScheme of ["dark", "light"] as const) {
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
         .analyze();
       expect(results.violations).toEqual([]);
+    });
+
+    test("roadmap pages have no detectable WCAG A/AA violations", async ({
+      page,
+      viewer: _viewer,
+    }) => {
+      await page.goto("/roadmaps/new");
+      await expectNoViolations(page);
+      await page.getByLabel("Title").fill("Accessible roadmap");
+      await page.getByRole("button", { name: "Create and add problems" }).click();
+      await page.getByRole("button", { name: "Add section" }).click();
+      await page.getByLabel("Search problems").fill("two");
+      await expect(page.getByRole("button", { name: "Add Two Sum", exact: true })).toBeVisible();
+      await page.getByRole("button", { name: "Add Two Sum", exact: true }).click();
+      await expectNoViolations(page);
+      await page.getByRole("button", { name: "Publish" }).click();
+      await expect(
+        page.getByRole("heading", { level: 1, name: "Accessible roadmap" }),
+      ).toBeVisible();
+      await expectNoViolations(page);
+      const id = page.url().split("/").at(-1)!;
+      await page.goto(`/roadmaps/${id}/settings`);
+      await expectNoViolations(page);
+      await page.goto("/roadmaps");
+      await expectNoViolations(page);
     });
 
     test("/onboarding has no detectable WCAG A/AA violations", async ({ page, baseURL }) => {
