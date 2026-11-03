@@ -2,6 +2,36 @@
 
 You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD as the source of truth for product behavior and release scope. Do not invent additional features or broaden the MVP without asking.
 
+## Current status (updated 2026-11-03)
+
+**Phase 1 (Foundation) in progress.** The Phase 1 plan was approved on 2026-11-03; decisions, dependency pins, and the per-milestone log live in `docs/DECISIONS.md`. Setup and commands are in `README.md`.
+
+| Milestone | Status |
+|---|---|
+| M0 Workspace and tooling | Done (`6c5ef2c`) |
+| M1 Design system and app shell | Done (`4c28447`) |
+| M2 Authentication and profiles | Done (`41ed593`) |
+| M3 Domain schema and seed data | **Next** |
+| M4 Groups, membership, invites, admin | Planned |
+| M5 Roadmaps (curated, custom, versions) | Planned |
+| M6 Group plans and weekly schedules | Planned |
+| M7 Progress, completion, Home, branch graph | Planned |
+| M8 E2E journeys, accessibility pass, docs | Planned |
+
+**Approved Phase 1 decisions** (details in `docs/DECISIONS.md`): verified seed catalog plus a JSON importer, with NeetCode 150 / Blind 75 / Grind 75 drafted from cited public sources for owner review before being marked curated; email/password plus optional GitHub OAuth with no email delivery; group members see each other's status on assigned problems only; users may add problems by LeetCode URL (`source: USER`); exactly one admin per group; link-based hashed invites; weeks computed from the plan's start date and IANA timezone (Monday default); Review nav hidden until Phase 4; commit at the end of each milestone and push `main`.
+
+### Working in this repository
+
+- **Checks before any milestone commit:** `pnpm check` (typecheck, lint, format, unit, integration), `pnpm build`, `pnpm test:e2e`. Requires `pnpm db:up`.
+- **Pinned versions:** TypeScript 6.0 (typescript-eslint caps below 6.1), Prisma 7.10 (npm `latest` is an 8.0 RC; Better Auth supports ≤7), ESLint 9 (Next's lint plugins). Do not bump these without checking compatibility.
+- **Prisma 7:** `pnpm db:migrate` regenerates the client; Prisma no longer does it on its own. Constraints Prisma can't express (CHECK, partial unique indexes) go in the migration SQL.
+- **Authorization:** every app page and server action starts from `requireViewer()` (`apps/web/src/modules/auth/session.ts`). `src/proxy.ts` is an optimistic cookie check only. Never accept user IDs from the client. Return paths go through `safeNextPath()`.
+- **Module shape:** `apps/web/src/modules/<domain>/` holds `schemas.ts` (Zod), `service.ts` (server-only domain logic and authorization), `actions.ts` (server actions returning `FormState`), and colocated `*.test.ts` / `*.int.test.ts`.
+- **Tests:** unit tests need no database; `*.int.test.ts` run against `TEST_DATABASE_URL`, which is reset before each test; E2E creates a fresh account per test through the `viewer` fixture (`apps/web/e2e/support/fixtures.ts`). The reset helper refuses any database not ending in `_test`.
+- **Design system:** tokens in `apps/web/src/app/globals.css`. Orange marks progress data, the logo, and focus only; never buttons, tabs, or nav. The primary action is an inverted pill. Elevation is a lightness step, not borders or shadows. Every text colour must hold 4.5:1 and control outlines 3:1 in both themes.
+- **Taste skill** (`.claude/skills/design-taste-frontend`, pinned in `skills-lock.json`): use only its app-screen guidance and `lint.mjs --app` / `inspect.mjs --app` against local pages. Do not run `assets.mjs`, follow its gallery links, or adopt its CDN libraries. Where it conflicts with the PRD's restraint, the PRD wins. Its security-scan flags were reviewed and are recorded in `docs/DECISIONS.md`.
+- **21st.dev:** visual reference only; no API key or MCP.
+
 ## Mission and non-negotiables
 
 Build **Branch**, a polished **Strava-for-LeetCode** social accountability web app, not a coding judge. Deliver working, tested increments. The initial audience is friends; design boundaries so the product can grow without a rewrite. **Keep ongoing hosting costs as close to zero as practical.** Do not introduce paid infrastructure without explaining why and obtaining approval.
@@ -182,6 +212,6 @@ For **each phase**:
 
 Prefer secure, simple code over speculative abstraction. Keep dependencies lean. Never commit `.env` secrets. Document setup commands in `README.md` and maintain an `.env.example`. If a requirement depends on changing external APIs, provider pricing, or permissions, verify it rather than guessing.
 
-## First task
+## Next task
 
-Start with **Phase 1 planning only**: inspect the repository, read `PRD.md`, and propose the minimal scaffold, Prisma schema, branded app shell, acceptance tests, and a vertical-slice implementation plan for authentication, invite-only groups, shared roadmaps, weekly assignments, and manual completion. **Wait for the user to approve the plan before coding.** Once approved, implement and test Phase 1 only. Do not start extension, analyzer, or chat yet.
+Phase 1 planning is complete and approved (see **Current status** above). Continue Phase 1 milestone by milestone, starting from the first milestone marked **Next**: verify, run all checks, update `docs/DECISIONS.md`, commit, and push after each one. Update the status table here when a milestone completes. Do not start extension, analyzer, or chat work, and stop for approval at the end of Phase 1.
