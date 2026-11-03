@@ -1,0 +1,11 @@
+pnpm-lock.yaml
+.claude/
+skills-lock.json
+PRD.md
+CLAUDE.md
+**/.next/
+**/src/generated/
+**/prisma/migrations/
+coverage/
+playwright-report/
+test-results/

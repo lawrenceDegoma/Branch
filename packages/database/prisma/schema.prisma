@@ -1,0 +1,12 @@
+// Branch database schema.
+// Models are added milestone by milestone; see README.md for migration commands.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}

@@ -1,0 +1,91 @@
+# Branch
+
+**Grow together. Solve better.**
+
+Branch is a social accountability app for developers practicing coding-interview problems with
+friends: shared roadmaps, calendar-based weekly assignments, and individual progress tracking. You
+still solve problems on LeetCode; Branch tracks the progress and community around that work. It is
+not affiliated with LeetCode or NeetCode.
+
+- Product requirements: [PRD.md](PRD.md)
+- Engineering specification: [CLAUDE.md](CLAUDE.md)
+- Architecture decisions and milestone log: [docs/DECISIONS.md](docs/DECISIONS.md)
+
+## Prerequisites
+
+| Tool           | Version                                      |
+| -------------- | -------------------------------------------- |
+| Node.js        | 22.12 or newer (see `.nvmrc`)                |
+| pnpm           | 10.20 (pinned via `packageManager`)          |
+| Docker Desktop | Any recent version, for the local PostgreSQL |
+
+## Local setup
+
+```bash
+pnpm install                 # installs dependencies and generates the Prisma client
+cp .env.example .env         # local defaults work with the Docker database as-is
+pnpm db:up                   # starts PostgreSQL 18 and waits until it is healthy
+pnpm db:migrate              # applies migrations to the development database
+pnpm dev                     # http://localhost:3000
+```
+
+`pnpm db:down` stops the database; data persists in the `branch_postgres-data` Docker volume.
+
+## Environment variables
+
+All configuration lives in a single `.env` at the repository root (never committed). Every variable
+is server-only.
+
+| Variable            | Required                  | Purpose                                                                   |
+| ------------------- | ------------------------- | ------------------------------------------------------------------------- |
+| `DATABASE_URL`      | Yes                       | PostgreSQL connection string for the app and Prisma CLI.                  |
+| `TEST_DATABASE_URL` | For E2E/integration tests | Disposable database used by automated tests. Never point it at real data. |
+
+The server validates its environment at startup and reports invalid variable names without echoing
+their values.
+
+## Commands
+
+Run from the repository root.
+
+| Command                  | What it does                                                   |
+| ------------------------ | -------------------------------------------------------------- |
+| `pnpm dev`               | Next.js dev server                                             |
+| `pnpm build`             | Production build of the web app                                |
+| `pnpm start`             | Serve the production build                                     |
+| `pnpm typecheck`         | Strict TypeScript across all packages                          |
+| `pnpm lint`              | ESLint across all packages                                     |
+| `pnpm format`            | Format with Prettier (`format:check` verifies only)            |
+| `pnpm test`              | Unit tests (Vitest)                                            |
+| `pnpm test:e2e`          | Browser tests (Playwright, desktop + mobile, uses the test DB) |
+| `pnpm check`             | Typecheck, lint, format check, and unit tests                  |
+| `pnpm db:up` / `db:down` | Start / stop local PostgreSQL                                  |
+| `pnpm db:migrate`        | Create and apply a migration in development                    |
+| `pnpm db:deploy`         | Apply committed migrations (production/CI)                     |
+| `pnpm db:reset`          | Drop, recreate, and re-migrate the development database        |
+| `pnpm db:generate`       | Regenerate the Prisma client                                   |
+| `pnpm db:studio`         | Browse data in Prisma Studio                                   |
+
+First-time E2E setup: `pnpm --filter @branch/web exec playwright install chromium`.
+
+## Repository layout
+
+```text
+apps/web/            Next.js App Router app (UI, server actions, route handlers, domain modules)
+packages/database/   Prisma schema, migrations, and the shared Prisma client
+infra/docker/        Docker Compose for local PostgreSQL (dev + test databases)
+docs/                Architecture decisions and milestone log
+```
+
+Directories for the browser extension (`apps/extension`) and analysis service (`services/analyzer`)
+are created only when their phases begin.
+
+## Health check
+
+`GET /api/health` returns `200 {"status":"ok"}` when the database is reachable, otherwise
+`503 {"status":"unavailable"}`.
+
+## Status
+
+Phase 1 (Foundation) is in progress. See [docs/DECISIONS.md](docs/DECISIONS.md) for completed
+milestones, known limitations, and remaining work.
