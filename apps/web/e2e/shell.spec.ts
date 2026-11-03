@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./support/fixtures";
 
 const destinations = [
   { path: "/home", label: "Home" },
@@ -8,16 +8,21 @@ const destinations = [
 ];
 
 for (const { path, label } of destinations) {
-  test(`${label} page is titled and marked current in the navigation`, async ({ page }) => {
+  test(`${label} page is titled and marked current in the navigation`, async ({ page, viewer }) => {
     await page.goto(path);
     await expect(page).toHaveTitle(`${label} · Branch`);
-    await expect(page.getByRole("heading", { level: 1, name: label })).toBeVisible();
+    // The profile page is headed by the person's name.
+    const heading = path === "/profile" ? viewer.name : label;
+    await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
     const nav = page.getByRole("navigation", { name: "Main" });
     await expect(nav.getByRole("link", { name: label })).toHaveAttribute("aria-current", "page");
   });
 }
 
-test("desktop shows the sidebar; mobile shows the bottom bar", async ({ page }, testInfo) => {
+test("desktop shows the sidebar; mobile shows the bottom bar", async ({
+  page,
+  viewer: _viewer,
+}, testInfo) => {
   await page.goto("/home");
   const sidebar = page.locator("aside");
   const bottomBar = page.locator("nav.fixed");
@@ -30,7 +35,10 @@ test("desktop shows the sidebar; mobile shows the bottom bar", async ({ page }, 
   }
 });
 
-test("navigating between destinations updates the current page", async ({ page }) => {
+test("navigating between destinations updates the current page", async ({
+  page,
+  viewer: _viewer,
+}) => {
   await page.goto("/home");
   const nav = page.getByRole("navigation", { name: "Main" });
   await nav.getByRole("link", { name: "Groups" }).click();
@@ -39,7 +47,7 @@ test("navigating between destinations updates the current page", async ({ page }
   await expect(nav.getByRole("link", { name: "Home" })).not.toHaveAttribute("aria-current");
 });
 
-test("skip link moves focus to the main content", async ({ page }, testInfo) => {
+test("skip link moves focus to the main content", async ({ page, viewer: _viewer }, testInfo) => {
   test.skip(testInfo.project.name === "mobile", "Keyboard navigation is a desktop journey");
   await page.goto("/home");
   await page.keyboard.press("Tab");
@@ -56,7 +64,7 @@ test("unknown routes render the Branch not-found page", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1, name: "Page not found" })).toBeVisible();
 });
 
-test("reduced motion removes transitions", async ({ page }) => {
+test("reduced motion removes transitions", async ({ page, viewer: _viewer }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/home");
   const link = page

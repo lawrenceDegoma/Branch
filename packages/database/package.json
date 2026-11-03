@@ -3,13 +3,14 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./testing": "./src/testing.ts"
   },
   "scripts": {
     "generate": "prisma generate",
-    "migrate:dev": "prisma migrate dev",
+    "migrate:dev": "prisma migrate dev && prisma generate",
     "migrate:deploy": "prisma migrate deploy",
-    "migrate:reset": "prisma migrate reset",
+    "migrate:reset": "prisma migrate reset && prisma generate",
     "studio": "prisma studio",
     "typecheck": "tsc",
     "lint": "eslint .",

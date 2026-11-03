@@ -82,6 +82,25 @@ Contrast was computed for every text and data colour against every surface in it
 is at least 4.5:1, control outlines at least 3:1 (WCAG 1.4.11), and the light-mode orange 3:1 as a
 graphic. Re-check after changing any token.
 
+## Authentication and profiles
+
+- **Better Auth owns** `user`, `session`, `account`, `verification`, and `rateLimit` (generated with
+  `npx auth@1.7.15 generate`). **Branch owns** `profile` (username, bio, timezone, appearance), so
+  domain data never depends on the auth vendor's tables.
+- **Authorization root:** `requireViewer()` validates the session against the database and requires
+  a profile; every app page and server action starts there. User IDs are never accepted from the
+  client.
+- **Proxy is optimistic only.** `src/proxy.ts` redirects requests with no session cookie to
+  `/sign-in?next=...` and forwards the path so server code can return users after sign-in. Return
+  paths pass through `safeNextPath()` to prevent open redirects.
+- **Usernames** are stored lowercase, so uniqueness is case-insensitive; the format and bio length
+  are also database CHECK constraints.
+- **Rate limiting** uses Better Auth's database storage (5 attempts per minute on sign-in, sign-up,
+  and password change), enabled in production.
+- **Appearance** is saved to the profile and applied on other devices after sign-in.
+- **Password change** revokes other sessions and confirms via a URL parameter, because the rotated
+  session cookie re-renders the page and would discard client-side form state.
+
 ## Milestone log
 
 ### M0 — Workspace and tooling (complete)
@@ -117,8 +136,29 @@ override, persistence, and keyboard control; navigation state; skip link; 404; r
 Taste-skill lint: 0 FAIL. Inspector on `/settings`: 0 FAIL, 2 WARN (empty canvas on a one-section
 page, expected until more settings exist).
 
+### M2 — Authentication and profiles (complete)
+
+- Email and password sign-up and sign-in; optional GitHub OAuth when configured; sign-out.
+- Onboarding: username (suggested from the name) and timezone (detected from the browser).
+- Settings: profile (name, username, bio, timezone), appearance synced to the account, password
+  change, sign-out. Profile page with identity, bio, and member-since date.
+- Sidebar shows the signed-in person with a stable identity tint.
+- Test infrastructure: Vitest `unit` and `integration` projects; integration and E2E runs migrate
+  and empty the `_test` database; E2E creates a fresh account per test through Better Auth's API.
+
+Verified: 45 unit tests; 10 integration tests (case-insensitive and concurrent username claims,
+CHECK constraints with the application bypassed, transactional rollback, scoped updates); 97 E2E
+tests on desktop and mobile, stable across three consecutive runs (sign-up through onboarding,
+protected-route round trip, wrong password, duplicate email and username, open-redirect guard,
+incomplete account sent to onboarding, profile edit, password change, sign-out, appearance synced
+to a second browser, axe scans of every public and signed-in page in both themes). Taste-skill
+lint: 0 FAIL.
+
 ## Known limitations
 
-- Phase 1 has no email delivery, so there is no email verification or password reset.
+- Phase 1 has no email delivery, so there is no email verification or password reset. Sign-up
+  reveals whether an email is already registered; acceptable for invite-only groups of friends,
+  to revisit before public sign-up.
+- Accounts cannot yet be deleted from the UI.
 - ESLint 9 is end-of-life upstream (see dependency choices).
 - No CI pipeline yet; checks run locally.

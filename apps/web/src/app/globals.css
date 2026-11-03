@@ -195,6 +195,16 @@
   }
 }
 
+/* Identity tints: pale, same hue for every appearance of a person; never used as data colour. */
+.avatar {
+  background-color: oklch(0.92 0.04 var(--avatar-hue));
+  color: oklch(0.36 0.09 var(--avatar-hue));
+}
+.dark .avatar {
+  background-color: oklch(0.34 0.05 var(--avatar-hue));
+  color: oklch(0.9 0.06 var(--avatar-hue));
+}
+
 @utility tabular {
   font-variant-numeric: tabular-nums;
 }

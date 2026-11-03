@@ -4,6 +4,7 @@ import { Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BranchWordmark } from "@/components/brand/branch-mark";
+import { Avatar } from "@/components/user/avatar";
 import { cn } from "@/lib/utils";
 import { isActivePath, primaryNav, type NavItem } from "./navigation";
 
@@ -26,7 +27,9 @@ function SidebarLink({ item, pathname }: { item: NavItem; pathname: string }) {
   );
 }
 
-export function Sidebar({ className }: { className?: string }) {
+export type ShellViewer = { id: string; name: string; username: string };
+
+export function Sidebar({ viewer, className }: { viewer: ShellViewer; className?: string }) {
   const pathname = usePathname();
   return (
     <aside
@@ -48,6 +51,13 @@ export function Sidebar({ className }: { className?: string }) {
         item={{ href: "/settings", label: "Settings", icon: Settings }}
         pathname={pathname}
       />
+      <div className="mt-3 flex items-center gap-2.5 border-t border-line px-2.5 pt-4">
+        <Avatar userId={viewer.id} name={viewer.name} />
+        <div className="min-w-0 leading-4">
+          <p className="truncate font-medium text-ink">{viewer.name}</p>
+          <p className="truncate text-xs text-ink-muted">@{viewer.username}</p>
+        </div>
+      </div>
     </aside>
   );
 }

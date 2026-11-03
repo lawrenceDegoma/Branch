@@ -1,8 +1,12 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { BranchMark } from "@/components/brand/branch-mark";
 import { buttonVariants } from "@/components/ui/button";
+import { getSession } from "@/modules/auth/session";
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  if (await getSession()) redirect("/home");
+
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col justify-center gap-6 px-6 py-16">
       <BranchMark className="size-10" />
@@ -14,9 +18,14 @@ export default function LandingPage() {
           own pace.
         </p>
       </div>
-      <Link href="/home" className={buttonVariants({ size: "lg", className: "self-start" })}>
-        Open Branch
-      </Link>
+      <div className="flex flex-wrap gap-3">
+        <Link href="/sign-up" className={buttonVariants({ size: "lg" })}>
+          Create account
+        </Link>
+        <Link href="/sign-in" className={buttonVariants({ size: "lg", variant: "outline" })}>
+          Sign in
+        </Link>
+      </div>
     </main>
   );
 }

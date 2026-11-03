@@ -23,7 +23,7 @@ not affiliated with LeetCode or NeetCode.
 
 ```bash
 pnpm install                 # installs dependencies and generates the Prisma client
-cp .env.example .env         # local defaults work with the Docker database as-is
+cp .env.example .env         # then set BETTER_AUTH_SECRET (see below)
 pnpm db:up                   # starts PostgreSQL 18 and waits until it is healthy
 pnpm db:migrate              # applies migrations to the development database
 pnpm dev                     # http://localhost:3000
@@ -36,10 +36,13 @@ pnpm dev                     # http://localhost:3000
 All configuration lives in a single `.env` at the repository root (never committed). Every variable
 is server-only.
 
-| Variable            | Required                  | Purpose                                                                   |
-| ------------------- | ------------------------- | ------------------------------------------------------------------------- |
-| `DATABASE_URL`      | Yes                       | PostgreSQL connection string for the app and Prisma CLI.                  |
-| `TEST_DATABASE_URL` | For E2E/integration tests | Disposable database used by automated tests. Never point it at real data. |
+| Variable                                    | Required                  | Purpose                                                                                                         |
+| ------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                              | Yes                       | PostgreSQL connection string for the app and Prisma CLI.                                                        |
+| `TEST_DATABASE_URL`                         | For E2E/integration tests | Disposable database used by automated tests. Never point it at real data.                                       |
+| `BETTER_AUTH_SECRET`                        | Yes                       | Signs sessions. At least 32 characters: `openssl rand -base64 32`.                                              |
+| `BETTER_AUTH_URL`                           | Yes                       | Public origin of the app, e.g. `http://localhost:3000`.                                                         |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | No (set both or neither)  | Enables "Continue with GitHub". Create an OAuth app with callback `<BETTER_AUTH_URL>/api/auth/callback/github`. |
 
 The server validates its environment at startup and reports invalid variable names without echoing
 their values.
@@ -56,9 +59,10 @@ Run from the repository root.
 | `pnpm typecheck`         | Strict TypeScript across all packages                          |
 | `pnpm lint`              | ESLint across all packages                                     |
 | `pnpm format`            | Format with Prettier (`format:check` verifies only)            |
-| `pnpm test`              | Unit tests (Vitest)                                            |
+| `pnpm test`              | Unit tests (Vitest, no database)                               |
+| `pnpm test:integration`  | Service and database tests against `TEST_DATABASE_URL`         |
 | `pnpm test:e2e`          | Browser tests (Playwright, desktop + mobile, uses the test DB) |
-| `pnpm check`             | Typecheck, lint, format check, and unit tests                  |
+| `pnpm check`             | Typecheck, lint, format check, unit and integration tests      |
 | `pnpm db:up` / `db:down` | Start / stop local PostgreSQL                                  |
 | `pnpm db:migrate`        | Create and apply a migration in development                    |
 | `pnpm db:deploy`         | Apply committed migrations (production/CI)                     |
@@ -66,7 +70,12 @@ Run from the repository root.
 | `pnpm db:generate`       | Regenerate the Prisma client                                   |
 | `pnpm db:studio`         | Browse data in Prisma Studio                                   |
 
-First-time E2E setup: `pnpm --filter @branch/web exec playwright install chromium`.
+First-time E2E setup: `pnpm --filter @branch/web exec playwright install chromium`. Integration and
+E2E runs migrate and empty the test database themselves; they refuse to touch a database whose name
+does not end in `_test`.
+
+After editing `packages/database/prisma/schema.prisma`, run `pnpm db:migrate` (it regenerates the
+client; Prisma 7 no longer does this automatically).
 
 ## Repository layout
 

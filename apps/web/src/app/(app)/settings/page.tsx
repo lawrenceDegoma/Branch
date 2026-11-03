@@ -1,28 +1,71 @@
+import { SettingsSection } from "@/components/settings/settings-section";
 import { PageHeader } from "@/components/shell/page-header";
 import { ThemeSelect } from "@/components/theme/theme-select";
+import { Button } from "@/components/ui/button";
+import { hasPasswordAccount } from "@/modules/auth/accounts";
+import { signOutAction } from "@/modules/auth/actions";
+import { requireViewer } from "@/modules/auth/session";
+import { listTimeZones } from "@/modules/profile/timezone";
+import { PasswordForm } from "./password-form";
+import { ProfileForm } from "./profile-form";
 
 export const metadata = { title: "Settings" };
 
-export default function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ password?: string }>;
+}) {
+  const { user, profile } = await requireViewer();
+  const passwordUpdated = (await searchParams).password === "updated";
+  const canChangePassword = await hasPasswordAccount(user.id);
+
   return (
-    <>
+    <div className="max-w-4xl">
       <PageHeader title="Settings" />
-      <section
-        aria-labelledby="appearance-heading"
-        className="grid max-w-4xl gap-4 md:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] md:gap-8"
+      <SettingsSection
+        id="profile"
+        title="Profile"
+        description="How you appear to people in your groups."
       >
-        <div>
-          <h2 id="appearance-heading" className="text-base font-medium">
-            Appearance
-          </h2>
-          <p className="mt-1 text-ink-muted">
-            System matches your device and switches with it. Saved on this device.
-          </p>
+        <ProfileForm
+          profile={{
+            name: user.name,
+            username: profile.username,
+            bio: profile.bio ?? "",
+            timezone: profile.timezone,
+          }}
+          zones={listTimeZones()}
+        />
+      </SettingsSection>
+      <SettingsSection
+        id="appearance"
+        title="Appearance"
+        description="System follows your device. Your choice is saved to your account."
+      >
+        <ThemeSelect />
+      </SettingsSection>
+      <SettingsSection id="account" title="Account" description={`Signed in as ${user.email}.`}>
+        <div className="flex flex-col gap-6">
+          {passwordUpdated ? (
+            <p role="status" className="rounded-[10px] bg-positive-soft px-3 py-2.5 text-ink">
+              Password updated. Other devices have been signed out.
+            </p>
+          ) : null}
+          {canChangePassword ? (
+            <PasswordForm />
+          ) : (
+            <p className="text-ink-muted">
+              You sign in with GitHub, so there&apos;s no password to change.
+            </p>
+          )}
+          <form action={signOutAction} className="flex justify-end border-t border-line pt-4">
+            <Button type="submit" variant="ghost">
+              Sign out
+            </Button>
+          </form>
         </div>
-        <div className="rounded-xl bg-surface p-4">
-          <ThemeSelect />
-        </div>
-      </section>
-    </>
+      </SettingsSection>
+    </div>
   );
 }

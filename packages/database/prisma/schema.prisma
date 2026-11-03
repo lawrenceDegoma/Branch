@@ -1,5 +1,6 @@
 // Branch database schema.
 // Models are added milestone by milestone; see README.md for migration commands.
+// Constraints Prisma cannot express (CHECK, partial unique indexes) live in the migration SQL.
 
 generator client {
   provider     = "prisma-client"
@@ -9,4 +10,111 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------------------------
+// Authentication (Better Auth 1.7). Generated with `npx auth@1.7.15 generate`; keep the shape in
+// sync when upgrading Better Auth. Domain data never goes on these models.
+// ---------------------------------------------------------------------------------------------
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  profile       Profile?
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model RateLimit {
+  id          String @id
+  key         String
+  count       Int
+  lastRequest BigInt
+
+  @@unique([key])
+  @@map("rateLimit")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Profiles
+// ---------------------------------------------------------------------------------------------
+
+enum Appearance {
+  SYSTEM
+  LIGHT
+  DARK
+}
+
+/// Branch-owned profile, created during onboarding. A signed-in user without one is sent to
+/// onboarding before using the app.
+model Profile {
+  userId     String     @id
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Lowercase handle, 3-30 characters (CHECK constraint in migration).
+  username   String     @unique
+  /// At most 280 characters (CHECK constraint in migration).
+  bio        String?
+  /// IANA timezone name, validated by the application.
+  timezone   String
+  appearance Appearance @default(SYSTEM)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@map("profile")
 }

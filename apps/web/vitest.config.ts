@@ -1,4 +1,9 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { defineConfig } from "vitest/config";
+
+const rootEnvFile = path.resolve(import.meta.dirname, "../../.env");
+if (existsSync(rootEnvFile)) process.loadEnvFile(rootEnvFile);
 
 export default defineConfig({
   resolve: {
@@ -7,7 +12,28 @@ export default defineConfig({
     alias: { "server-only": new URL("./src/test/server-only-stub.ts", import.meta.url).pathname },
   },
   test: {
-    include: ["src/**/*.test.{ts,tsx}"],
     environment: "node",
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "unit",
+          include: ["src/**/*.test.{ts,tsx}"],
+          exclude: ["src/**/*.int.test.ts"],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "integration",
+          include: ["src/**/*.int.test.ts"],
+          globalSetup: ["./src/test/integration-global-setup.ts"],
+          setupFiles: ["./src/test/integration-setup.ts"],
+          // Tests share one database; run files one at a time.
+          fileParallelism: false,
+          env: { DATABASE_URL: process.env.TEST_DATABASE_URL ?? "" },
+        },
+      },
+    ],
   },
 });

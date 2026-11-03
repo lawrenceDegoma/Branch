@@ -1,10 +1,25 @@
 import "server-only";
 import { z } from "zod";
 
-const serverEnvSchema = z.object({
-  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
-});
+const optionalSecret = z
+  .string()
+  .trim()
+  .transform((value) => value || undefined)
+  .optional();
+
+const serverEnvSchema = z
+  .object({
+    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
+    BETTER_AUTH_SECRET: z.string().min(32, "must be at least 32 characters"),
+    BETTER_AUTH_URL: z.url({ protocol: /^https?$/ }),
+    GITHUB_CLIENT_ID: optionalSecret,
+    GITHUB_CLIENT_SECRET: optionalSecret,
+  })
+  .refine((env) => !env.GITHUB_CLIENT_ID === !env.GITHUB_CLIENT_SECRET, {
+    message: "set both or neither",
+    path: ["GITHUB_CLIENT_ID"],
+  });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
 

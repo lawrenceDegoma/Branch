@@ -1,12 +1,12 @@
 import { MobileHeader } from "./mobile-header";
 import { MobileNav } from "./mobile-nav";
-import { Sidebar } from "./sidebar";
+import { Sidebar, type ShellViewer } from "./sidebar";
 
 /**
  * Desktop: labelled sidebar on the page ground beside a fluid canvas.
  * Below 1024px: a compact header and a bottom bar with the primary destinations.
  */
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ viewer, children }: { viewer: ShellViewer; children: React.ReactNode }) {
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[var(--sidebar-width)_minmax(0,1fr)]">
       <a
@@ -15,7 +15,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       >
         Skip to content
       </a>
-      <Sidebar className="hidden lg:flex" />
+      <Sidebar viewer={viewer} className="hidden lg:flex" />
       <div className="flex min-w-0 flex-col">
         <MobileHeader className="lg:hidden" />
         <main

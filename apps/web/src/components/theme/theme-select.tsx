@@ -2,9 +2,13 @@
 
 import { Monitor, Moon, Sun, type LucideIcon } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useTransition } from "react";
 import { useMounted } from "@/hooks/use-mounted";
+import { saveAppearanceAction } from "@/modules/profile/actions";
 
-const options: { value: "system" | "light" | "dark"; label: string; icon: LucideIcon }[] = [
+type ThemeValue = "system" | "light" | "dark";
+
+const options: { value: ThemeValue; label: string; icon: LucideIcon }[] = [
   { value: "system", label: "System", icon: Monitor },
   { value: "light", label: "Light", icon: Sun },
   { value: "dark", label: "Dark", icon: Moon },
@@ -14,6 +18,12 @@ export function ThemeSelect() {
   const { theme, setTheme } = useTheme();
   // The stored theme is only known in the browser; render no selection until hydrated.
   const mounted = useMounted();
+  const [, startTransition] = useTransition();
+
+  function choose(value: ThemeValue) {
+    setTheme(value);
+    startTransition(() => saveAppearanceAction(value));
+  }
 
   return (
     <fieldset>
@@ -29,7 +39,7 @@ export function ThemeSelect() {
               name="theme"
               value={value}
               checked={mounted && theme === value}
-              onChange={() => setTheme(value)}
+              onChange={() => choose(value)}
               className="sr-only"
             />
             <Icon aria-hidden="true" className="size-4" strokeWidth={1.75} />
