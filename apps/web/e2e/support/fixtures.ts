@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { prisma } from "@branch/database";
-import { test as base, expect, type APIRequestContext } from "@playwright/test";
+import { test as base, expect, type APIRequestContext, type Browser } from "@playwright/test";
 
 export type TestAccount = {
   id: string;
@@ -51,6 +51,33 @@ export async function signInViaApi(
     headers: { Origin: baseURL },
   });
   expect(response.ok(), await response.text()).toBe(true);
+}
+
+/** Creates a group directly in the database with `adminId` as admin and optional members. */
+export async function createGroupInDb(
+  adminId: string,
+  name = "Study crew",
+  memberIds: string[] = [],
+) {
+  return prisma.group.create({
+    data: {
+      name,
+      timezone: "UTC",
+      memberships: {
+        create: [
+          { userId: adminId, role: "ADMIN" as const },
+          ...memberIds.map((userId) => ({ userId, role: "MEMBER" as const })),
+        ],
+      },
+    },
+  });
+}
+
+/** A second signed-in person in their own browser context. */
+export async function anotherUser(browser: Browser, baseURL: string, prefix = "friend") {
+  const context = await browser.newContext({ baseURL });
+  const account = await signUpViaApi(context.request, baseURL, newAccountDetails(prefix));
+  return { context, page: await context.newPage(), account };
 }
 
 /** `viewer`: a fresh, onboarded account signed in on the test's page. */

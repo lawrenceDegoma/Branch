@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 // Buttons are pills. The primary action is inverted (light on dark, dark on light); the brand
 // orange is reserved for progress data and never fills a button.
-const buttonVariants = cva(
+const buttonStyles = cva(
   "group/button inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full border border-transparent text-sm font-medium whitespace-nowrap select-none transition-[background-color,border-color,color,transform] duration-(--duration-fast) ease-(--ease-out) outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:not-aria-[haspopup]:scale-[0.98] disabled:pointer-events-none disabled:opacity-60 aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
@@ -32,16 +32,21 @@ const buttonVariants = cva(
   },
 );
 
+/** Button classes, merged so variant colours override the base (also used to style links). */
+function buttonVariants(props?: Parameters<typeof buttonStyles>[0]) {
+  return cn(buttonStyles(props));
+}
+
 function Button({
   className,
   variant = "default",
   size = "default",
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: ButtonPrimitive.Props & VariantProps<typeof buttonStyles>) {
   return (
     <ButtonPrimitive
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(buttonStyles({ variant, size, className }))}
       {...props}
     />
   );

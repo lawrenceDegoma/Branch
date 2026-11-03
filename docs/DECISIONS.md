@@ -123,6 +123,26 @@ graphic. Re-check after changing any token.
 - **Deletion:** removing a user cascades their memberships, profile, and completions, and nulls
   authorship fields; a roadmap version used by any plan cannot be deleted.
 
+## Groups and invites
+
+- **Privacy:** non-members get a 404 (with a real 404 status) for group pages, settings, and every
+  group action; members get a 404 for admin-only pages and a clear "only the admin" message for
+  admin-only actions. Malformed IDs are treated as not found.
+- **Loading boundaries:** a route-level `loading.tsx` makes Next stream with status 200 before the
+  page can call `notFound()`, so only `home/` has one. Pages that can 404 render fully first.
+- **Invites:** 256-bit random tokens, stored only as SHA-256 hashes, so a link is shown once when
+  created (copy it then). Expiry of 1, 7, or 30 days; optional use limit of 1, 5, 10, or 25; can be
+  turned off. Joining is idempotent for existing members, and claiming a use is a single
+  conditional update, so a limited link cannot be over-used by concurrent joins. Admins can create
+  at most 20 links per group per hour. Invite pages are `noindex`.
+- **Admin role:** transfer demotes the current admin and promotes the target in one transaction,
+  re-checking the role inside it, so concurrent transfers still leave exactly one admin. The admin
+  cannot leave or be removed; they transfer first, or delete the group if they are the only
+  member.
+- **Audit:** group creation and updates, joins, leaves, removals, admin transfers, and invite
+  creation and revocation are recorded and shown to the admin as "Admin activity". Deleting a group
+  removes its audit trail with it, so deletion is also written to the server log.
+
 ## Milestone log
 
 ### M0 — Workspace and tooling (complete)
@@ -196,11 +216,31 @@ The seed catalog lists problems from memory of their public LeetCode identifiers
 and difficulties before any public launch. Curated NeetCode 150 / Blind 75 / Grind 75 lists are
 drafted for review in M5.
 
+### M4 — Groups, membership, invites, and admin (complete)
+
+- Groups list, create group, group page with members, and admin settings (details, invite links,
+  member management, admin activity, delete group).
+- Invite landing page for signed-out and signed-in visitors; new users sign up, finish onboarding,
+  and return to the invite to join.
+- Leave group, remove member, and transfer admin behind accessible confirmation dialogs; delete
+  requires typing the group's name.
+- Fixed: link-styled outline buttons lost their border because their classes were not merged.
+
+Verified: 51 unit tests; 50 integration tests, including 19 for groups (privacy for non-members
+and members, hashed tokens, invite states, concurrent joins on a single-use link, cross-group
+revocation, invite rate limit, leave/remove/transfer rules, racing transfers keeping one admin,
+delete confirmation and cascade); 121 E2E tests, stable across consecutive runs, including two
+friends joining through an invite link from sign-up, 404 status for non-members and for members on
+admin pages, removal, transfer, leaving, deletion, a turned-off link, and axe scans of every group
+page and an open dialog in both themes. Taste-skill lint: 0 FAIL.
+
 ## Known limitations
 
 - Phase 1 has no email delivery, so there is no email verification or password reset. Sign-up
   reveals whether an email is already registered; acceptable for invite-only groups of friends,
   to revisit before public sign-up.
 - Accounts cannot yet be deleted from the UI.
+- Other people's profile pages don't exist yet; members see each other's name and username in the
+  group's member list only.
 - ESLint 9 is end-of-life upstream (see dependency choices).
 - No CI pipeline yet; checks run locally.

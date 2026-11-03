@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
-import { expect, signUpViaApi, test } from "./support/fixtures";
+import { createGroupInDb, expect, signUpViaApi, test } from "./support/fixtures";
 
 const publicRoutes = ["/", "/sign-in", "/sign-up", "/missing-page"];
 const appRoutes = ["/home", "/roadmaps", "/groups", "/profile", "/settings"];
@@ -33,6 +33,31 @@ for (const colorScheme of ["dark", "light"] as const) {
         await expectNoViolations(page);
       });
     }
+
+    test("group pages have no detectable WCAG A/AA violations", async ({ page, viewer }) => {
+      const group = await createGroupInDb(viewer.id, "Accessible crew");
+      for (const path of [
+        "/groups",
+        "/groups/new",
+        `/groups/${group.id}`,
+        `/groups/${group.id}/settings`,
+      ]) {
+        await page.goto(path);
+        await expectNoViolations(page);
+      }
+      // An open confirmation dialog.
+      await page.getByRole("button", { name: "Create link" }).click();
+      await expect(page.getByLabel("Invite link", { exact: true })).toBeVisible();
+      await expectNoViolations(page);
+      await page.getByRole("button", { name: "Turn off" }).click();
+      await expect(page.getByRole("alertdialog")).toBeVisible();
+      // Measure contrast after the dialog has finished fading in.
+      await page.waitForFunction(() => document.getAnimations().length === 0);
+      const results = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .analyze();
+      expect(results.violations).toEqual([]);
+    });
 
     test("/onboarding has no detectable WCAG A/AA violations", async ({ page, baseURL }) => {
       await signUpViaApi(page.context().request, baseURL!, undefined, { onboard: false });

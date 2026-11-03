@@ -12,8 +12,8 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 | M1 Design system and app shell | Done |
 | M2 Authentication and profiles | Done |
 | M3 Domain schema and seed data | Done |
-| M4 Groups, membership, invites, admin | **Next** |
-| M5 Roadmaps (curated, custom, versions) | Planned |
+| M4 Groups, membership, invites, admin | Done |
+| M5 Roadmaps (curated, custom, versions) | **Next** |
 | M6 Group plans and weekly schedules | Planned |
 | M7 Progress, completion, Home, branch graph | Planned |
 | M8 E2E journeys, accessibility pass, docs | Planned |
@@ -28,8 +28,11 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 - **Data invariants enforced by the database:** one admin per group, one active plan per group, one draft per roadmap, one completion per user and problem, published roadmap versions immutable (triggers), weekly assignments only from the plan's own version (composite foreign keys). Services should translate these violations into friendly errors, not re-implement them.
 - **Seed and catalog:** `pnpm db:seed` (idempotent) loads `packages/database/prisma/data/` through the validated contracts in `@branch/shared/catalog` and the importer in `@branch/database/catalog-import`. Dev accounts: `ada@example.test` / `grace@example.test`, password `branch-dev-password`.
 - **Authorization:** every app page and server action starts from `requireViewer()` (`apps/web/src/modules/auth/session.ts`). `src/proxy.ts` is an optimistic cookie check only. Never accept user IDs from the client. Return paths go through `safeNextPath()`.
+- **Private resources return 404.** Services throw `NotFoundError` for non-members and `ForbiddenError` for members lacking a role; pages wrap reads in `orNotFound()` so both render the 404 page with a real 404 status. Never put a route-level `loading.tsx` above a page that can 404 (a Suspense boundary starts streaming with status 200); `home/` is the only one.
+- **Group authorization** lives in `modules/groups/access.ts` (`requireMembership`, `requireAdmin`). Every group-scoped service function calls one of them first.
 - **Module shape:** `apps/web/src/modules/<domain>/` holds `schemas.ts` (Zod), `service.ts` (server-only domain logic and authorization), `actions.ts` (server actions returning `FormState`), and colocated `*.test.ts` / `*.int.test.ts`.
-- **Tests:** unit tests need no database; `*.int.test.ts` run against `TEST_DATABASE_URL`, which is reset before each test; E2E creates a fresh account per test through the `viewer` fixture (`apps/web/e2e/support/fixtures.ts`). The reset helper refuses any database not ending in `_test`.
+- **UI pieces to reuse:** `ConfirmAction` (dialog that runs a server action), `CopyField`, `FormField`, `SettingsSection`, `MemberList`. Style links as buttons with `buttonVariants()` (it merges classes so variants override the base).
+- **Tests:** unit tests need no database; `*.int.test.ts` run against `TEST_DATABASE_URL`, which is reset before each test; E2E creates a fresh account per test through the `viewer` fixture, with `anotherUser()` and `createGroupInDb()` for multi-person scenarios (`apps/web/e2e/support/fixtures.ts`). Scope `alert`/`status` locators to `main` (Next's route announcer is also an alert), and wait for a hydration signal before clicking client controls. The reset helper refuses any database not ending in `_test`.
 - **Design system:** tokens in `apps/web/src/app/globals.css`. Orange marks progress data, the logo, and focus only; never buttons, tabs, or nav. The primary action is an inverted pill. Elevation is a lightness step, not borders or shadows. Every text colour must hold 4.5:1 and control outlines 3:1 in both themes.
 - **Taste skill** (`.claude/skills/design-taste-frontend`, pinned in `skills-lock.json`): use only its app-screen guidance and `lint.mjs --app` / `inspect.mjs --app` against local pages. Do not run `assets.mjs`, follow its gallery links, or adopt its CDN libraries. Where it conflicts with the PRD's restraint, the PRD wins. Its security-scan flags were reviewed and are recorded in `docs/DECISIONS.md`.
 - **21st.dev:** visual reference only; no API key or MCP.

@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma, type Profile } from "@branch/database";
-import { DomainError, isUniqueViolation } from "@/lib/errors";
+import { isUniqueViolation } from "@/lib/db-errors";
+import { DomainError } from "@/lib/errors";
 import type { AppearanceValue, OnboardingInput, ProfileUpdateInput } from "./schemas";
 
 // Every function here acts on the caller's own profile; `userId` must come from the session.

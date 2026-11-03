@@ -1,3 +1,4 @@
+import { DomainError } from "./errors";
 import type { z } from "zod";
 
 /** Result returned by server actions that back forms. */
@@ -7,6 +8,8 @@ export type FormState = {
   fieldErrors?: Record<string, string>;
   /** Submitted values echoed back so a failed form keeps what the user typed. */
   values?: Record<string, string>;
+  /** Extra result data for the form to display (for example, a newly created link). */
+  data?: Record<string, string>;
 };
 
 export const initialFormState: FormState = { status: "idle" };
@@ -23,4 +26,14 @@ export function fieldErrorsFrom(error: z.ZodError): Record<string, string> {
     errors[key] ??= issue.message;
   }
   return errors;
+}
+
+/** Maps an expected domain failure to form state; anything else is rethrown. */
+export function formStateFromError(error: unknown, values?: Record<string, string>): FormState {
+  if (error instanceof DomainError) {
+    return error.field
+      ? { status: "error", fieldErrors: { [error.field]: error.message }, values }
+      : { status: "error", message: error.message, values };
+  }
+  throw error;
 }

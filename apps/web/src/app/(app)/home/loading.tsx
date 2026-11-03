@@ -1,3 +1,5 @@
+// Route-level loading UI only where the page cannot 404: a Suspense boundary starts streaming
+// with a 200 status, so pages that call notFound() (groups, roadmaps) must not sit under one.
 import { Skeleton } from "@/components/states/skeleton";
 
 export default function Loading() {

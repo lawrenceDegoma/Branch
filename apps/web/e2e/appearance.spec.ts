@@ -20,6 +20,8 @@ test.describe("appearance", () => {
     await page.emulateMedia({ colorScheme: "dark" });
     await page.goto("/settings");
     const html = page.locator("html");
+    // The selection renders after hydration; wait for it so the click isn't lost.
+    await expect(page.getByRole("radio", { name: "System" })).toBeChecked();
 
     await page.locator("label", { hasText: "Light" }).click();
     await expect(page.getByRole("radio", { name: "Light" })).toBeChecked();
@@ -41,6 +43,7 @@ test.describe("appearance", () => {
   }) => {
     await page.emulateMedia({ colorScheme: "light" });
     await page.goto("/settings");
+    await expect(page.getByRole("radio", { name: "System" })).toBeChecked();
     await page.locator("label", { hasText: "Dark" }).click();
     await expect(page.locator("html")).toHaveClass(/\bdark\b/);
     // The save runs in the background; wait until the account reflects it.
@@ -64,6 +67,7 @@ test.describe("appearance", () => {
   test("the appearance control works from the keyboard", async ({ page, viewer: _viewer }) => {
     await page.emulateMedia({ colorScheme: "light" });
     await page.goto("/settings");
+    await expect(page.getByRole("radio", { name: "System" })).toBeChecked();
     await page.getByRole("radio", { name: "System" }).focus();
     await page.keyboard.press("ArrowRight");
     await expect(page.getByRole("radio", { name: "Light" })).toBeChecked();
