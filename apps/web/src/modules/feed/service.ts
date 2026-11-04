@@ -2,7 +2,7 @@ import "server-only";
 import { prisma } from "@branch/database";
 import { DomainError, ForbiddenError, NotFoundError } from "@/lib/errors";
 import { requireMembership } from "@/modules/groups/access";
-import { FEED_PAGE_SIZE, type CreatePostInput } from "./schemas";
+import { FEED_PAGE_SIZE, type CreatePostInput, type EditPostInput } from "./schemas";
 
 // Posts belong to exactly one group. A feed is the union of the viewer's groups, so every read
 // starts from the viewer's memberships, and every write checks membership of the post's group.
@@ -33,6 +33,7 @@ function toFeedItem(
   return {
     id: post.id,
     body: post.body,
+    spoiler: post.spoiler,
     createdAt: post.createdAt,
     editedAt: post.editedAt,
     author: { id: post.author.id, name: post.author.name, username: post.author.profile?.username },
@@ -132,18 +133,27 @@ export async function createPost(authorId: string, input: CreatePostInput, now =
       authorId,
       body: input.body,
       problemId: input.problemId,
+      spoiler: input.spoiler,
       createdAt: now,
     },
   });
 }
 
 /** Only the author edits. Non-members get NotFound; other members get Forbidden. */
-export async function editPost(viewerId: string, postId: string, body: string, now = new Date()) {
+export async function editPost(
+  viewerId: string,
+  postId: string,
+  input: EditPostInput,
+  now = new Date(),
+) {
   const found = await loadPostView(postId, viewerId);
   if (!found) throw new NotFoundError("We couldn't find that post.");
   if (found.post.authorId !== viewerId)
     throw new ForbiddenError("Only the author can edit a post.");
-  return prisma.post.update({ where: { id: postId }, data: { body, editedAt: now } });
+  return prisma.post.update({
+    where: { id: postId },
+    data: { body: input.body, spoiler: input.spoiler, editedAt: now },
+  });
 }
 
 /** The author, or the group's admin (recorded in the audit log), may delete a post. */

@@ -137,6 +137,53 @@ test.describe("feed", () => {
     await member.context.close();
   });
 
+  test("a spoiler post folds its highlighted code until a reader opens it", async ({
+    page,
+    viewer,
+    browser,
+    baseURL,
+  }) => {
+    const friend = await anotherUser(browser, baseURL!);
+    const group = await createGroupInDb(viewer.id, "Spoiler crew", [friend.account.id]);
+
+    await page.goto(`/groups/${group.id}`);
+    await ready(page);
+    const form = page.getByRole("form", { name: "New post" });
+    await form
+      .getByRole("textbox")
+      .fill("Got it in one pass:\n\n```python\nseen = {}\nreturn [seen[x], i]\n```");
+    await form.getByRole("checkbox", { name: "Contains spoilers" }).check();
+    await form.getByRole("button", { name: "Post" }).click();
+    await expect(form.getByRole("status")).toContainText("Posted.");
+    // The form is ready for the next post, unticked.
+    await expect(form.getByRole("checkbox", { name: "Contains spoilers" })).not.toBeChecked();
+
+    await friend.page.goto("/home");
+    const post = postWith(friend.page, "Got it in one pass");
+    const code = post.locator("pre");
+    await expect(post.getByText("Got it in one pass:")).toBeVisible();
+    await expect(code).toBeHidden();
+    await post.getByText("Show spoiler code").click();
+    await expect(code).toBeVisible();
+    await expect(code.locator(".hljs-keyword", { hasText: "return" })).toBeVisible();
+    await post.getByText("Hide spoiler code").click();
+    await expect(code).toBeHidden();
+    // By keyboard as well: the disclosure is a native control.
+    await post.locator("summary").focus();
+    await friend.page.keyboard.press("Enter");
+    await expect(code).toBeVisible();
+
+    // The author can take the mark off; the code then shows to everyone.
+    const mine = postWith(page, "Got it in one pass");
+    await mine.getByRole("button", { name: "Edit" }).click();
+    await mine.getByRole("checkbox", { name: "Contains spoilers" }).uncheck();
+    await mine.getByRole("button", { name: "Save" }).click();
+    await expect(mine.locator("details")).toHaveCount(0);
+    await friend.page.reload();
+    await expect(postWith(friend.page, "Got it in one pass").locator("pre")).toBeVisible();
+    await friend.context.close();
+  });
+
   test("hostile Markdown renders as inert text", async ({ page, viewer }) => {
     await createGroupInDb(viewer.id, "Safe crew");
     let dialogs = 0;

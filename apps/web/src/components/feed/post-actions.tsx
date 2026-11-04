@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { CheckboxField } from "@/components/forms/checkbox-field";
 import { ConfirmAction } from "@/components/forms/confirm-action";
 import { FormAlert } from "@/components/forms/form-alert";
 import { SubmitButton } from "@/components/forms/submit-button";
@@ -17,12 +18,14 @@ import { POST_BODY_MAX } from "@/modules/feed/schemas";
 export function EditablePostBody({
   postId,
   body,
+  spoiler,
   canEdit,
   canDelete,
   children,
 }: {
   postId: string;
   body: string;
+  spoiler: boolean;
   canEdit: boolean;
   canDelete: boolean;
   children: React.ReactNode;
@@ -57,6 +60,13 @@ export function EditablePostBody({
             {state.fieldErrors.body}
           </p>
         ) : null}
+        <CheckboxField
+          id={`${textareaId}-spoiler`}
+          name="spoiler"
+          label="Contains spoilers"
+          description="Code blocks stay folded until each reader opens them."
+          defaultChecked={state.values ? state.values.spoiler === "on" : spoiler}
+        />
         <div className="flex justify-end gap-2">
           <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(false)}>
             Cancel

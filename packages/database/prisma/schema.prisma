@@ -471,6 +471,8 @@ model Post {
   /// The problem the post is about, if any.
   problemId String?   @db.Uuid
   problem   Problem?  @relation(fields: [problemId], references: [id], onDelete: Restrict)
+  /// The author marked the post as containing spoilers: its code blocks render folded.
+  spoiler   Boolean   @default(false)
   createdAt DateTime  @default(now())
   editedAt  DateTime?
 

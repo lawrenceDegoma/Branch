@@ -71,10 +71,11 @@ export function PostCard({
       <EditablePostBody
         postId={post.id}
         body={post.body}
+        spoiler={post.spoiler}
         canEdit={post.canEdit}
         canDelete={post.canDelete}
       >
-        <Markdown>{post.body}</Markdown>
+        <Markdown spoiler={post.spoiler}>{post.body}</Markdown>
       </EditablePostBody>
     </article>
   );

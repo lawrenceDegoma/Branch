@@ -27,7 +27,7 @@ async function setup() {
 }
 
 const post = (authorId: string, groupId: string, body: string, at = NOW) =>
-  createPost(authorId, { groupId, body, problemId: null }, at);
+  createPost(authorId, { groupId, body, problemId: null, spoiler: false }, at);
 
 describe("feed visibility", () => {
   it("shows each person only the posts of groups they belong to", async () => {
@@ -82,7 +82,11 @@ describe("writing posts", () => {
   it("rejects a problem that doesn't exist", async () => {
     const { ada, study } = await setup();
     await expect(
-      createPost(ada.id, { groupId: study.id, body: "hi", problemId: crypto.randomUUID() }, NOW),
+      createPost(
+        ada.id,
+        { groupId: study.id, body: "hi", problemId: crypto.randomUUID(), spoiler: false },
+        NOW,
+      ),
     ).rejects.toMatchObject({ field: "problemId" });
   });
 });
@@ -91,10 +95,31 @@ describe("editing and deleting", () => {
   it("lets only the author edit, and hides the post from non-members", async () => {
     const { ada, grace, olu, study } = await setup();
     const created = await post(grace.id, study.id, "first draft");
-    await expect(editPost(ada.id, created.id, "hijacked")).rejects.toBeInstanceOf(ForbiddenError);
-    await expect(editPost(olu.id, created.id, "hijacked")).rejects.toBeInstanceOf(NotFoundError);
-    const edited = await editPost(grace.id, created.id, "second draft", later(5));
-    expect(edited).toMatchObject({ body: "second draft", editedAt: later(5) });
+    const hijack = { body: "hijacked", spoiler: false };
+    await expect(editPost(ada.id, created.id, hijack)).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(editPost(olu.id, created.id, hijack)).rejects.toBeInstanceOf(NotFoundError);
+    const edited = await editPost(
+      grace.id,
+      created.id,
+      { body: "second draft", spoiler: true },
+      later(5),
+    );
+    expect(edited).toMatchObject({ body: "second draft", spoiler: true, editedAt: later(5) });
+  });
+
+  it("keeps the spoiler mark on the post and in the feed", async () => {
+    const { ada, grace, study } = await setup();
+    await createPost(
+      grace.id,
+      { groupId: study.id, body: "```py\nreturn 1\n```", problemId: null, spoiler: true },
+      NOW,
+    );
+    await post(grace.id, study.id, "no spoilers here", later(1));
+    const { items } = await listFeed(ada.id);
+    expect(items.map((item) => [item.body, item.spoiler])).toEqual([
+      ["no spoilers here", false],
+      ["```py\nreturn 1\n```", true],
+    ]);
   });
 
   it("lets the author delete, and the admin remove with an audit record", async () => {

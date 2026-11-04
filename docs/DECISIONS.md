@@ -268,6 +268,19 @@ Feed rules:
   someone else's post is recorded in the group's audit log (`POST_REMOVED`). Deletion is a hard
   delete. Posts stay when their author leaves the group.
 - Posting is limited to 5 posts a minute per person (counted in Postgres, no extra service).
+- **Code highlighting** uses `rehype-highlight` (highlight.js grammars, its 37 common languages,
+  LeetCode's main ones included) rather than shiki, which the plan named: it runs synchronously
+  inside react-markdown and emits classes, not inline colours, so token colours are theme tokens
+  (`--code-*` in `globals.css`), each checked at 4.5:1 on the code background in both themes, and
+  never orange. Only fences that name a language are highlighted (guessing is unreliable on short
+  snippets); unknown languages stay plain (of LeetCode's languages, Scala, Dart, Elixir, Erlang,
+  and Racket aren't in the common set; adding a grammar is one import if anyone asks). Its `span`s are the only ones allowed through.
+- **Spoilers** are a post-level "Contains spoilers" mark (`post.spoiler`, migration
+  `post_spoiler`) that folds every code block behind a native `<details>` disclosure ("Show
+  spoiler code"), keeping the question around it readable: solutions are code. It works without
+  JavaScript and by keyboard. It is a courtesy, not access control: the code is in the page. Hints
+  written as prose aren't folded; per-block or inline spoilers can come later if people want them.
+  Comments (M12) reuse the same mark.
 - The body is 1-5000 characters and not only whitespace (CHECK `body ~ '\S'`; `btrim` alone keeps
   newlines).
 
@@ -509,6 +522,21 @@ checking the client ID and callback URL. Implicit account linking stays off for 
 
 Verified: 24 shared, 89 unit, 107 integration tests; 209 E2E passed (3 skipped by design);
 production build; taste-skill lint 0 FAIL on the shipped files.
+
+### M10 — Code highlighting and spoilers (complete)
+
+- `rehype-highlight` in `Markdown`, with `--code-keyword/string/number/title` tokens per theme and
+  comments in the faint ink.
+- `post.spoiler` (migration `post_spoiler`: one column, default false, so it can reach production
+  before the code). `Markdown spoiler` folds code blocks; the composer and the edit form have a
+  "Contains spoilers" checkbox (`CheckboxField`, shared with M11's setting).
+- Tests: Markdown unit tests (highlighting, plain fallbacks, folding); checkbox parsing; the mark
+  stored, edited, and returned in the feed (integration); an E2E journey (post with the mark, a
+  friend opens and closes the code by mouse and keyboard, the author removes the mark); axe scans
+  with every token colour and an open spoiler in both themes; 320px reflow with wide folded code.
+
+Verified: 24 shared, 94 unit, 108 integration tests; 211 E2E passed (3 skipped by design);
+production build; taste-skill lint 0 FAIL.
 
 ## Phase 1 summary
 

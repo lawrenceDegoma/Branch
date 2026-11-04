@@ -47,6 +47,12 @@
   --warning-ink: #92400e;
   --warning-soft: #fffbeb;
 
+  /* Code tokens, on --raised (each 4.5:1 or more). Never orange: that marks progress. */
+  --code-keyword: #7334c9;
+  --code-string: #1b6b3a;
+  --code-number: #1f4fb8;
+  --code-title: #0b6477;
+
   --focus: #d9480f;
   --overlay: rgb(22 24 28 / 0.4);
   --shadow-float: 0 8px 24px rgb(22 24 28 / 0.12), 0 1px 3px rgb(22 24 28 / 0.08);
@@ -90,6 +96,11 @@
   --negative-soft: #2c1a20;
   --warning-ink: #f5c26b;
   --warning-soft: #2e2615;
+
+  --code-keyword: #c9b3ff;
+  --code-string: #8fd9a8;
+  --code-number: #9cc2ff;
+  --code-title: #7fd4e3;
 
   --focus: #ff683b;
   --overlay: rgb(0 0 0 / 0.6);
@@ -255,6 +266,95 @@
   font-size: 0.8125rem;
   line-height: 1.25rem;
   overflow-wrap: normal;
+}
+/* Highlighted tokens (rehype-highlight's classes). Comments use the faint ink, diffs the status
+   colours; everything unlisted stays body ink. */
+.markdown .hljs-keyword,
+.markdown .hljs-selector-tag,
+.markdown .hljs-doctag,
+.markdown .hljs-template-tag {
+  color: var(--code-keyword);
+}
+.markdown .hljs-string,
+.markdown .hljs-regexp,
+.markdown .hljs-symbol,
+.markdown .hljs-char {
+  color: var(--code-string);
+}
+.markdown .hljs-number,
+.markdown .hljs-literal,
+.markdown .hljs-attr,
+.markdown .hljs-attribute,
+.markdown .hljs-property,
+.markdown .hljs-variable.constant_ {
+  color: var(--code-number);
+}
+.markdown .hljs-title,
+.markdown .hljs-built_in,
+.markdown .hljs-type,
+.markdown .hljs-name,
+.markdown .hljs-selector-class,
+.markdown .hljs-selector-id {
+  color: var(--code-title);
+}
+.markdown .hljs-comment,
+.markdown .hljs-quote {
+  color: var(--ink-faint);
+  font-style: italic;
+}
+.markdown .hljs-meta {
+  color: var(--ink-muted);
+}
+.markdown .hljs-addition {
+  color: var(--positive);
+}
+.markdown .hljs-deletion {
+  color: var(--negative);
+}
+.markdown .hljs-emphasis {
+  font-style: italic;
+}
+.markdown .hljs-strong {
+  font-weight: 600;
+}
+/* Spoiler code: a native disclosure on the code block's own surface. */
+.markdown .spoiler {
+  border-radius: var(--radius-inner);
+  background: var(--raised);
+}
+.markdown .spoiler > summary {
+  display: flex;
+  min-height: 2.5rem;
+  cursor: pointer;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: var(--radius-inner);
+  padding: 0.5rem 0.75rem;
+  font-weight: 500;
+  list-style: none;
+}
+.markdown .spoiler > summary::-webkit-details-marker {
+  display: none;
+}
+@media (pointer: coarse) {
+  .markdown .spoiler > summary {
+    min-height: 2.75rem;
+  }
+}
+.markdown .spoiler-chevron {
+  flex: none;
+  color: var(--ink-muted);
+  transition: rotate var(--duration-fast) var(--ease-out);
+}
+.markdown .spoiler[open] .spoiler-chevron {
+  rotate: 90deg;
+}
+.markdown .spoiler:not([open]) .spoiler-open,
+.markdown .spoiler[open] .spoiler-closed {
+  display: none;
+}
+.markdown .spoiler > pre {
+  padding-top: 0;
 }
 .markdown hr {
   border-color: var(--line);

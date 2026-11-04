@@ -165,12 +165,27 @@ for (const colorScheme of ["dark", "light"] as const) {
             editedAt: new Date(),
           },
           { groupId: group.id, authorId: viewer.id, body: "Week one done." },
+          {
+            groupId: group.id,
+            authorId: member.account.id,
+            body: "Every token colour:\n\n```python\n@cache\ndef f(s: str) -> int:\n    # note\n    return len(s) + 1 if s else None  # 'x'\n```\n\n```diff\n- old\n+ new\n```",
+          },
+          {
+            groupId: group.id,
+            authorId: member.account.id,
+            body: "My solution:\n\n```ts\nconst seen = new Set<number>();\n```",
+            spoiler: true,
+          },
         ],
       });
       for (const path of ["/home", `/home?group=${group.id}`, `/groups/${group.id}`]) {
         await page.goto(path);
         await expectNoViolations(page);
       }
+      // Spoiler code, opened.
+      await page.getByText("Show spoiler code").click();
+      await expect(page.getByText("new Set<number>()")).toBeVisible();
+      await expectNoViolations(page);
       // Editing in place, and a composer error.
       await page.waitForFunction(() => document.readyState === "complete");
       await page

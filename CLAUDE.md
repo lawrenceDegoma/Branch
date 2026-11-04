@@ -4,7 +4,7 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 
 ## Current status (updated 2026-11-03)
 
-**Phase 1 complete and soft-launched (Neon + Vercel). Phase 2 (social feed) approved 2026-11-04 and in progress; M9 done.** Phase 2 decisions are in `docs/DECISIONS.md` (Social feed); images (M13) are deferred by the owner. The Phase 1 plan was approved on 2026-11-03; decisions, dependency pins, and the per-milestone log live in `docs/DECISIONS.md`. Setup and commands are in `README.md`.
+**Phase 1 complete and soft-launched (Neon + Vercel). Phase 2 (social feed) approved 2026-11-04 and in progress; M9 and M10 done.** Phase 2 decisions are in `docs/DECISIONS.md` (Social feed); images (M13) are deferred by the owner. The Phase 1 plan was approved on 2026-11-03; decisions, dependency pins, and the per-milestone log live in `docs/DECISIONS.md`. Setup and commands are in `README.md`.
 
 | Milestone | Status |
 |---|---|
@@ -19,8 +19,8 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 | M8 E2E journeys, accessibility pass, docs | Done |
 | Soft launch: deploy guide (Neon + Vercel), password reset | Done |
 | M9 Feed and text posts | Done |
-| M10 Code highlighting and spoilers | Next |
-| M11 Automatic posts (opt-in) | Planned |
+| M10 Code highlighting and spoilers | Done |
+| M11 Automatic posts (opt-in) | Next |
 | M12 Reactions and comments | Planned |
 | M13 Images | Deferred (owner) |
 | M14 Privacy journeys, accessibility, docs | Planned |
@@ -31,7 +31,7 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 
 - **Checks before any milestone commit:** `pnpm check` (typecheck, lint, format, unit, integration), `pnpm build`, `pnpm test:e2e`. Requires `pnpm db:up`.
 - **Pinned versions:** TypeScript 6.0 (typescript-eslint caps below 6.1), Prisma 7.10 (npm `latest` is an 8.0 RC; Better Auth supports ≤7), ESLint 9 (Next's lint plugins). Do not bump these without checking compatibility.
-- **Prisma 7:** `pnpm db:migrate` regenerates the client; Prisma no longer does it on its own. Constraints Prisma can't express (CHECK, partial unique indexes, triggers) go in the migration SQL, with an integration test proving each one.
+- **Prisma 7:** `pnpm db:migrate` regenerates the client; Prisma no longer does it on its own. To name a new migration, run `pnpm exec prisma migrate dev --name <name>` then `pnpm exec prisma generate` in `packages/database` (the script passes extra arguments to `generate`, so `migrate dev` waits for a name). Constraints Prisma can't express (CHECK, partial unique indexes, triggers) go in the migration SQL, with an integration test proving each one.
 - **Data invariants enforced by the database:** one admin per group, one active plan per group, one draft per roadmap, one completion per user and problem, published roadmap versions immutable (triggers), weekly assignments only from the plan's own version (composite foreign keys). Services should translate these violations into friendly errors, not re-implement them.
 - **Production:** `docs/DEPLOY.md` (Neon Free + Vercel Hobby). Migrations run from the owner's machine with `DATABASE_URL=<direct> pnpm db:deploy` before pushing; curated data with `pnpm db:load-curated`; never `db:seed`. No email: password resets are owner-issued with `pnpm auth:reset-link -- <email>`, which writes a token in Better Auth's `reset-password:<token>` format (pinned by `e2e/auth.spec.ts`; recheck when upgrading Better Auth).
 - **Seed and catalog:** `pnpm db:seed` (idempotent) loads `packages/database/prisma/data/` through the validated contracts in `@branch/shared/catalog` and the importer in `@branch/database/catalog-import`. Dev accounts: `ada@example.test` / `grace@example.test`, password `branch-dev-password`.
@@ -42,7 +42,7 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 - **Dates and weeks:** use `@branch/shared/calendar`. Weeks are computed on calendar dates (`YYYY-MM-DD`) in the group's IANA timezone, never on instants, so DST can't shift them; week n starts `startDate + 7(n−1)`. Plan services accept a `now` argument so tests are deterministic. Schedule generation is `@branch/shared/schedule`, shared by the app and the seed.
 - **Progress** lives in `modules/progress/`: `setCompletion` is the only writer of completions (idempotent, `ON CONFLICT DO NOTHING`); progress is always derived from completions, never stored. Backlog/ahead/position rules are pure functions in `standing.ts`. Group views read only completions of problems assigned in the group's plan; keep it that way (approved privacy rule). Don't rank members.
 - **SQL CHECK constraints must handle NULL explicitly** (a CHECK that evaluates to NULL passes). Write `col IS NOT NULL AND ...` or `col IS NULL OR ...`, and add a test with the NULL case.
-- **Feed** lives in `modules/feed/`: a post belongs to one group; reads start from the viewer's memberships, writes check membership of the post's group (non-members 404, non-authors 403). Page by post ID (UUIDv7, `?before=`). Render user text only through `components/feed/markdown.tsx` (no raw HTML, no images, safe links); never `dangerouslySetInnerHTML`.
+- **Feed** lives in `modules/feed/`: a post belongs to one group; reads start from the viewer's memberships, writes check membership of the post's group (non-members 404, non-authors 403). Page by post ID (UUIDv7, `?before=`). Render user text only through `components/feed/markdown.tsx` (no raw HTML, no images, safe links; fenced code highlighted by class, coloured by `--code-*` tokens; `spoiler` folds code blocks); never `dangerouslySetInnerHTML`.
 - **Group authorization** lives in `modules/groups/access.ts` (`requireMembership`, `requireAdmin`). Every group-scoped service function calls one of them first.
 - **Module shape:** `apps/web/src/modules/<domain>/` holds `schemas.ts` (Zod), `service.ts` (server-only domain logic and authorization), `actions.ts` (server actions returning `FormState`), and colocated `*.test.ts` / `*.int.test.ts`.
 - **UI pieces to reuse:** `ConfirmAction` (dialog that runs a server action), `CopyField`, `FormField`, `SettingsSection`, `MemberList`, `ProblemRow` (with a `leading` slot for `CompletionToggle`), `ProgressBar`. Style links as buttons with `buttonVariants()` (it merges classes so variants override the base).
@@ -234,4 +234,4 @@ Prefer secure, simple code over speculative abstraction. Keep dependencies lean.
 
 ## Next task
 
-Continue Phase 2 with **M10** (code highlighting and spoilers), then M11, M12, M14, committing at the end of each milestone. Any milestone with a migration must be applied to production (`DATABASE_URL=<direct> pnpm db:deploy`, by the owner) before it is pushed. Do not start extension, analyzer, or chat work.
+Continue Phase 2 with **M11** (automatic posts, opt-in), then M12, M14, committing at the end of each milestone. Any milestone with a migration must be applied to production (`DATABASE_URL=<direct> pnpm db:deploy`, by the owner) before it is pushed. Do not start extension, analyzer, or chat work.

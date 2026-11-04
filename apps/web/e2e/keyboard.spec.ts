@@ -67,6 +67,14 @@ test.describe("reflow at 320px", () => {
         body: `See https://example.com/${"a-very-long-path-segment/".repeat(6)} and\n\n\`\`\`\n${"const wide = 1; ".repeat(12)}\n\`\`\`\n\n| column one | column two | column three | column four |\n|---|---|---|---|\n| 1 | 2 | 3 | 4 |`,
       },
     });
+    await prisma.post.create({
+      data: {
+        groupId: group.id,
+        authorId: viewer.id,
+        body: `Folded:\n\n\`\`\`python\n${"wide_name = 1; ".repeat(12)}\n\`\`\``,
+        spoiler: true,
+      },
+    });
     await page.goto("/roadmaps");
     await page.getByRole("link", { name: /^Patterns 150/ }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Patterns 150" })).toBeVisible();
@@ -84,6 +92,8 @@ test.describe("reflow at 320px", () => {
     for (const path of paths) {
       await page.goto(path);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      // Opened spoiler code scrolls inside its own block too.
+      if (path === "/home") await page.getByText("Show spoiler code").click();
       const overflow = await page.evaluate(
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
       );

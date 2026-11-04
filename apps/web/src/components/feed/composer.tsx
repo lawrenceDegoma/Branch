@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { CheckboxField } from "@/components/forms/checkbox-field";
 import { FormAlert } from "@/components/forms/form-alert";
 import { FormField } from "@/components/forms/form-field";
 import { SearchSelect } from "@/components/forms/search-select";
@@ -68,7 +69,12 @@ export function Composer({
         <FormField
           name="body"
           label={fixed ? `Post to ${group?.name ?? "this group"}` : "Message"}
-          description="Ask for help, share a tip, or reflect on a problem. Markdown works."
+          description={
+            <>
+              Ask for help, share a tip, or reflect on a problem. Markdown works, and{" "}
+              <code>```python</code> starts highlighted code.
+            </>
+          }
           error={state.fieldErrors?.body}
         >
           {(props) => (
@@ -97,6 +103,13 @@ export function Composer({
             )}
           </FormField>
         ) : null}
+        <CheckboxField
+          id="field-spoiler"
+          name="spoiler"
+          label="Contains spoilers"
+          description="Code blocks stay folded until each reader opens them."
+          defaultChecked={state.status === "error" && state.values?.spoiler === "on"}
+        />
       </div>
       <div className="flex justify-end">
         <SubmitButton pendingLabel="Posting…">Post</SubmitButton>

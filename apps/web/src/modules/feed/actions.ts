@@ -13,7 +13,7 @@ function refreshFeeds() {
 
 export async function createPostAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const { user } = await requireViewer();
-  const values = formValues(formData, ["groupId", "body", "problemId"]);
+  const values = formValues(formData, ["groupId", "body", "problemId", "spoiler"]);
   const parsed = createPostSchema.safeParse(values);
   if (!parsed.success)
     return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error), values };
@@ -34,12 +34,13 @@ export async function createPostAction(_prev: FormState, formData: FormData): Pr
 
 export async function editPostAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const { user } = await requireViewer();
-  const values = formValues(formData, ["postId", "body"]);
+  const values = formValues(formData, ["postId", "body", "spoiler"]);
   const parsed = editPostSchema.safeParse(values);
   if (!parsed.success)
     return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error), values };
   try {
-    await editPost(user.id, parsed.data.postId, parsed.data.body);
+    const { postId, ...input } = parsed.data;
+    await editPost(user.id, postId, input);
   } catch (error) {
     return formStateFromError(error, values);
   }
