@@ -314,6 +314,15 @@ Feed rules:
   as `COMMENT_REMOVED`). A deleted comment with replies becomes "Comment deleted." (text and
   author gone, CHECK-enforced), and goes entirely when its last reply does. Deleting a post takes
   its comments and reactions with it.
+- **Focus** (M14): nothing a person does leaves keyboard focus on the page body. `SubmitButton` is
+  `aria-disabled` while pending and ignores clicks, but is never natively disabled (a disabled
+  button drops focus; this applies to every form in the app). Leaving an edit form returns focus
+  to Edit, and the editor opens with the caret at the end. Comment and post forms keep focus on
+  their button while the fields clear. When an action removes the item holding its button
+  (deleting a post or comment, hiding a post), `ConfirmAction`'s `focusAfterRemoval` moves focus
+  to the section heading ("Activity", "Comments"), which is focusable for that reason. Deleting or
+  hiding a post from its own page returns to the group (`returnTo`, checked by `safeNextPath`),
+  since the page would otherwise become a 404.
 - The body is 1-5000 characters and not only whitespace (CHECK `body ~ '\S'`; `btrim` alone keeps
   newlines).
 
@@ -612,6 +621,42 @@ production build; taste-skill lint 0 FAIL.
 Verified: 24 shared, 94 unit, 132 integration tests; 223 E2E passed (3 skipped by design);
 production build; taste-skill lint 0 FAIL on the shipped files.
 
+### M14 — Privacy journeys, accessibility, and docs (complete)
+
+- Focus fixes above, found by probing where focus lands after each feed action (it fell to the
+  page body after editing, posting, commenting, and deleting). Deleting a post from its own page
+  no longer shows a 404.
+- PRD scenario coverage, end to end: 4 in `e2e/comments.spec.ts` (without the image); 5 in
+  `e2e/privacy.spec.ts` (outsider and former member across the feed, crafted filter and cursor
+  links, group pages, and post pages) and `modules/feed/privacy.int.test.ts` (every feed read and
+  write, as an outsider and as a former member, plus malformed IDs); 6 and 7 in
+  `e2e/sharing.spec.ts` (sharing off by default; one post through undo and redo, hiding, and two
+  tabs marking the same problem).
+- Keyboard: reactions, editing with focus return, commenting, the reply disclosure, and deletion
+  focus in `e2e/keyboard.spec.ts`; text spacing on posts and comments (WCAG 1.4.12).
+- README, deploy smoke test, and this log brought up to date.
+
+Verified: 24 shared, 94 unit, 135 integration tests; 230 E2E passed (4 skipped by design:
+desktop-only keyboard journeys); production build; taste-skill lint 0 FAIL.
+
+## Phase 2 summary
+
+Done when "members can post questions with code/images, react/reply, and see only authorized
+group activity", met except images, which the owner deferred (M13):
+
+- A unified feed across a person's groups with a group filter, cursor paging, and a post page;
+  Markdown posts with highlighted code and spoilers; opt-in automatic solve and milestone posts
+  that never duplicate; four reactions; two-level comments; author and admin edit and delete,
+  with admin removals audited; posting and commenting rate limits.
+- Privacy: every read starts from the viewer's memberships, every write checks membership of the
+  post's group, and anything else is a 404. Automatic posts go only to groups whose plan assigns
+  the problem.
+- Four migrations (`posts`, `post_spoiler`, `automatic_posts`, `reactions_comments`), each
+  additive and applied to production before its code was pushed.
+- Owner decisions still open: when to schedule images (M13; Vercel Blob was the recommendation),
+  and whether to add reporting or blocking before inviting people beyond friends. Phase 3 (the
+  LeetCode extension) starts only after the owner's approval.
+
 ## Phase 1 summary
 
 Done when "two test users can join one group, see synchronized assignments, and track independent
@@ -638,6 +683,8 @@ approval.
 - Two different problems solved at the same instant that together finish a week can both miss the
   milestone (each transaction may not see the other's completion); unmarking and re-marking one
   of them posts it. Rare with manual toggles.
+- After a deletion, focus moves to the section heading rather than to the next item. Member
+  removal and invite revocation (Phase 1) don't use `focusAfterRemoval` yet.
 - Reactions show counts, not who reacted. Comments have no reactions of their own. A thread shows
   its first 100 replies.
 - Redoing a solve restores automatic posts for active plans only; a milestone of an archived plan

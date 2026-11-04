@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { DomainError } from "@/lib/errors";
 import { fieldErrorsFrom, formStateFromError, formValues, type FormState } from "@/lib/form";
 import { errorContext, logger } from "@/lib/logger";
+import { safeNextPath } from "@/lib/redirect";
 import { requireViewer } from "@/modules/auth/session";
 import { createComment, deleteComment, editComment } from "./comments";
 import { setReaction } from "./reactions";
@@ -71,6 +73,9 @@ export async function deletePostAction(_prev: FormState, formData: FormData): Pr
     return formStateFromError(error);
   }
   refreshFeeds();
+  // From the post's own page, which no longer exists for the viewer.
+  const returnTo = safeNextPath(formData.get("returnTo"));
+  if (returnTo) redirect(returnTo);
   return { status: "success", message: "Post deleted." };
 }
 
@@ -84,6 +89,9 @@ export async function hidePostAction(_prev: FormState, formData: FormData): Prom
     return formStateFromError(error);
   }
   refreshFeeds();
+  // From the post's own page, which no longer exists for the viewer.
+  const returnTo = safeNextPath(formData.get("returnTo"));
+  if (returnTo) redirect(returnTo);
   return { status: "success", message: "Post hidden." };
 }
 

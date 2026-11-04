@@ -50,9 +50,10 @@ export default async function PostPage({ params, searchParams }: Props) {
           timeZone={profile.timezone}
           showGroup={false}
           linkComments={false}
+          returnTo={`/groups/${post.group.id}`}
         />
         <section id="comments" aria-labelledby="comments-heading" className="flex flex-col gap-4">
-          <h2 id="comments-heading" className="text-base font-medium">
+          <h2 id="comments-heading" tabIndex={-1} className="text-base font-medium">
             Comments{total > 0 ? <span className="text-ink-muted tabular"> {total}</span> : null}
           </h2>
           {after ? (

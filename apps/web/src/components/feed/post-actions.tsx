@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { CheckboxField } from "@/components/forms/checkbox-field";
 import { ConfirmAction } from "@/components/forms/confirm-action";
 import { FormAlert } from "@/components/forms/form-alert";
@@ -24,6 +24,8 @@ const targets = {
     remove: deletePostAction,
     editLabel: "Edit post",
     deleteTitle: "Delete this post?",
+    /** Where focus goes once the deleted item is gone. */
+    afterRemoval: "activity-heading",
     deleteConfirm: "Delete post",
     ownDelete: "It disappears from the group's feed, with its comments. This can't be undone.",
     adminDelete:
@@ -36,6 +38,7 @@ const targets = {
     remove: deleteCommentAction,
     editLabel: "Edit comment",
     deleteTitle: "Delete this comment?",
+    afterRemoval: "comments-heading",
     deleteConfirm: "Delete comment",
     ownDelete: "Replies to it stay, under a deleted-comment note. This can't be undone.",
     adminDelete:
@@ -56,6 +59,7 @@ export function EditableBody({
   canEdit,
   canDelete,
   footer,
+  returnTo,
   children,
 }: {
   target: keyof typeof targets;
@@ -66,15 +70,35 @@ export function EditableBody({
   canDelete: boolean;
   /** Shown at the start of the actions row (reactions, a comments link). */
   footer?: React.ReactNode;
+  /** After deleting, go here instead of staying (a post's own page would be a 404). */
+  returnTo?: string;
   children: React.ReactNode;
 }) {
   const t = targets[target];
   const [editing, setEditing] = useState(false);
+  const editButton = useRef<HTMLButtonElement>(null);
+  const field = useRef<HTMLTextAreaElement>(null);
+  const returnFocus = useRef(false);
+  const stopEditing = () => {
+    returnFocus.current = true;
+    setEditing(false);
+  };
   const [state, action] = useActionState(async (prev: typeof initialFormState, data: FormData) => {
     const result = await t.edit(prev, data);
-    if (result.status === "success") setEditing(false);
+    if (result.status === "success") stopEditing();
     return result;
   }, initialFormState);
+
+  // Opening the form: continue where the text ends. Leaving it removes the focused control, so
+  // focus goes back to Edit.
+  useEffect(() => {
+    const end = field.current?.value.length;
+    if (editing && end !== undefined) field.current?.setSelectionRange(end, end);
+    if (!editing && returnFocus.current) {
+      returnFocus.current = false;
+      editButton.current?.focus();
+    }
+  }, [editing]);
 
   if (editing) {
     const textareaId = `edit-${id}`;
@@ -91,6 +115,7 @@ export function EditableBody({
           defaultValue={state.values?.body ?? body}
           maxLength={t.max}
           autoFocus
+          ref={field}
           aria-invalid={state.fieldErrors?.body ? true : undefined}
           aria-describedby={state.fieldErrors?.body ? `${textareaId}-error` : undefined}
         />
@@ -107,7 +132,7 @@ export function EditableBody({
           defaultChecked={state.values ? state.values.spoiler === "on" : spoiler}
         />
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(false)}>
+          <Button type="button" variant="ghost" size="sm" onClick={stopEditing}>
             Cancel
           </Button>
           <SubmitButton size="sm" pendingLabel="Saving…">
@@ -126,14 +151,15 @@ export function EditableBody({
           {footer}
           <div className="ml-auto flex gap-1">
             {canEdit ? (
-              <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
+              <Button ref={editButton} variant="ghost" size="sm" onClick={() => setEditing(true)}>
                 Edit
               </Button>
             ) : null}
             {canDelete ? (
               <ConfirmAction
                 action={t.remove}
-                fields={{ [t.field]: id }}
+                fields={{ [t.field]: id, ...(returnTo ? { returnTo } : {}) }}
+                focusAfterRemoval={t.afterRemoval}
                 trigger="Delete"
                 title={t.deleteTitle}
                 description={canEdit ? t.ownDelete : t.adminDelete}

@@ -17,6 +17,7 @@ export function PostCard({
   timeZone,
   showGroup,
   linkComments = true,
+  returnTo,
 }: {
   post: FeedItem;
   now: Date;
@@ -24,6 +25,8 @@ export function PostCard({
   showGroup: boolean;
   /** In a feed, link to the post's page for its comments; on that page, the thread is below. */
   linkComments?: boolean;
+  /** Where to go after deleting or hiding the post, when the current page would be gone. */
+  returnTo?: string;
 }) {
   const headingId = `post-${post.id}-author`;
   const footer = (
@@ -93,6 +96,7 @@ export function PostCard({
             canEdit={post.canEdit}
             canDelete={post.canDelete}
             footer={footer}
+            returnTo={returnTo}
           >
             <Markdown spoiler={post.spoiler}>{post.body ?? ""}</Markdown>
           </EditableBody>
@@ -106,7 +110,8 @@ export function PostCard({
               <div className="ml-auto">
                 <ConfirmAction
                   action={hidePostAction}
-                  fields={{ postId: post.id }}
+                  fields={{ postId: post.id, ...(returnTo ? { returnTo } : {}) }}
+                  focusAfterRemoval="activity-heading"
                   trigger="Hide"
                   title="Hide this post?"
                   description="It disappears from the group's feed for everyone and won't be posted again. Your progress doesn't change."

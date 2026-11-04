@@ -37,7 +37,8 @@ export function Feed({
 
   return (
     <section aria-labelledby="activity-heading" className="flex flex-col gap-4">
-      <h2 id="activity-heading" className="text-base font-medium">
+      {/* Focusable so focus has somewhere to go when a post is deleted or hidden. */}
+      <h2 id="activity-heading" tabIndex={-1} className="text-base font-medium">
         Activity
       </h2>
       {filter}

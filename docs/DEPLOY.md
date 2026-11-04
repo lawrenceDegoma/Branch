@@ -71,6 +71,7 @@ data. Turn previews off under **Settings → Git** if the failed builds bother y
 2. Create your account, create a group, choose Essentials 75, and start the plan.
 3. Create an invite link in the group's settings and send it to your friend.
 4. Each of you marks a problem solved, and checks that the other sees it on the group page.
+5. Write a post on Home, react to it from the other account, and comment on it from its page.
 
 ## Password resets
 
@@ -119,4 +120,5 @@ Store the dumps outside the repository: they contain password hashes.
 
 Anyone who finds the URL can create an account. They can't see any group without an invite, but
 open sign-up and a public URL are fine only for a soft launch. Before a wider launch, revisit:
-email delivery and verification, rate limits on completions, CI, and monitoring (Phase 5).
+email delivery and verification, rate limits on completions, reporting and blocking people (only
+deletion by authors and admins exists today), CI, and monitoring (Phase 5).

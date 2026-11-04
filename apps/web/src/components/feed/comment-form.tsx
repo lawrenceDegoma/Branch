@@ -45,18 +45,19 @@ export function CommentForm({
             />
           )}
         </FormField>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <CheckboxField
-            id={`${prefix}-spoiler`}
-            name="spoiler"
-            label="Contains spoilers"
-            description="Code blocks stay folded until each reader opens them."
-            defaultChecked={state.status === "error" && state.values?.spoiler === "on"}
-          />
-          <SubmitButton size="sm" pendingLabel="Posting…" className="ml-auto">
-            {submitLabel}
-          </SubmitButton>
-        </div>
+        <CheckboxField
+          id={`${prefix}-spoiler`}
+          name="spoiler"
+          label="Contains spoilers"
+          description="Code blocks stay folded until each reader opens them."
+          defaultChecked={state.status === "error" && state.values?.spoiler === "on"}
+        />
+      </div>
+      {/* Outside the keyed block, so it keeps focus when the fields clear after posting. */}
+      <div className="flex justify-end">
+        <SubmitButton size="sm" pendingLabel="Posting…">
+          {submitLabel}
+        </SubmitButton>
       </div>
     </form>
   );

@@ -9,7 +9,7 @@ not affiliated with LeetCode or NeetCode.
 
 ## What works today
 
-- **Accounts:** email and password sign-up (optional GitHub sign-in), a username and timezone,
+- **Accounts:** email and password sign-up (optional Google and GitHub sign-in), a username and timezone,
   profile, and Dark / Light / System appearance that follows your account.
 - **Groups:** create a private group, invite friends with a link (expiring, limited uses,
   revocable), one admin who can remove members or hand the role on.
@@ -18,21 +18,22 @@ not affiliated with LeetCode or NeetCode.
   to a free version.
 - **Weekly plans:** the admin picks a roadmap, start date, and pace; the problems spread across
   weeks that advance on the group's calendar.
-- **Feed (Phase 2, in progress):** Home shows posts from all your groups, with a group filter;
-  each group page shows its own. Write Markdown posts to one group, optionally about a problem in
-  its plan; edit or delete your own; admins can remove posts in their group. Code blocks that name
-  their language are highlighted, and a post marked "Contains spoilers" keeps its code folded
-  until each reader opens it. With "Share my solves" on (Settings; off by default), marking a
-  problem solved posts it to groups whose plan includes it, along with finished weeks and plans;
-  unmarking takes the post down, and you can hide any single one. React to posts with kudos,
-  impressive, helpful, or same here, and discuss each one on its own page in comments with
-  replies.
+- **Feed:** Home shows posts from all your groups, with a group filter; each group page shows its
+  own. Write Markdown posts to one group, optionally about a problem in its plan; edit or delete
+  your own; admins can remove posts in their group. Code blocks that name their language are
+  highlighted, and a post marked "Contains spoilers" keeps its code folded until each reader
+  opens it.
+- **Sharing solves:** with "Share my solves" on (Settings; off by default), marking a problem
+  solved posts it to groups whose plan includes it, along with finished weeks and plans;
+  unmarking takes the post down, and you can hide any single one.
+- **Reactions and comments:** react to posts with kudos, impressive, helpful, or same here, and
+  discuss each one on its own page in comments with replies (spoilers work there too).
 - **Progress:** mark problems solved once and it counts in every group and roadmap. Home shows
   this week across your groups, next week for working ahead, and your backlog. The group page
   shows who solved this week's problems and a branch graph of everyone's progress.
 
-There is no browser
-extension, review queue, or chat yet; those are later phases (see the PRD).
+Image uploads are deferred. There is no browser extension, review queue, or chat yet; those are
+later phases (see the PRD).
 
 ## Try it locally
 
@@ -147,4 +148,5 @@ are created only when their phases begin.
 
 ## Status
 
-Phase 1 (Foundation) is complete and soft-launched; Phase 2 (the social feed) is in progress. See [docs/DECISIONS.md](docs/DECISIONS.md) for the milestone log and known limitations.
+Phase 1 (Foundation) and Phase 2 (the social feed, without images) are complete; Phase 3 starts
+only after the owner's review. See [docs/DECISIONS.md](docs/DECISIONS.md) for the milestone log and known limitations.

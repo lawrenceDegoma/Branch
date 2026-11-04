@@ -51,6 +51,62 @@ test.describe("keyboard", () => {
     await expect(trigger).toBeFocused();
     await expect(page.getByRole("heading", { level: 2, name: /^Week 1\b/ })).toBeVisible();
   });
+
+  test("posts, reactions, and comments work from the keyboard and keep focus", async ({
+    page,
+    viewer,
+  }) => {
+    const group = await createGroupInDb(viewer.id, "Keyboard crew");
+    const post = await prisma.post.create({
+      data: { groupId: group.id, authorId: viewer.id, body: "Keyboard post" },
+    });
+    await page.goto(`/posts/${post.id}`);
+    await ready(page);
+
+    // Reactions are toggle buttons.
+    const kudos = page.getByRole("button", { name: "Kudos" });
+    await kudos.focus();
+    await page.keyboard.press("Space");
+    await expect(kudos).toHaveAttribute("aria-pressed", "true");
+    await expect(kudos).toBeFocused();
+
+    // Leaving the edit form, by Cancel or by saving, returns focus to Edit.
+    const card = page.getByRole("article").filter({ hasText: "Keyboard post" });
+    const edit = card.getByRole("button", { name: "Edit" });
+    await edit.focus();
+    await page.keyboard.press("Enter");
+    await expect(card.getByLabel("Edit post")).toBeFocused();
+    await page.keyboard.type(" (edited)");
+    await card.getByRole("button", { name: "Save" }).focus();
+    await page.keyboard.press("Enter");
+    await expect(card).toContainText("Keyboard post (edited)");
+    await expect(edit).toBeFocused();
+
+    // Commenting keeps focus on the button, ready for the next comment.
+    const form = page.getByRole("form", { name: "Add a comment" });
+    await form.getByRole("textbox").focus();
+    await page.keyboard.type("First comment");
+    const submit = form.getByRole("button", { name: "Comment" });
+    await submit.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("list", { name: "Comments" })).toContainText("First comment");
+    await expect(submit).toBeFocused();
+    await expect(form.getByRole("textbox")).toHaveValue("");
+
+    // The reply form opens from its disclosure, and Tab reaches the reply field.
+    await page.locator("summary", { hasText: "Reply" }).focus();
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Tab");
+    await expect(page.getByRole("textbox", { name: `Reply to ${viewer.name}` })).toBeFocused();
+
+    // Deleting the comment moves focus to the Comments heading rather than the page body.
+    await page
+      .getByRole("list", { name: "Comments" })
+      .getByRole("button", { name: "Delete" })
+      .click();
+    await page.getByRole("button", { name: "Delete comment" }).click();
+    await expect(page.getByRole("heading", { level: 2, name: /^Comments/ })).toBeFocused();
+  });
 });
 
 // WCAG 1.4.10: at 320 CSS pixels wide, nothing but tables and graphics may scroll sideways.
@@ -127,4 +183,40 @@ test("progress rows grow with increased text spacing", async ({ page, viewer }) 
     (items) => items.filter((item) => item.scrollHeight > item.clientHeight + 1).length,
   );
   expect(overflowing).toBe(0);
+});
+
+test("posts and comments grow with increased text spacing", async ({ page, viewer }) => {
+  const group = await createGroupInDb(viewer.id, "Spacing crew");
+  const post = await prisma.post.create({
+    data: {
+      groupId: group.id,
+      authorId: viewer.id,
+      body: "A post with **some** text, a [link](https://example.com), and `code`.",
+    },
+  });
+  const top = await prisma.comment.create({
+    data: { postId: post.id, authorId: viewer.id, body: "A comment that wraps across lines." },
+  });
+  await prisma.comment.create({
+    data: { postId: post.id, authorId: viewer.id, parentId: top.id, body: "And a reply." },
+  });
+  await page.goto(`/posts/${post.id}`);
+  await page.addStyleTag({
+    content: `* { line-height: 1.5 !important; letter-spacing: 0.12em !important;
+      word-spacing: 0.16em !important; } p { margin-bottom: 2em !important; }`,
+  });
+  const blocks = page.getByRole("main").locator("article, article *");
+  await expect(blocks.first()).toBeVisible();
+  const clipped = await blocks.evaluateAll(
+    (items) =>
+      items.filter(
+        (item) =>
+          getComputedStyle(item).overflowY !== "visible" &&
+          // Code scrolls by design; screen-reader-only text is clipped by design.
+          item.tagName !== "PRE" &&
+          !item.classList.contains("sr-only") &&
+          item.scrollHeight > item.clientHeight + 1,
+      ).length,
+  );
+  expect(clipped).toBe(0);
 });

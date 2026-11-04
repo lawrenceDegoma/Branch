@@ -1,3 +1,4 @@
+import { prisma } from "@branch/database";
 import type { Page } from "@playwright/test";
 import {
   anotherUser,
@@ -113,6 +114,39 @@ test.describe("automatic posts", () => {
     await setSolved(page, "Two Sum", true);
     await friend.page.reload();
     await expect(solvePost(friend.page, "Two Sum")).toHaveCount(0);
+    await friend.context.close();
+  });
+
+  test("marking the same problem solved from two tabs posts once", async ({
+    page,
+    viewer,
+    browser,
+    baseURL,
+  }) => {
+    const friend = await anotherUser(browser, baseURL!);
+    const group = await createGroupInDb(viewer.id, "Twin crew", [friend.account.id]);
+    await createPlanInDb(group.id, viewer.id, mondayWeeksAgo(0));
+    await prisma.profile.update({ where: { userId: viewer.id }, data: { shareSolves: true } });
+
+    // Both tabs show Two Sum unsolved; both mark it.
+    const second = await page.context().newPage();
+    for (const tab of [page, second]) {
+      await tab.goto(`/groups/${group.id}`);
+      await ready(tab);
+    }
+    await Promise.all(
+      [page, second].map((tab) =>
+        tab.getByRole("button", { name: "Solved: Two Sum", exact: true }).first().click(),
+      ),
+    );
+    for (const tab of [page, second]) {
+      const graph = tab.getByRole("list", { name: "Progress by member" });
+      await expect(graph.getByRole("listitem").filter({ hasText: "(you)" })).toContainText(
+        "1/22 solved",
+      );
+    }
+    await friend.page.goto("/home");
+    await expect(solvePost(friend.page, "Two Sum")).toHaveCount(1);
     await friend.context.close();
   });
 });
