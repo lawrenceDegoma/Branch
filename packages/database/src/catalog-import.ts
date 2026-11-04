@@ -3,6 +3,10 @@ import type { Prisma, PrismaClient, ProblemSource } from "./generated/prisma/cli
 
 type Db = PrismaClient | Prisma.TransactionClient;
 
+// Imports make one round trip per problem. That is instant locally but takes seconds against a
+// hosted database, well past Prisma's 5-second default for interactive transactions.
+const IMPORT_TRANSACTION = { maxWait: 10_000, timeout: 120_000 };
+
 /** Upserts tags and problems by slug and replaces each listed problem's tags. Idempotent. */
 export async function syncCatalog(
   prisma: PrismaClient,
@@ -16,6 +20,7 @@ export async function syncCatalog(
     const tagIds = new Map(
       (await tx.tag.findMany({ select: { id: true, slug: true } })).map((t) => [t.slug, t.id]),
     );
+    const problemTags: { problemId: string; tagId: string }[] = [];
     for (const problem of catalog.problems) {
       const details = {
         title: problem.title,
@@ -27,13 +32,18 @@ export async function syncCatalog(
         where: { leetcodeSlug: problem.slug },
         update: details,
         create: { leetcodeSlug: problem.slug, ...details, source },
+        select: { id: true },
       });
-      await tx.problemTag.deleteMany({ where: { problemId: saved.id } });
-      await tx.problemTag.createMany({
-        data: problem.tags.map((slug) => ({ problemId: saved.id, tagId: tagIds.get(slug)! })),
-      });
+      problemTags.push(
+        ...problem.tags.map((slug) => ({ problemId: saved.id, tagId: tagIds.get(slug)! })),
+      );
     }
-  });
+    // Replace the listed problems' tags in two statements rather than two per problem.
+    await tx.problemTag.deleteMany({
+      where: { problemId: { in: [...new Set(problemTags.map((t) => t.problemId))] } },
+    });
+    await tx.problemTag.createMany({ data: problemTags });
+  }, IMPORT_TRANSACTION);
   return { problems: catalog.problems.length, tags: catalog.tags.length };
 }
 
@@ -132,5 +142,5 @@ export async function importCuratedRoadmap(
       data: { publishedAt: new Date() },
     });
     return { roadmapId: roadmap.id, versionNumber: number, created: true };
-  });
+  }, IMPORT_TRANSACTION);
 }
