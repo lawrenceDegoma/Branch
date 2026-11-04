@@ -1,6 +1,6 @@
 import { prisma } from "@branch/database";
 import { createPasswordResetLink } from "@branch/database/password-reset";
-import { expect, newAccountDetails, signUpViaApi, test } from "./support/fixtures";
+import { chooseTimezone, expect, newAccountDetails, signUpViaApi, test } from "./support/fixtures";
 
 test.describe("authentication", () => {
   test("a new user signs up, chooses a username, and lands on Home", async ({ page }) => {
@@ -16,7 +16,7 @@ test.describe("authentication", () => {
     await expect(page).toHaveURL(/\/onboarding$/);
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Welcome");
     await page.getByLabel("Username").fill(account.username.toUpperCase());
-    await page.getByLabel("Timezone").selectOption("Europe/Berlin");
+    await chooseTimezone(page, "Timezone", "Europe/Berlin");
     await page.getByRole("button", { name: "Continue" }).click();
 
     await expect(page).toHaveURL(/\/home$/);

@@ -18,7 +18,12 @@ export function Textarea({ className, ...props }: React.ComponentProps<"textarea
 export function NativeSelect({ className, ...props }: React.ComponentProps<"select">) {
   return (
     <select
-      className={cn(controlClassName, "h-10 pr-8 pointer-coarse:h-11", className)}
+      className={cn(
+        controlClassName,
+        // The browser's own arrow can't be positioned; draw a chevron inset like the text.
+        "h-10 appearance-none bg-(image:--select-chevron) bg-size-[1rem] bg-position-[right_0.75rem_center] bg-no-repeat pr-10 pointer-coarse:h-11",
+        className,
+      )}
       {...props}
     />
   );

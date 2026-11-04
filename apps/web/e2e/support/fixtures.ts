@@ -2,7 +2,13 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "@branch/database";
 import { addDays, dateInTimeZone, isoWeekday, toDbDate } from "@branch/shared/calendar";
 import { generateAssignments } from "@branch/shared/schedule";
-import { test as base, expect, type APIRequestContext, type Browser } from "@playwright/test";
+import {
+  test as base,
+  expect,
+  type APIRequestContext,
+  type Browser,
+  type Page,
+} from "@playwright/test";
 
 export type TestAccount = {
   id: string;
@@ -136,3 +142,12 @@ export const test = base.extend<{ viewer: TestAccount }>({
 });
 
 export { expect };
+
+/** Picks a zone in a timezone combobox by typing part of its name, as a person would. */
+export async function chooseTimezone(page: Page, label: string, zone: string) {
+  const input = page.getByRole("combobox", { name: label, exact: true });
+  await input.fill("");
+  await input.fill(zone.replaceAll("_", " ").split("/").pop()!);
+  await page.getByRole("option", { name: zone.replaceAll("_", " "), exact: true }).click();
+  await expect(input).toHaveValue(zone.replaceAll("_", " "));
+}

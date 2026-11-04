@@ -1,5 +1,12 @@
 import type { Page } from "@playwright/test";
-import { anotherUser, expect, mondayWeeksAgo, newAccountDetails, test } from "./support/fixtures";
+import {
+  anotherUser,
+  chooseTimezone,
+  expect,
+  mondayWeeksAgo,
+  newAccountDetails,
+  test,
+} from "./support/fixtures";
 
 // Phase 1's definition of done, entirely through the UI: two people join one group, see the same
 // weekly assignments, and track independent progress. Also covers PRD acceptance scenarios 1
@@ -12,7 +19,7 @@ async function signUp(page: Page, details: ReturnType<typeof newAccountDetails>)
   await page.getByLabel("Password", { exact: true }).fill(details.password);
   await page.getByRole("button", { name: "Create account" }).click();
   await page.getByLabel("Username").fill(details.username);
-  await page.getByLabel("Timezone").selectOption("UTC");
+  await chooseTimezone(page, "Timezone", "UTC");
   await page.getByRole("button", { name: "Continue" }).click();
 }
 
@@ -50,7 +57,7 @@ test("two friends share a weekly plan and track their own progress", async ({
   await expect(page.getByText("Start with a group")).toBeVisible();
   await page.getByRole("main").getByRole("link", { name: "Create group" }).click();
   await page.getByLabel("Group name").fill("Offer season");
-  await page.getByLabel("Group timezone").selectOption("UTC");
+  await chooseTimezone(page, "Group timezone", "UTC");
   await page.getByRole("button", { name: "Create group" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Offer season" })).toBeVisible();
   const groupUrl = page.url();
