@@ -187,6 +187,14 @@ test.describe("password reset", () => {
 });
 
 test.describe("social sign-in", () => {
+  test("a refused sign-in explains itself", async ({ page }) => {
+    // Where Better Auth sends a Google or GitHub sign-in whose email already has a password account.
+    await page.goto("/sign-in?error=account_not_linked");
+    await expect(page.getByRole("main").getByRole("alert")).toContainText(
+      "Sign in with your email and password",
+    );
+  });
+
   for (const [label, host, provider] of [
     ["Google", "accounts.google.com", "google"],
     ["GitHub", "github.com", "github"],

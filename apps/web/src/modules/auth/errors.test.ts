@@ -1,6 +1,6 @@
 import { APIError } from "better-auth/api";
 import { describe, expect, it } from "vitest";
-import { authErrorMessage, GENERIC_AUTH_ERROR } from "./errors";
+import { authErrorMessage, GENERIC_AUTH_ERROR, socialSignInErrorMessage } from "./errors";
 
 describe("authErrorMessage", () => {
   it("maps known Better Auth codes", () => {
@@ -24,5 +24,13 @@ describe("authErrorMessage", () => {
     expect(authErrorMessage(new Error("connection string postgres://secret"))).toBe(
       GENERIC_AUTH_ERROR,
     );
+  });
+});
+
+describe("socialSignInErrorMessage", () => {
+  it("explains known codes and falls back for unknown ones", () => {
+    expect(socialSignInErrorMessage("account_not_linked")).toMatch(/email and password/);
+    expect(socialSignInErrorMessage("access_denied")).toMatch(/cancelled/);
+    expect(socialSignInErrorMessage("<script>")).toMatch(/didn't complete/);
   });
 });

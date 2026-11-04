@@ -35,6 +35,9 @@ export const auth = betterAuth({
     revokeSessionsOnPasswordReset: true,
   },
   socialProviders,
+  // Failures that happen before a sign-in knows where to return (e.g. an expired attempt) land on
+  // the sign-in page, which explains the error code, rather than Better Auth's unstyled /error.
+  onAPIError: { errorURL: new URL("/sign-in", env.BETTER_AUTH_URL).href },
   session: {
     expiresIn: 60 * 60 * 24 * 30,
     updateAge: 60 * 60 * 24,

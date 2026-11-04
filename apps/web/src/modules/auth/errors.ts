@@ -22,3 +22,22 @@ export function authErrorMessage(error: unknown): string {
   const code = typeof error.body?.code === "string" ? error.body.code : undefined;
   return (code && messages[code]) || GENERIC_AUTH_ERROR;
 }
+
+/**
+ * Explains why a Google or GitHub sign-in came back unfinished. Better Auth appends its own
+ * `error` code to the sign-in URL (e.g. `account_not_linked`); unknown codes get a generic line.
+ */
+export function socialSignInErrorMessage(code: string): string {
+  switch (code) {
+    case "account_not_linked":
+      return "An account with this email already exists. Sign in with your email and password.";
+    case "access_denied":
+      return "Sign-in was cancelled. Choose a way to sign in below.";
+    case "state_not_found":
+    case "state_mismatch":
+    case "please_restart_the_process":
+      return "That sign-in took too long or was started in another tab. Try again.";
+    default:
+      return "That sign-in didn't complete. Try again, or sign in with your email and password.";
+  }
+}

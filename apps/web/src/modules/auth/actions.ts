@@ -65,7 +65,7 @@ export async function signInWithProviderAction(formData: FormData): Promise<void
   if (!provider.success) redirect("/sign-in?error=oauth");
   const next = safeNextPath(formData.get("next")) ?? "/home";
   const result = await auth.api.signInSocial({
-    body: { provider: provider.data, callbackURL: next, errorCallbackURL: "/sign-in?error=oauth" },
+    body: { provider: provider.data, callbackURL: next, errorCallbackURL: "/sign-in" },
     headers: await headers(),
   });
   if (!result.url) redirect("/sign-in?error=oauth");

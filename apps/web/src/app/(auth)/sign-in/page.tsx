@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { SocialSignIn } from "@/components/forms/social-sign-in";
 import { safeNextPath } from "@/lib/redirect";
 import { enabledSocialProviders } from "@/modules/auth/auth";
+import { socialSignInErrorMessage } from "@/modules/auth/errors";
 import { getSession } from "@/modules/auth/session";
 import { SignInForm } from "./sign-in-form";
 
@@ -25,10 +26,9 @@ export default async function SignInPage({
           Password updated. Sign in with your new password.
         </p>
       ) : null}
-      {params.error === "oauth" ? (
+      {params.error ? (
         <p role="alert" className="mb-4 rounded-[10px] bg-negative-soft px-3 py-2.5 text-ink">
-          That sign-in didn&apos;t complete. If you created your account with an email and password,
-          sign in that way.
+          {socialSignInErrorMessage(params.error)}
         </p>
       ) : null}
       <SocialSignIn providers={enabledSocialProviders} next={next} />
