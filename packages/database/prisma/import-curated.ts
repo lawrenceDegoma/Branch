@@ -60,6 +60,13 @@ async function main() {
 }
 
 main().catch((error: unknown) => {
-  console.error(error);
+  // P2021: a table is missing, so the schema hasn't been migrated in this database yet.
+  if ((error as { code?: string }).code === "P2021") {
+    console.error(
+      "This database has no Branch tables yet. Run `pnpm db:deploy` with the same DATABASE_URL first.",
+    );
+  } else {
+    console.error(error);
+  }
   process.exitCode = 1;
 });
