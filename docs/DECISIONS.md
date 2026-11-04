@@ -403,6 +403,38 @@ it, backlog after two weeks, the same problem in two groups, working ahead, Home
 axe scans of Home, the group page with the graph, the schedule, and a roadmap in both themes).
 Taste-skill lint: 0 FAIL.
 
+### M8 — Journeys, accessibility pass, and docs (complete)
+
+- **Phase 1 journey** (`e2e/journey.spec.ts`), UI only: an admin signs up, creates a group,
+  schedules Essentials 75 from last week, and invites a friend who signs up from the link; both see
+  the same week 2 problems; each marks different problems; Home and the branch graph show
+  independent progress and backlog; an outsider gets 404 on the group, schedule, and settings.
+  Covers PRD acceptance scenarios 1, 2, and 5 (scenario 3 is in `progress.spec.ts`).
+- **Keyboard** (`e2e/keyboard.spec.ts`): completion toggles with Space and Enter keep focus
+  across the data refresh; "Next week" opens from the keyboard; confirmation dialogs open on the
+  safe choice, close with Escape, and return focus to the trigger.
+- **Reflow and text spacing:** nine main pages fit 320px without sideways scrolling (WCAG
+  1.4.10); branch-graph and problem rows grow under the WCAG 1.4.12 text-spacing overrides (graph
+  rows changed from a fixed to a minimum height).
+- **Axe coverage** extended to the invite page (signed out, and signed in as a non-member) and a
+  shared-link roadmap, in both themes. Non-member 404 checks now include the schedule pages.
+- **Security review:** every server action starts from `requireViewer()` except sign-in and
+  sign-up (public by design) and the background appearance save (checks the session and does
+  nothing without one). Route handlers are Better Auth's and the health check.
+- README: what works in Phase 1 and a local walkthrough with the dev accounts.
+
+Verified: 24 shared tests; 80 unit tests; 94 integration tests; 179 E2E tests passed on two
+consecutive full runs (3 skipped by design: keyboard journeys run on desktop only); production
+build; taste-skill lint 0 FAIL.
+
+## Phase 1 summary
+
+Done when "two test users can join one group, see synchronized assignments, and track independent
+progress; all tests pass" — demonstrated end to end by `e2e/journey.spec.ts`. Five migrations
+(auth and profiles, domain schema, plan pacing and its NULL fix, Premium problems). Owner
+decisions still open: none for Phase 1. Phase 2 (the social feed) starts only after the owner's
+approval.
+
 ## Known limitations
 
 - Phase 1 has no email delivery, so there is no email verification or password reset. Sign-up

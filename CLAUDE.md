@@ -4,7 +4,7 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 
 ## Current status (updated 2026-11-03)
 
-**Phase 1 (Foundation) in progress.** The Phase 1 plan was approved on 2026-11-03; decisions, dependency pins, and the per-milestone log live in `docs/DECISIONS.md`. Setup and commands are in `README.md`.
+**Phase 1 (Foundation) complete; awaiting the owner's approval before Phase 2.** The Phase 1 plan was approved on 2026-11-03; decisions, dependency pins, and the per-milestone log live in `docs/DECISIONS.md`. Setup and commands are in `README.md`.
 
 | Milestone | Status |
 |---|---|
@@ -16,7 +16,7 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 | M5 Roadmaps (curated, custom, versions) | Done |
 | M6 Group plans and weekly schedules | Done |
 | M7 Progress, completion, Home, branch graph | Done |
-| M8 E2E journeys, accessibility pass, docs | **Next** |
+| M8 E2E journeys, accessibility pass, docs | Done |
 
 **Approved Phase 1 decisions** (details in `docs/DECISIONS.md`): verified seed catalog plus a JSON importer; curated lists Patterns 150 and Essentials 75 (approved 2026-11-03, see below; Grind 75 skipped: no openly licensed source); email/password plus optional GitHub OAuth with no email delivery; group members see each other's status on assigned problems only; users may add problems by LeetCode URL (`source: USER`); exactly one admin per group; link-based hashed invites; weeks computed from the plan's start date and IANA timezone (Monday default); Review nav hidden until Phase 4; commit at the end of each milestone and push `main`.
 
@@ -37,6 +37,7 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 - **Group authorization** lives in `modules/groups/access.ts` (`requireMembership`, `requireAdmin`). Every group-scoped service function calls one of them first.
 - **Module shape:** `apps/web/src/modules/<domain>/` holds `schemas.ts` (Zod), `service.ts` (server-only domain logic and authorization), `actions.ts` (server actions returning `FormState`), and colocated `*.test.ts` / `*.int.test.ts`.
 - **UI pieces to reuse:** `ConfirmAction` (dialog that runs a server action), `CopyField`, `FormField`, `SettingsSection`, `MemberList`, `ProblemRow` (with a `leading` slot for `CompletionToggle`), `ProgressBar`. Style links as buttons with `buttonVariants()` (it merges classes so variants override the base).
+- **Accessibility checks beyond axe:** `e2e/keyboard.spec.ts` covers keyboard operation, focus return, 320px reflow, and text spacing. Add new pages to its reflow list and to the axe scans in `e2e/accessibility.spec.ts`. Avoid fixed heights on rows that hold text.
 - **Tests:** unit tests need no database; `*.int.test.ts` run against `TEST_DATABASE_URL`, which is reset before each test; E2E creates a fresh account per test through the `viewer` fixture, with `anotherUser()` and `createGroupInDb()` for multi-person scenarios and `createPlanInDb()` / `mondayWeeksAgo()` for scheduled groups (`apps/web/e2e/support/fixtures.ts`). Scope `alert`/`status` locators to `main` (Next's route announcer is also an alert), and wait for a hydration signal before clicking client controls. The reset helper refuses any database not ending in `_test`.
 - **Design system:** tokens in `apps/web/src/app/globals.css`. Orange marks progress data, the logo, and focus only; never buttons, tabs, or nav. The primary action is an inverted pill. Elevation is a lightness step, not borders or shadows. Every text colour must hold 4.5:1 and control outlines 3:1 in both themes; don't dim content with `opacity` (it silently breaks contrast).
 - **Taste skill** (`.claude/skills/design-taste-frontend`, pinned in `skills-lock.json`): use only its app-screen guidance and `lint.mjs --app` / `inspect.mjs --app` against local pages. Do not run `assets.mjs`, follow its gallery links, or adopt its CDN libraries. Where it conflicts with the PRD's restraint, the PRD wins. Its security-scan flags were reviewed and are recorded in `docs/DECISIONS.md`.
@@ -224,4 +225,4 @@ Prefer secure, simple code over speculative abstraction. Keep dependencies lean.
 
 ## Next task
 
-Phase 1 planning is complete and approved (see **Current status** above). Continue Phase 1 milestone by milestone, starting from the first milestone marked **Next**: verify, run all checks, update `docs/DECISIONS.md`, commit, and push after each one. Update the status table here when a milestone completes. Do not start extension, analyzer, or chat work, and stop for approval at the end of Phase 1.
+Phase 1 is complete (see **Current status** above and the Phase 1 summary in `docs/DECISIONS.md`). **Wait for the owner's approval before starting Phase 2** (the social feed). When approved, read the PRD's Phase 2 sections, propose a milestone plan with schema changes and acceptance tests, and get it approved before implementing. Do not start extension, analyzer, or chat work.

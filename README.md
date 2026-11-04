@@ -7,6 +7,33 @@ friends: shared roadmaps, calendar-based weekly assignments, and individual prog
 still solve problems on LeetCode; Branch tracks the progress and community around that work. It is
 not affiliated with LeetCode or NeetCode.
 
+## What works today (Phase 1)
+
+- **Accounts:** email and password sign-up (optional GitHub sign-in), a username and timezone,
+  profile, and Dark / Light / System appearance that follows your account.
+- **Groups:** create a private group, invite friends with a link (expiring, limited uses,
+  revocable), one admin who can remove members or hand the role on.
+- **Roadmaps:** two curated lists (Patterns 150, Essentials 75) and your own roadmaps with
+  sections, versions, and optional link sharing. Problems open on LeetCode; Premium ones also link
+  to a free version.
+- **Weekly plans:** the admin picks a roadmap, start date, and pace; the problems spread across
+  weeks that advance on the group's calendar.
+- **Progress:** mark problems solved once and it counts in every group and roadmap. Home shows
+  this week across your groups, next week for working ahead, and your backlog. The group page
+  shows who solved this week's problems and a branch graph of everyone's progress.
+
+There is no activity feed, browser extension, review queue, or chat yet; those are later phases
+(see the PRD).
+
+## Try it locally
+
+After the setup below, sign in as `ada@example.test` and open **Home**: one problem waits in the
+backlog, and this week's problems can be checked off. Open **Groups → Interview prep crew** to see
+Grace's progress beside Ada's on the branch graph, then sign in as `grace@example.test` in another
+browser to see the same week from the member's side.
+
+## Documentation
+
 - Product requirements: [PRD.md](PRD.md)
 - Engineering specification: [CLAUDE.md](CLAUDE.md)
 - Architecture decisions and milestone log: [docs/DECISIONS.md](docs/DECISIONS.md)
@@ -95,7 +122,7 @@ client; Prisma 7 no longer does this automatically).
 ```text
 apps/web/            Next.js App Router app (UI, server actions, route handlers, domain modules)
 packages/database/   Prisma schema, migrations, seed data, catalog importer, Prisma client
-packages/shared/     Validated contracts shared across apps (problem catalog, roadmap definitions)
+packages/shared/     Contracts and pure logic shared across apps (catalog, calendar weeks, schedules)
 infra/docker/        Docker Compose for local PostgreSQL (dev + test databases)
 docs/                Architecture decisions and milestone log
 ```
@@ -110,5 +137,5 @@ are created only when their phases begin.
 
 ## Status
 
-Phase 1 (Foundation) is in progress. See [docs/DECISIONS.md](docs/DECISIONS.md) for completed
-milestones, known limitations, and remaining work.
+Phase 1 (Foundation) is complete and awaiting the owner's approval before Phase 2 (the social
+feed). See [docs/DECISIONS.md](docs/DECISIONS.md) for the milestone log and known limitations.

@@ -135,6 +135,45 @@ for (const colorScheme of ["dark", "light"] as const) {
       await member.context.close();
     });
 
+    test("invite and shared-link pages have no detectable WCAG A/AA violations", async ({
+      page,
+      viewer,
+      browser,
+      baseURL,
+    }) => {
+      const group = await createGroupInDb(viewer.id, "Invited crew");
+      await page.goto(`/groups/${group.id}/settings`);
+      await page.getByRole("button", { name: "Create link" }).click();
+      const inviteUrl = await page.getByLabel("Invite link", { exact: true }).inputValue();
+
+      await page.goto("/roadmaps/new");
+      await page.getByLabel("Title").fill("Shared roadmap");
+      await page.getByRole("button", { name: "Create and add problems" }).click();
+      await page.getByRole("button", { name: "Add section" }).click();
+      await page.getByLabel("Search problems").fill("two");
+      await page.getByRole("button", { name: "Add Two Sum", exact: true }).click();
+      await page.getByRole("button", { name: "Publish" }).click();
+      await page.getByRole("link", { name: "Roadmap settings" }).click();
+      await page.getByRole("button", { name: "Create share link" }).click();
+      const shareUrl = await page.getByLabel("Share link").inputValue();
+
+      // Signed out: the invite explains itself and offers sign-up.
+      const visitor = await browser.newContext({ baseURL, colorScheme });
+      const visitorPage = await visitor.newPage();
+      await visitorPage.goto(inviteUrl);
+      await expectNoViolations(visitorPage);
+      await visitor.close();
+
+      // Signed in, not yet a member: the invite and someone else's shared roadmap.
+      const friend = await anotherUser(browser, baseURL!);
+      await friend.page.emulateMedia({ colorScheme });
+      for (const url of [inviteUrl, shareUrl]) {
+        await friend.page.goto(url);
+        await expectNoViolations(friend.page);
+      }
+      await friend.context.close();
+    });
+
     test("/onboarding has no detectable WCAG A/AA violations", async ({ page, baseURL }) => {
       await signUpViaApi(page.context().request, baseURL!, undefined, { onboard: false });
       await page.goto("/onboarding");

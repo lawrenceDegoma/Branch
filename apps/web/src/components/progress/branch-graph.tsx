@@ -9,12 +9,13 @@ import { describeStanding } from "@/modules/progress/standing";
 // branch inside it is on pace, short of it has backlog, and past it is ahead.
 //
 // Drawn with HTML and CSS (percentages along a shared track, rounded borders for the elbows) so
-// lines stay crisp and nodes stay round at any width. Every row is the same height and there is
-// no gap between rows, so the trunk reads as one line. The drawing is decorative; each row's text
-// carries the same information.
+// lines stay crisp and nodes stay round at any width. Rows have a minimum height and grow with
+// user text spacing; the drawing stretches to fill each row, and rows have no gap between them,
+// so the trunk reads as one line. The drawing is decorative; each row's text carries the same
+// information.
 
 const ROW =
-  "grid h-12 grid-cols-[6.5rem_minmax(0,1fr)_3.5rem] items-center gap-x-3 sm:grid-cols-[9rem_minmax(0,1fr)_4rem]";
+  "grid min-h-12 grid-cols-[6.5rem_minmax(0,1fr)_3.5rem] items-center gap-x-3 sm:grid-cols-[9rem_minmax(0,1fr)_4rem]";
 const ELBOW = 10; // px radius of the curve where a branch leaves the trunk
 
 const pct = (weeks: number, total: number) =>
@@ -56,7 +57,7 @@ export function BranchGraph({
           <p className="truncate font-medium">Group calendar</p>
           <p className="truncate text-xs text-ink-muted">{calendarLabel}</p>
         </div>
-        <div aria-hidden="true" className="relative h-full">
+        <div aria-hidden="true" className="relative self-stretch">
           <WeekBand plan={plan} />
           {/* Trunk down to the members' branches. */}
           <span className="absolute top-1/2 bottom-0 left-0 w-0.5 -translate-x-1/2 bg-control" />
@@ -89,7 +90,7 @@ export function BranchGraph({
               </p>
               <p className="truncate text-xs text-ink-muted">{describeStanding(standing)}</p>
             </div>
-            <div aria-hidden="true" className="relative h-full">
+            <div aria-hidden="true" className="relative self-stretch">
               <WeekBand plan={plan} />
               {/* The trunk continues past this row unless it is the last branch. */}
               <span

@@ -67,6 +67,8 @@ test.describe("groups", () => {
     for (const path of [
       `/groups/${group.id}`,
       `/groups/${group.id}/settings`,
+      `/groups/${group.id}/plan`,
+      `/groups/${group.id}/plan/new`,
       "/groups/not-a-uuid",
     ]) {
       const response = await page.goto(path);
