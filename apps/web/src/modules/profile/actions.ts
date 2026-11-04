@@ -6,8 +6,8 @@ import { DomainError } from "@/lib/errors";
 import { fieldErrorsFrom, formValues, type FormState } from "@/lib/form";
 import { safeNextPath } from "@/lib/redirect";
 import { getSession, requireUser, requireViewer } from "@/modules/auth/session";
-import { appearanceSchema, onboardingSchema, profileUpdateSchema } from "./schemas";
-import { createProfile, getProfile, setAppearance, updateProfile } from "./service";
+import { appearanceSchema, onboardingSchema, profileUpdateSchema, sharingSchema } from "./schemas";
+import { createProfile, getProfile, setAppearance, setShareSolves, updateProfile } from "./service";
 
 function domainErrorState(error: DomainError, values?: Record<string, string>): FormState {
   return error.field
@@ -65,4 +65,20 @@ export async function saveAppearanceAction(value: string): Promise<void> {
   if (!session || !(await getProfile(session.user.id))) return;
   await setAppearance(session.user.id, parsed.data);
   revalidatePath("/", "layout");
+}
+
+export async function updateSharingAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const { user } = await requireViewer();
+  const values = formValues(formData, ["shareSolves"]);
+  const { shareSolves } = sharingSchema.parse(values);
+  await setShareSolves(user.id, shareSolves);
+  revalidatePath("/settings");
+  return {
+    status: "success",
+    message: shareSolves ? "Your solves will be shared." : "Your solves won't be shared.",
+    values,
+  };
 }

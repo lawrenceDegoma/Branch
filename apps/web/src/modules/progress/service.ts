@@ -3,6 +3,7 @@ import { addDays, dateInTimeZone, isoWeekday } from "@branch/shared/calendar";
 import { prisma } from "@branch/database";
 import { isForeignKeyViolation } from "@/lib/db-errors";
 import { NotFoundError } from "@/lib/errors";
+import { syncAutomaticPosts } from "@/modules/feed/automatic";
 import { getGroupPlan, listViewerPlans, type PlanLayout } from "@/modules/plans/service";
 import { problemIdSchema } from "./schemas";
 import { standingOn } from "./standing";
@@ -20,7 +21,8 @@ const problemNotFound = () => new NotFoundError("We couldn't find that problem."
 /**
  * Marks a problem solved or unsolved for the user. Idempotent: repeating a request (or racing it
  * from two tabs) leaves exactly one completion, and `changed` is true only for the request that
- * actually changed something.
+ * actually changed something. Only that request updates the user's automatic posts, in the same
+ * transaction, so a repeated solve never posts again.
  */
 export async function setCompletion(
   userId: string,
@@ -30,8 +32,11 @@ export async function setCompletion(
 ): Promise<{ changed: boolean }> {
   if (!problemIdSchema.safeParse(problemId).success) throw problemNotFound();
   if (!solved) {
-    const { count } = await prisma.problemCompletion.deleteMany({ where: { userId, problemId } });
-    return { changed: count > 0 };
+    return prisma.$transaction(async (tx) => {
+      const { count } = await tx.problemCompletion.deleteMany({ where: { userId, problemId } });
+      if (count > 0) await syncAutomaticPosts(tx, userId, problemId, false, now);
+      return { changed: count > 0 };
+    });
   }
   const problem = await prisma.problem.findUnique({
     where: { id: problemId },
@@ -39,12 +44,15 @@ export async function setCompletion(
   });
   if (!problem) throw problemNotFound();
   try {
-    // ON CONFLICT DO NOTHING on (userId, problemId).
-    const { count } = await prisma.problemCompletion.createMany({
-      data: [{ userId, problemId, source: "MANUAL", completedAt: now }],
-      skipDuplicates: true,
+    return await prisma.$transaction(async (tx) => {
+      // ON CONFLICT DO NOTHING on (userId, problemId).
+      const { count } = await tx.problemCompletion.createMany({
+        data: [{ userId, problemId, source: "MANUAL", completedAt: now }],
+        skipDuplicates: true,
+      });
+      if (count > 0) await syncAutomaticPosts(tx, userId, problemId, true, now);
+      return { changed: count > 0 };
     });
-    return { changed: count > 0 };
   } catch (error) {
     if (isForeignKeyViolation(error)) throw problemNotFound();
     throw error;

@@ -8,6 +8,7 @@ import { requireViewer } from "@/modules/auth/session";
 import { listTimeZones } from "@/modules/profile/timezone";
 import { PasswordForm } from "./password-form";
 import { ProfileForm } from "./profile-form";
+import { SharingForm } from "./sharing-form";
 
 export const metadata = { title: "Settings" };
 
@@ -39,6 +40,13 @@ export default async function SettingsPage({
         />
       </SettingsSection>
       <SettingsSection
+        id="sharing"
+        title="Sharing"
+        description="Solving a problem never posts anything unless you turn this on."
+      >
+        <SharingForm shareSolves={profile.shareSolves} />
+      </SettingsSection>
+      <SettingsSection
         id="appearance"
         title="Appearance"
         description="System follows your device. Your choice is saved to your account."
@@ -56,7 +64,7 @@ export default async function SettingsPage({
             <PasswordForm />
           ) : (
             <p className="text-ink-muted">
-              You sign in with GitHub, so there&apos;s no password to change.
+              You sign in with Google or GitHub, so there&apos;s no password to change.
             </p>
           )}
           <form action={signOutAction} className="flex justify-end border-t border-line pt-4">

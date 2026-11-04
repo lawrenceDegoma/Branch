@@ -1,5 +1,5 @@
 import { DomainError } from "./errors";
-import type { z } from "zod";
+import { z } from "zod";
 
 /** Result returned by server actions that back forms. */
 export type FormState = {
@@ -13,6 +13,12 @@ export type FormState = {
 };
 
 export const initialFormState: FormState = { status: "idle" };
+
+/** A checkbox field: the form sends "on" when it is ticked and nothing otherwise. */
+export const checkboxSchema = z
+  .string()
+  .optional()
+  .transform((value) => value === "on");
 
 export function formValues(formData: FormData, keys: readonly string[]): Record<string, string> {
   return Object.fromEntries(keys.map((key) => [key, String(formData.get(key) ?? "")]));

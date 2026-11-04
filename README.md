@@ -22,12 +22,14 @@ not affiliated with LeetCode or NeetCode.
   each group page shows its own. Write Markdown posts to one group, optionally about a problem in
   its plan; edit or delete your own; admins can remove posts in their group. Code blocks that name
   their language are highlighted, and a post marked "Contains spoilers" keeps its code folded
-  until each reader opens it.
+  until each reader opens it. With "Share my solves" on (Settings; off by default), marking a
+  problem solved posts it to groups whose plan includes it, along with finished weeks and plans;
+  unmarking takes the post down, and you can hide any single one.
 - **Progress:** mark problems solved once and it counts in every group and roadmap. Home shows
   this week across your groups, next week for working ahead, and your backlog. The group page
   shows who solved this week's problems and a branch graph of everyone's progress.
 
-Automatic solve posts, reactions, and comments are the rest of Phase 2. There is no browser
+Reactions and comments are the rest of Phase 2. There is no browser
 extension, review queue, or chat yet; those are later phases (see the PRD).
 
 ## Try it locally

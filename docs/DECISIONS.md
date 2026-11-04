@@ -281,6 +281,23 @@ Feed rules:
   JavaScript and by keyboard. It is a courtesy, not access control: the code is in the page. Hints
   written as prose aren't folded; per-block or inline spoilers can come later if people want them.
   Comments (M12) reuse the same mark.
+- **Automatic posts** (M11) are posts of kind `SOLVE`, `WEEK_DONE`, or `PLAN_DONE` with no body,
+  made only when "Share my solves" (`profile.shareSolves`, off by default) is on. A solve posts to
+  each group whose _active_ plan assigns the problem, never elsewhere (the same rule as member
+  progress). Finishing every problem of the solve's week adds "Finished week N of <roadmap>";
+  finishing the whole plan adds "Finished every problem in <roadmap>" instead of a post for its
+  last week. They are written by `setCompletion` in the completion's transaction, only when the
+  completion actually changed, and partial unique indexes allow each one once per author, so
+  repeated or racing solves never post twice (PRD scenario 7).
+- **Undo, redo, and hiding:** unmarking a solve sets `withdrawnAt` on every automatic post it made
+  true, whatever the sharing setting; marking it again (with sharing on) clears it, so the same
+  post returns in its original place rather than celebrating twice. The author can hide an
+  automatic post (`hiddenAt`): it is gone for everyone and never posted again. Automatic posts
+  can't be edited or deleted (they hold no member-written text; deletion would let them be
+  re-created); admins can't remove them. Turning sharing off stops new posts and leaves earlier
+  ones until hidden. CHECK constraints fix which columns each kind uses, and a trigger keeps a
+  milestone's plan in the post's group (Prisma can't model that composite key on an optional
+  relation).
 - The body is 1-5000 characters and not only whitespace (CHECK `body ~ '\S'`; `btrim` alone keeps
   newlines).
 
@@ -538,6 +555,28 @@ production build; taste-skill lint 0 FAIL on the shipped files.
 Verified: 24 shared, 94 unit, 108 integration tests; 211 E2E passed (3 skipped by design);
 production build; taste-skill lint 0 FAIL.
 
+### M11 — Automatic posts (complete)
+
+- Migration `automatic_posts`: `PostKind`, nullable `body` (TEXT only), `planId`, `weekNumber`,
+  `hiddenAt`, `withdrawnAt`; shape CHECKs, once-per-author partial unique indexes, the
+  plan-in-group trigger; `profile.shareSolves` (default false). Additive: production can take it
+  before the code.
+- `modules/feed/automatic.ts` (`syncAutomaticPosts`), called from `setCompletion` in its
+  transaction. `hidePost` and `hidePostAction`; edit and delete refuse automatic posts.
+- Settings: a Sharing section with "Share my solves" (`CheckboxField`). The feed renders solves and
+  milestones as one line with an orange progress mark, and the author's Hide beside it.
+- `checkboxSchema` moved to `lib/form.ts`. Settings now says "Google or GitHub" for accounts
+  without a password.
+- Tests: 8 integration tests (sharing off by default, only groups whose plan assigns the problem,
+  no duplicates under racing requests, undo and redo restore the same post, sharing turned off,
+  hidden stays hidden, week and plan milestones through undo and redo, who may hide, edit, or
+  delete); constraint tests for each kind's shape (NULL cases included), once-per-author indexes,
+  and the trigger; 2 E2E journeys (scenario 6; sharing on through undo, redo, and hide); axe scans
+  with all three kinds and the Hide control.
+
+Verified: 24 shared, 94 unit, 119 integration tests; 215 E2E passed (3 skipped by design);
+production build; taste-skill lint 0 FAIL.
+
 ## Phase 1 summary
 
 Done when "two test users can join one group, see synchronized assignments, and track independent
@@ -559,7 +598,13 @@ approval.
   group's member list only.
 - ESLint 9 is end-of-life upstream (see dependency choices).
 - No CI pipeline yet; checks run locally.
-- Marking problems solved is not rate-limited; each toggle is one small idempotent write.
+- Marking problems solved is not rate-limited; each toggle is one small idempotent write (plus
+  its automatic posts, in the same transaction).
+- Two different problems solved at the same instant that together finish a week can both miss the
+  milestone (each transaction may not see the other's completion); unmarking and re-marking one
+  of them posts it. Rare with manual toggles.
+- Redoing a solve restores automatic posts for active plans only; a milestone of an archived plan
+  that was withdrawn stays withdrawn.
 - The shared-link roadmap view is read-only (no completion toggles); progress shows on the
   roadmap's own page.
 - Sign-up is open to anyone who finds the deployed URL (they see nothing without an invite).

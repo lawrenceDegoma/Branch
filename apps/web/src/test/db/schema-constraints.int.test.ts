@@ -339,4 +339,85 @@ describe("posts", () => {
     await expect(post("x".repeat(5001))).rejects.toThrow();
     await expect(post("x".repeat(5000))).resolves.toBeDefined();
   });
+
+  async function groupWithPlan() {
+    const user = await createTestUser();
+    const group = await createTestGroup([{ userId: user.id, role: "ADMIN" }]);
+    const version = await createPublishedRoadmap();
+    const plan = await prisma.groupRoadmapPlan.create({
+      data: {
+        groupId: group.id,
+        roadmapVersionId: version.id,
+        startDate: new Date("2026-11-02"),
+        pacing: "PER_SECTION" as const,
+      },
+    });
+    return { user, group, plan, problemId: version.items[0]!.problemId };
+  }
+
+  it("gives each kind of post exactly the columns it uses", async () => {
+    const { user, group, plan, problemId } = await groupWithPlan();
+    const base = { groupId: group.id, authorId: user.id };
+    const create = (data: Omit<Parameters<typeof prisma.post.create>[0]["data"], "group">) =>
+      prisma.post.create({ data: { ...base, ...data } as never });
+
+    // Written posts need a body and nothing automatic; automatic posts have no body.
+    await expect(create({ kind: "TEXT", body: null })).rejects.toThrow();
+    await expect(create({ kind: "TEXT", body: "hi", hiddenAt: new Date() })).rejects.toThrow();
+    await expect(create({ kind: "TEXT", body: "hi", planId: plan.id })).rejects.toThrow();
+    await expect(create({ kind: "SOLVE", problemId, body: "hi" })).rejects.toThrow();
+    // A solve names its problem; milestones name their plan (and week) and no problem.
+    await expect(create({ kind: "SOLVE", problemId: null })).rejects.toThrow();
+    await expect(create({ kind: "SOLVE", problemId, spoiler: true })).rejects.toThrow();
+    await expect(
+      create({ kind: "WEEK_DONE", planId: plan.id, weekNumber: null }),
+    ).rejects.toThrow();
+    await expect(create({ kind: "WEEK_DONE", planId: plan.id, weekNumber: 0 })).rejects.toThrow();
+    await expect(
+      create({ kind: "WEEK_DONE", planId: plan.id, weekNumber: 1, problemId }),
+    ).rejects.toThrow();
+    await expect(create({ kind: "PLAN_DONE", planId: null })).rejects.toThrow();
+    await expect(create({ kind: "PLAN_DONE", planId: plan.id, weekNumber: 2 })).rejects.toThrow();
+
+    await create({ kind: "SOLVE", problemId, withdrawnAt: new Date(), hiddenAt: new Date() });
+    await create({ kind: "WEEK_DONE", planId: plan.id, weekNumber: 1 });
+    await create({ kind: "PLAN_DONE", planId: plan.id });
+  });
+
+  it("allows each automatic post once per author", async () => {
+    const { user, group, plan, problemId } = await groupWithPlan();
+    const base = { groupId: group.id, authorId: user.id };
+    for (const data of [
+      { kind: "SOLVE" as const, problemId },
+      { kind: "WEEK_DONE" as const, planId: plan.id, weekNumber: 1 },
+      { kind: "PLAN_DONE" as const, planId: plan.id },
+    ]) {
+      await prisma.post.create({ data: { ...base, ...data } });
+      await expect(prisma.post.create({ data: { ...base, ...data } })).rejects.toThrow();
+    }
+    // Another member, or another week, is a different post; written posts are never limited.
+    const other = await createTestUser();
+    await prisma.post.create({ data: { ...base, authorId: other.id, kind: "SOLVE", problemId } });
+    await prisma.post.create({
+      data: { ...base, kind: "WEEK_DONE", planId: plan.id, weekNumber: 2 },
+    });
+    await prisma.post.create({ data: { ...base, body: "about it", problemId } });
+    await prisma.post.create({ data: { ...base, body: "about it", problemId } });
+  });
+
+  it("keeps a milestone's plan in the post's own group", async () => {
+    const { user, plan } = await groupWithPlan();
+    const elsewhere = await createTestGroup([{ userId: user.id, role: "ADMIN" }]);
+    await expect(
+      prisma.post.create({
+        data: { groupId: elsewhere.id, authorId: user.id, kind: "PLAN_DONE", planId: plan.id },
+      }),
+    ).rejects.toThrow(/Foreign key constraint/);
+    const fine = await prisma.post.create({
+      data: { groupId: plan.groupId, authorId: user.id, kind: "PLAN_DONE", planId: plan.id },
+    });
+    await expect(
+      prisma.post.update({ where: { id: fine.id }, data: { groupId: elsewhere.id } }),
+    ).rejects.toThrow(/Foreign key constraint/);
+  });
 });

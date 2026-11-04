@@ -46,3 +46,8 @@ export async function updateProfile(userId: string, input: ProfileUpdateInput): 
 export async function setAppearance(userId: string, appearance: AppearanceValue): Promise<void> {
   await prisma.profile.update({ where: { userId }, data: { appearance } });
 }
+
+/** Turning sharing off stops new automatic posts; earlier ones stay until the author hides them. */
+export async function setShareSolves(userId: string, shareSolves: boolean): Promise<void> {
+  await prisma.profile.update({ where: { userId }, data: { shareSolves } });
+}

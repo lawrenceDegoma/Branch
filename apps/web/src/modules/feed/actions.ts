@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { fieldErrorsFrom, formStateFromError, formValues, type FormState } from "@/lib/form";
 import { requireViewer } from "@/modules/auth/session";
 import { createPostSchema, editPostSchema, postIdSchema } from "./schemas";
-import { createPost, deletePost, editPost } from "./service";
+import { createPost, deletePost, editPost, hidePost } from "./service";
 
 function refreshFeeds() {
   revalidatePath("/home");
@@ -59,4 +59,17 @@ export async function deletePostAction(_prev: FormState, formData: FormData): Pr
   }
   refreshFeeds();
   return { status: "success", message: "Post deleted." };
+}
+
+export async function hidePostAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const { user } = await requireViewer();
+  const parsed = postIdSchema.safeParse(formData.get("postId"));
+  if (!parsed.success) return { status: "error", message: "We couldn't find that post." };
+  try {
+    await hidePost(user.id, parsed.data);
+  } catch (error) {
+    return formStateFromError(error);
+  }
+  refreshFeeds();
+  return { status: "success", message: "Post hidden." };
 }

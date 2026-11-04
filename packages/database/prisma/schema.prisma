@@ -115,17 +115,20 @@ enum Appearance {
 /// Branch-owned profile, created during onboarding. A signed-in user without one is sent to
 /// onboarding before using the app.
 model Profile {
-  userId     String     @id
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String     @id
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// Lowercase handle, 3-30 characters (CHECK constraint in migration).
-  username   String     @unique
+  username    String     @unique
   /// At most 280 characters (CHECK constraint in migration).
-  bio        String?
+  bio         String?
   /// IANA timezone name, validated by the application.
-  timezone   String
-  appearance Appearance @default(SYSTEM)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  timezone    String
+  appearance  Appearance @default(SYSTEM)
+  /// Post automatically when solving a problem a group's plan assigns, finishing a week, or
+  /// finishing a plan. Off by default: completion never implies sharing.
+  shareSolves Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   @@map("profile")
 }
@@ -406,6 +409,7 @@ model GroupRoadmapPlan {
   createdAt        DateTime           @default(now())
   archivedAt       DateTime?
   assignments      WeeklyAssignment[]
+  posts            Post[]
 
   @@unique([id, roadmapVersionId])
   @@index([groupId])
@@ -460,25 +464,47 @@ model ProblemCompletion {
 // of the viewer's groups. IDs are UUIDv7, so ordering by id is ordering by creation time.
 // ---------------------------------------------------------------------------------------------
 
+enum PostKind {
+  /// Written by a member.
+  TEXT
+  /// Automatic: the author solved a problem the group's plan assigns (problemId).
+  SOLVE
+  /// Automatic: the author solved every problem in one week of a plan (planId, weekNumber).
+  WEEK_DONE
+  /// Automatic: the author solved every problem in a plan (planId).
+  PLAN_DONE
+}
+
+/// Which columns each kind uses is enforced by CHECK constraints in the migration, and each
+/// automatic post exists at most once per author (partial unique indexes).
 model Post {
-  id        String    @id @default(uuid(7)) @db.Uuid
-  groupId   String    @db.Uuid
-  group     Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  authorId  String
-  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  /// Markdown source, 1-5000 characters (CHECK). Rendered without raw HTML.
-  body      String
-  /// The problem the post is about, if any.
-  problemId String?   @db.Uuid
-  problem   Problem?  @relation(fields: [problemId], references: [id], onDelete: Restrict)
+  id          String            @id @default(uuid(7)) @db.Uuid
+  groupId     String            @db.Uuid
+  group       Group             @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  authorId    String
+  author      User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  kind        PostKind          @default(TEXT)
+  /// Markdown source, 1-5000 characters, for TEXT posts only (CHECK). Rendered without raw HTML.
+  body        String?
+  /// The problem the post is about, if any; the solved problem for SOLVE.
+  problemId   String?           @db.Uuid
+  problem     Problem?          @relation(fields: [problemId], references: [id], onDelete: Restrict)
+  /// The plan a milestone belongs to; always a plan of the post's own group (trigger).
+  planId      String?           @db.Uuid
+  plan        GroupRoadmapPlan? @relation(fields: [planId], references: [id], onDelete: Cascade)
+  /// The finished week, for WEEK_DONE (1-based).
+  weekNumber  Int?
   /// The author marked the post as containing spoilers: its code blocks render folded.
-  spoiler   Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  editedAt  DateTime?
+  spoiler     Boolean           @default(false)
+  createdAt   DateTime          @default(now())
+  editedAt    DateTime?
+  /// The author hid this automatic post. It stays hidden and is never posted again.
+  hiddenAt    DateTime?
+  /// The solve behind this automatic post was undone. Cleared if it is redone with sharing on.
+  withdrawnAt DateTime?
 
   @@index([groupId, id(sort: Desc)])
   @@index([authorId, createdAt])
   @@index([problemId])
   @@map("post")
 }
-

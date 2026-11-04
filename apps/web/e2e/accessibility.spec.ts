@@ -154,7 +154,22 @@ for (const colorScheme of ["dark", "light"] as const) {
       const member = await anotherUser(browser, baseURL!);
       const group = await createGroupInDb(viewer.id, "Feed crew", [member.account.id]);
       await createGroupInDb(viewer.id, "Second crew");
+      const plan = await createPlanInDb(group.id, viewer.id, mondayWeeksAgo(0));
       const twoSum = await prisma.problem.findUniqueOrThrow({ where: { leetcodeSlug: "two-sum" } });
+      // Automatic posts by the viewer, so their Hide control is scanned too.
+      await prisma.post.createMany({
+        data: [
+          { groupId: group.id, authorId: viewer.id, kind: "SOLVE", problemId: twoSum.id },
+          {
+            groupId: group.id,
+            authorId: viewer.id,
+            kind: "WEEK_DONE",
+            planId: plan.id,
+            weekNumber: 1,
+          },
+          { groupId: group.id, authorId: viewer.id, kind: "PLAN_DONE", planId: plan.id },
+        ],
+      });
       await prisma.post.createMany({
         data: [
           {

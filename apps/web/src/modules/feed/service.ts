@@ -13,7 +13,13 @@ const postInclude = {
   author: { select: { id: true, name: true, profile: { select: { username: true } } } },
   group: { select: { id: true, name: true } },
   problem: { select: { id: true, title: true, leetcodeSlug: true, difficulty: true } },
+  plan: {
+    select: { roadmapVersion: { select: { roadmap: { select: { id: true, title: true } } } } },
+  },
 } as const;
+
+/** Automatic posts the author hid, or whose solve was undone, show to no one. */
+const visible = { hiddenAt: null, withdrawnAt: null } as const;
 
 async function loadPostView(postId: string, viewerId: string) {
   const post = await prisma.post.findUnique({ where: { id: postId }, include: postInclude });
@@ -30,8 +36,11 @@ function toFeedItem(
   adminGroupIds: ReadonlySet<string>,
 ) {
   const isAuthor = post.authorId === viewerId;
+  const written = post.kind === "TEXT";
   return {
     id: post.id,
+    kind: post.kind,
+    /** Set for TEXT posts only. */
     body: post.body,
     spoiler: post.spoiler,
     createdAt: post.createdAt,
@@ -39,8 +48,12 @@ function toFeedItem(
     author: { id: post.author.id, name: post.author.name, username: post.author.profile?.username },
     group: post.group,
     problem: post.problem,
-    canEdit: isAuthor,
-    canDelete: isAuthor || adminGroupIds.has(post.groupId),
+    roadmap: post.plan?.roadmapVersion.roadmap ?? null,
+    weekNumber: post.weekNumber,
+    canEdit: written && isAuthor,
+    // Automatic posts hold no member-written text to moderate; the author hides them instead.
+    canDelete: written && (isAuthor || adminGroupIds.has(post.groupId)),
+    canHide: !written && isAuthor,
   };
 }
 export type FeedItem = ReturnType<typeof toFeedItem>;
@@ -66,6 +79,7 @@ export async function listFeed(
   const posts = await prisma.post.findMany({
     where: {
       groupId: { in: groupIds },
+      ...visible,
       ...(options.before ? { id: { lt: options.before } } : {}),
     },
     orderBy: { id: "desc" },
@@ -150,6 +164,7 @@ export async function editPost(
   if (!found) throw new NotFoundError("We couldn't find that post.");
   if (found.post.authorId !== viewerId)
     throw new ForbiddenError("Only the author can edit a post.");
+  if (found.post.kind !== "TEXT") throw new ForbiddenError("Automatic posts can't be edited.");
   return prisma.post.update({
     where: { id: postId },
     data: { body: input.body, spoiler: input.spoiler, editedAt: now },
@@ -162,6 +177,9 @@ export async function deletePost(viewerId: string, postId: string) {
   if (!found) throw new NotFoundError("We couldn't find that post.");
   const { post, membership } = found;
   const isAuthor = post.authorId === viewerId;
+  if (post.kind !== "TEXT") {
+    throw new ForbiddenError("Automatic posts can be hidden by their author, not deleted.");
+  }
   if (!isAuthor && membership.role !== "ADMIN") {
     throw new ForbiddenError("Only the author or the group admin can delete a post.");
   }
@@ -180,4 +198,21 @@ export async function deletePost(viewerId: string, postId: string) {
     }
   });
   return { groupId: post.groupId };
+}
+
+/**
+ * The author hides one of their automatic posts. It stays hidden, and because the row remains,
+ * solving the problem again never posts it anew. Hiding twice is harmless.
+ */
+export async function hidePost(viewerId: string, postId: string, now = new Date()) {
+  const found = await loadPostView(postId, viewerId);
+  if (!found) throw new NotFoundError("We couldn't find that post.");
+  if (found.post.authorId !== viewerId) {
+    throw new ForbiddenError("Only the author can hide a post.");
+  }
+  if (found.post.kind === "TEXT") {
+    throw new ForbiddenError("Posts you wrote can be deleted instead.");
+  }
+  await prisma.post.updateMany({ where: { id: postId, hiddenAt: null }, data: { hiddenAt: now } });
+  return { groupId: found.post.groupId };
 }

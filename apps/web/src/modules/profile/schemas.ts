@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { checkboxSchema } from "@/lib/form";
 import { timeZoneSchema } from "./timezone";
 import { usernameSchema } from "./username";
 
@@ -23,6 +24,8 @@ export const profileUpdateSchema = z.object({
     .transform((value) => value || null),
   timezone: timeZoneSchema,
 });
+
+export const sharingSchema = z.object({ shareSolves: checkboxSchema });
 
 export const appearanceSchema = z.enum(["SYSTEM", "LIGHT", "DARK"]);
 
