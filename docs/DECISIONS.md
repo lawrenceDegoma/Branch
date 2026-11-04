@@ -298,6 +298,22 @@ Feed rules:
   ones until hidden. CHECK constraints fix which columns each kind uses, and a trigger keeps a
   milestone's plan in the post's group (Prisma can't model that composite key on an optional
   relation).
+- **Reactions** (M12): the fixed four (👏 Kudos, 🔥 Impressive, 💡 Helpful, 🤝 Same here) as toggle
+  buttons on every visible post, written or automatic. Each person holds each kind once per post
+  (primary key `(postId, userId, kind)`), so toggling is idempotent and needs no rate limit. The
+  feed shows counts and the viewer's own (two queries per page); not who reacted. Buttons flip
+  optimistically and revert with a message on failure; pressed ones carry an outline, not only a
+  fill. The emoji are `aria-hidden`; the label is the accessible name.
+- **Comments** (M12) live on the post's own page, `/posts/[id]` (members of its group only; hidden,
+  withdrawn, foreign, or malformed IDs are a 404). The feed shows the count and links there, which
+  keeps feed reads bounded. Two levels: top-level comments oldest first (50 a page, `?after=`),
+  each with its replies (up to 100 shown) and a folded "Reply" form at the end of the thread;
+  replying to a reply files it in the same thread (a trigger enforces two levels and the same
+  post). Markdown and the spoiler mark work as in posts; 1-2000 characters; 10 comments a minute
+  per person. The author edits; the author or the group admin deletes (admin removals are audited
+  as `COMMENT_REMOVED`). A deleted comment with replies becomes "Comment deleted." (text and
+  author gone, CHECK-enforced), and goes entirely when its last reply does. Deleting a post takes
+  its comments and reactions with it.
 - The body is 1-5000 characters and not only whitespace (CHECK `body ~ '\S'`; `btrim` alone keeps
   newlines).
 
@@ -577,6 +593,25 @@ production build; taste-skill lint 0 FAIL.
 Verified: 24 shared, 94 unit, 119 integration tests; 215 E2E passed (3 skipped by design);
 production build; taste-skill lint 0 FAIL.
 
+### M12 — Reactions and comments (complete)
+
+- Migration `reactions_comments`: `reaction`, `comment` (body/deletion CHECK, two-level trigger),
+  `COMMENT_REMOVED`. Additive.
+- `modules/feed/reactions.ts` (`setReaction`), `modules/feed/comments.ts` (`listComments`,
+  `createComment`, `editComment`, `deleteComment`), `requireVisiblePost` and `getPost` in the
+  feed service; actions for each. `/posts` is a protected prefix in the proxy.
+- UI: `ReactionBar`; a footer on every post card (reactions, comments link, the owner's actions);
+  `EditableBody` now serves posts and comments; `CommentList`, `CommentForm`, and the post page.
+- Tests: 11 integration tests (reaction toggling and races, visibility, threading and the
+  reply-to-reply rule, foreign parents, edit rights, placeholders and their cleanup, admin removal
+  audit, rate limit, paging, cascade with the post); constraint tests for reactions, comment
+  bodies (NULL cases included), and the two-level trigger; 2 E2E journeys (PRD scenario 4 without
+  the image; edit, delete, admin removal, and a surviving reply); axe scans of the post page with
+  every comment state; 320px reflow of a post page.
+
+Verified: 24 shared, 94 unit, 132 integration tests; 223 E2E passed (3 skipped by design);
+production build; taste-skill lint 0 FAIL on the shipped files.
+
 ## Phase 1 summary
 
 Done when "two test users can join one group, see synchronized assignments, and track independent
@@ -603,6 +638,8 @@ approval.
 - Two different problems solved at the same instant that together finish a week can both miss the
   milestone (each transaction may not see the other's completion); unmarking and re-marking one
   of them posts it. Rare with manual toggles.
+- Reactions show counts, not who reacted. Comments have no reactions of their own. A thread shows
+  its first 100 replies.
 - Redoing a solve restores automatic posts for active plans only; a milestone of an archived plan
   that was withdrawn stays withdrawn.
 - The shared-link roadmap view is read-only (no completion toggles); progress shows on the

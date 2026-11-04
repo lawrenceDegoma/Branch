@@ -217,6 +217,45 @@ for (const colorScheme of ["dark", "light"] as const) {
       await member.context.close();
     });
 
+    test("post pages have no detectable WCAG A/AA violations", async ({
+      page,
+      viewer,
+      browser,
+      baseURL,
+    }) => {
+      const member = await anotherUser(browser, baseURL!);
+      const group = await createGroupInDb(viewer.id, "Thread crew", [member.account.id]);
+      const post = await prisma.post.create({
+        data: { groupId: group.id, authorId: member.account.id, body: "Help with **this**?" },
+      });
+      await prisma.reaction.create({ data: { postId: post.id, userId: viewer.id, kind: "KUDOS" } });
+      const top = await prisma.comment.create({
+        data: {
+          postId: post.id,
+          authorId: member.account.id,
+          body: "My attempt:\n\n```js\nlet x = 1;\n```",
+          spoiler: true,
+        },
+      });
+      await prisma.comment.create({
+        data: { postId: post.id, authorId: viewer.id, parentId: top.id, body: "Close!" },
+      });
+      const gone = await prisma.comment.create({
+        data: { postId: post.id, authorId: member.account.id, body: null, deletedAt: new Date() },
+      });
+      await prisma.comment.create({
+        data: { postId: post.id, authorId: viewer.id, parentId: gone.id, body: "Still here" },
+      });
+      await page.goto(`/posts/${post.id}`);
+      await expectNoViolations(page);
+      // An open reply form and opened spoiler code.
+      await page.locator("summary", { hasText: "Reply" }).first().click();
+      await page.getByText("Show spoiler code").click();
+      await expect(page.getByText("let x")).toBeVisible();
+      await expectNoViolations(page);
+      await member.context.close();
+    });
+
     test("invite and shared-link pages have no detectable WCAG A/AA violations", async ({
       page,
       viewer,

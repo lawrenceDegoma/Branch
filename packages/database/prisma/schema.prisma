@@ -39,6 +39,8 @@ model User {
   plansCreated     GroupRoadmapPlan[]
   completions      ProblemCompletion[]
   posts            Post[]
+  reactions        Reaction[]
+  comments         Comment[]
 
   @@unique([email])
   @@map("user")
@@ -209,6 +211,7 @@ enum GroupAuditAction {
   INVITE_REVOKED
   PLAN_CHANGED
   POST_REMOVED
+  COMMENT_REMOVED
 }
 
 /// Record of sensitive group administration actions (PRD §7).
@@ -502,9 +505,59 @@ model Post {
   hiddenAt    DateTime?
   /// The solve behind this automatic post was undone. Cleared if it is redone with sharing on.
   withdrawnAt DateTime?
+  reactions   Reaction[]
+  comments    Comment[]
 
   @@index([groupId, id(sort: Desc)])
   @@index([authorId, createdAt])
   @@index([problemId])
   @@map("post")
+}
+
+/// The fixed set of reactions: kudos, impressive, helpful, same here.
+enum ReactionKind {
+  KUDOS
+  IMPRESSIVE
+  HELPFUL
+  SAME_HERE
+}
+
+/// One person's reaction of one kind to one post; toggling it off deletes the row.
+model Reaction {
+  postId    String       @db.Uuid
+  post      Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      ReactionKind
+  createdAt DateTime     @default(now())
+
+  @@id([postId, userId, kind])
+  @@index([userId])
+  @@map("reaction")
+}
+
+/// A comment on a post, or a reply to one (two levels: a reply's parent is always a top-level
+/// comment on the same post, enforced by a trigger).
+model Comment {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  postId    String    @db.Uuid
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parentId  String?   @db.Uuid
+  parent    Comment?  @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("Replies")
+  /// Markdown, 1-2000 characters (CHECK); null once deleted.
+  body      String?
+  /// Code blocks render folded, as on posts.
+  spoiler   Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  editedAt  DateTime?
+  /// Deleted while it had replies: the text is gone and the replies stay under a placeholder.
+  deletedAt DateTime?
+
+  @@index([postId, parentId, id])
+  @@index([parentId, id])
+  @@index([authorId, createdAt])
+  @@map("comment")
 }

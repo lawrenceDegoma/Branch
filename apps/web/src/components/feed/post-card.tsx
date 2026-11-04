@@ -1,26 +1,47 @@
-import { CircleCheck, Flag } from "lucide-react";
+import { CircleCheck, Flag, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { ConfirmAction } from "@/components/forms/confirm-action";
 import { DifficultyPill } from "@/components/roadmaps/difficulty-pill";
+import { buttonVariants } from "@/components/ui/button";
 import { Avatar } from "@/components/user/avatar";
 import { formatDateTime, formatRelative } from "@/lib/format";
 import { hidePostAction } from "@/modules/feed/actions";
 import type { FeedItem } from "@/modules/feed/service";
 import { Markdown } from "./markdown";
-import { EditablePostBody } from "./post-actions";
+import { EditableBody } from "./post-actions";
+import { ReactionBar } from "./reactions";
 
 export function PostCard({
   post,
   now,
   timeZone,
   showGroup,
+  linkComments = true,
 }: {
   post: FeedItem;
   now: Date;
   timeZone: string;
   showGroup: boolean;
+  /** In a feed, link to the post's page for its comments; on that page, the thread is below. */
+  linkComments?: boolean;
 }) {
   const headingId = `post-${post.id}-author`;
+  const footer = (
+    <>
+      <ReactionBar postId={post.id} reactions={post.reactions} />
+      {linkComments ? (
+        <Link
+          href={`/posts/${post.id}#comments`}
+          className={buttonVariants({ variant: "ghost", size: "sm", className: "text-ink-muted" })}
+        >
+          <MessageCircle aria-hidden className="size-4" />
+          {post.commentCount === 0
+            ? "Comment"
+            : `${post.commentCount} ${post.commentCount === 1 ? "comment" : "comments"}`}
+        </Link>
+      ) : null}
+    </>
+  );
   return (
     <article
       aria-labelledby={headingId}
@@ -64,33 +85,38 @@ export function PostCard({
               <ProblemLink problem={post.problem} />
             </p>
           ) : null}
-          <EditablePostBody
-            postId={post.id}
+          <EditableBody
+            target="post"
+            id={post.id}
             body={post.body ?? ""}
             spoiler={post.spoiler}
             canEdit={post.canEdit}
             canDelete={post.canDelete}
+            footer={footer}
           >
             <Markdown spoiler={post.spoiler}>{post.body ?? ""}</Markdown>
-          </EditablePostBody>
+          </EditableBody>
         </>
       ) : (
-        <div className="-my-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+        <>
           <AutomaticPostBody post={post} />
-          {post.canHide ? (
-            <div className="ml-auto">
-              <ConfirmAction
-                action={hidePostAction}
-                fields={{ postId: post.id }}
-                trigger="Hide"
-                title="Hide this post?"
-                description="It disappears from the group's feed for everyone and won't be posted again. Your progress doesn't change."
-                confirmLabel="Hide post"
-                pendingLabel="Hiding…"
-              />
-            </div>
-          ) : null}
-        </div>
+          <div className="-mb-1 flex flex-wrap items-center gap-1">
+            {footer}
+            {post.canHide ? (
+              <div className="ml-auto">
+                <ConfirmAction
+                  action={hidePostAction}
+                  fields={{ postId: post.id }}
+                  trigger="Hide"
+                  title="Hide this post?"
+                  description="It disappears from the group's feed for everyone and won't be posted again. Your progress doesn't change."
+                  confirmLabel="Hide post"
+                  pendingLabel="Hiding…"
+                />
+              </div>
+            ) : null}
+          </div>
+        </>
       )}
     </article>
   );

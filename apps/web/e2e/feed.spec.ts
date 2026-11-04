@@ -178,6 +178,8 @@ test.describe("feed", () => {
     await mine.getByRole("button", { name: "Edit" }).click();
     await mine.getByRole("checkbox", { name: "Contains spoilers" }).uncheck();
     await mine.getByRole("button", { name: "Save" }).click();
+    // Saved: the code shows unfolded (the edit form has no code block, so this waits for it).
+    await expect(mine.locator("pre")).toBeVisible();
     await expect(mine.locator("details")).toHaveCount(0);
     await friend.page.reload();
     await expect(postWith(friend.page, "Got it in one pass").locator("pre")).toBeVisible();

@@ -43,6 +43,8 @@ function describeEvent(action: GroupAuditAction, actor: string, subject: string)
       return `${actor} changed the group's roadmap`;
     case "POST_REMOVED":
       return `${actor} removed a post by ${subject}`;
+    case "COMMENT_REMOVED":
+      return `${actor} removed a comment by ${subject}`;
   }
 }
 

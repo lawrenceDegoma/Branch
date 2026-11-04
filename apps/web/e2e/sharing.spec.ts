@@ -87,7 +87,13 @@ test.describe("automatic posts", () => {
 
     await friend.page.goto("/home");
     await expect(solvePost(friend.page, "Two Sum")).toContainText(viewer.name);
-    await expect(solvePost(friend.page, "Two Sum").getByRole("button")).toHaveCount(0);
+    // Friends can react, but only the author can hide it.
+    await expect(
+      solvePost(friend.page, "Two Sum").getByRole("button", { name: "Hide" }),
+    ).toHaveCount(0);
+    await expect(
+      solvePost(friend.page, "Two Sum").getByRole("button", { name: "Kudos" }),
+    ).toBeVisible();
 
     // Undo takes it down; redo brings back the one post, not a second.
     await setSolved(page, "Two Sum", false);

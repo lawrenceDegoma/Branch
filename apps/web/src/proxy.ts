@@ -10,6 +10,7 @@ const PROTECTED_PREFIXES = [
   "/home",
   "/roadmaps",
   "/groups",
+  "/posts",
   "/profile",
   "/settings",
   "/onboarding",

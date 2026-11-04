@@ -2,7 +2,14 @@ import "server-only";
 import { prisma } from "@branch/database";
 import { DomainError, ForbiddenError, NotFoundError } from "@/lib/errors";
 import { requireMembership } from "@/modules/groups/access";
-import { FEED_PAGE_SIZE, type CreatePostInput, type EditPostInput } from "./schemas";
+import {
+  FEED_PAGE_SIZE,
+  postIdSchema,
+  REACTIONS,
+  type CreatePostInput,
+  type EditPostInput,
+  type ReactionKindValue,
+} from "./schemas";
 
 // Posts belong to exactly one group. A feed is the union of the viewer's groups, so every read
 // starts from the viewer's memberships, and every write checks membership of the post's group.
@@ -16,12 +23,14 @@ const postInclude = {
   plan: {
     select: { roadmapVersion: { select: { roadmap: { select: { id: true, title: true } } } } },
   },
+  _count: { select: { comments: { where: { deletedAt: null } } } },
 } as const;
 
 /** Automatic posts the author hid, or whose solve was undone, show to no one. */
 const visible = { hiddenAt: null, withdrawnAt: null } as const;
 
 async function loadPostView(postId: string, viewerId: string) {
+  if (!postIdSchema.safeParse(postId).success) return null;
   const post = await prisma.post.findUnique({ where: { id: postId }, include: postInclude });
   if (!post) return null;
   const membership = await prisma.groupMembership.findUnique({
@@ -30,10 +39,49 @@ async function loadPostView(postId: string, viewerId: string) {
   return membership ? { post, membership } : null;
 }
 
+/**
+ * A post the viewer may see and respond to: in one of their groups, and not hidden or withdrawn.
+ * Anything else is NotFound, so a post's existence never leaks.
+ */
+export async function requireVisiblePost(viewerId: string, postId: string) {
+  const found = await loadPostView(postId, viewerId);
+  if (!found || found.post.hiddenAt || found.post.withdrawnAt) {
+    throw new NotFoundError("We couldn't find that post.");
+  }
+  return found;
+}
+
+export type ReactionSummary = { kind: ReactionKindValue; count: number; mine: boolean }[];
+
+/** Counts of each reaction on each post, and which ones the viewer gave. Two queries per page. */
+async function reactionSummaries(viewerId: string, postIds: string[]) {
+  const [counts, mine] = await Promise.all([
+    prisma.reaction.groupBy({
+      by: ["postId", "kind"],
+      where: { postId: { in: postIds } },
+      _count: { _all: true },
+    }),
+    prisma.reaction.findMany({
+      where: { postId: { in: postIds }, userId: viewerId },
+      select: { postId: true, kind: true },
+    }),
+  ]);
+  const key = (postId: string, kind: string) => `${postId}:${kind}`;
+  const countOf = new Map(counts.map((c) => [key(c.postId, c.kind), c._count._all]));
+  const given = new Set(mine.map((m) => key(m.postId, m.kind)));
+  return (postId: string): ReactionSummary =>
+    REACTIONS.map(({ kind }) => ({
+      kind,
+      count: countOf.get(key(postId, kind)) ?? 0,
+      mine: given.has(key(postId, kind)),
+    }));
+}
+
 function toFeedItem(
   post: Awaited<ReturnType<typeof prisma.post.findMany<{ include: typeof postInclude }>>>[number],
   viewerId: string,
   adminGroupIds: ReadonlySet<string>,
+  reactions: ReactionSummary,
 ) {
   const isAuthor = post.authorId === viewerId;
   const written = post.kind === "TEXT";
@@ -50,6 +98,8 @@ function toFeedItem(
     problem: post.problem,
     roadmap: post.plan?.roadmapVersion.roadmap ?? null,
     weekNumber: post.weekNumber,
+    reactions,
+    commentCount: post._count.comments,
     canEdit: written && isAuthor,
     // Automatic posts hold no member-written text to moderate; the author hides them instead.
     canDelete: written && (isAuthor || adminGroupIds.has(post.groupId)),
@@ -88,10 +138,22 @@ export async function listFeed(
   });
   const admin = new Set(memberships.filter((m) => m.role === "ADMIN").map((m) => m.groupId));
   const page = posts.slice(0, limit);
+  const reactionsOf = await reactionSummaries(
+    viewerId,
+    page.map((post) => post.id),
+  );
   return {
-    items: page.map((post) => toFeedItem(post, viewerId, admin)),
+    items: page.map((post) => toFeedItem(post, viewerId, admin, reactionsOf(post.id))),
     nextCursor: posts.length > limit ? page.at(-1)!.id : null,
   };
+}
+
+/** One post, for its own page. */
+export async function getPost(viewerId: string, postId: string): Promise<FeedItem> {
+  const { post, membership } = await requireVisiblePost(viewerId, postId);
+  const admin = new Set(membership.role === "ADMIN" ? [post.groupId] : []);
+  const reactionsOf = await reactionSummaries(viewerId, [post.id]);
+  return toFeedItem(post, viewerId, admin, reactionsOf(post.id));
 }
 
 /** Groups the viewer can post to, each with the problems its active plan assigns. */

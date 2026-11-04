@@ -4,7 +4,7 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 
 ## Current status (updated 2026-11-03)
 
-**Phase 1 complete and soft-launched (Neon + Vercel). Phase 2 (social feed) approved 2026-11-04 and in progress; M9, M10 and M11 done.** Phase 2 decisions are in `docs/DECISIONS.md` (Social feed); images (M13) are deferred by the owner. The Phase 1 plan was approved on 2026-11-03; decisions, dependency pins, and the per-milestone log live in `docs/DECISIONS.md`. Setup and commands are in `README.md`.
+**Phase 1 complete and soft-launched (Neon + Vercel). Phase 2 (social feed) approved 2026-11-04 and in progress; M9 to M12 done.** Phase 2 decisions are in `docs/DECISIONS.md` (Social feed); images (M13) are deferred by the owner. The Phase 1 plan was approved on 2026-11-03; decisions, dependency pins, and the per-milestone log live in `docs/DECISIONS.md`. Setup and commands are in `README.md`.
 
 | Milestone | Status |
 |---|---|
@@ -21,9 +21,9 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 | M9 Feed and text posts | Done |
 | M10 Code highlighting and spoilers | Done |
 | M11 Automatic posts (opt-in) | Done |
-| M12 Reactions and comments | Next |
+| M12 Reactions and comments | Done |
 | M13 Images | Deferred (owner) |
-| M14 Privacy journeys, accessibility, docs | Planned |
+| M14 Privacy journeys, accessibility, docs | Next |
 
 **Approved Phase 1 decisions** (details in `docs/DECISIONS.md`): verified seed catalog plus a JSON importer; curated lists Patterns 150 and Essentials 75 (approved 2026-11-03, see below; Grind 75 skipped: no openly licensed source); email/password plus optional GitHub and Google OAuth (each enabled by its env vars) with no email delivery; group members see each other's status on assigned problems only; users may add problems by LeetCode URL (`source: USER`); exactly one admin per group; link-based hashed invites; weeks computed from the plan's start date and IANA timezone (Monday default); Review nav hidden until Phase 4; commit at the end of each milestone and push `main`.
 
@@ -42,7 +42,7 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 - **Dates and weeks:** use `@branch/shared/calendar`. Weeks are computed on calendar dates (`YYYY-MM-DD`) in the group's IANA timezone, never on instants, so DST can't shift them; week n starts `startDate + 7(n−1)`. Plan services accept a `now` argument so tests are deterministic. Schedule generation is `@branch/shared/schedule`, shared by the app and the seed.
 - **Progress** lives in `modules/progress/`: `setCompletion` is the only writer of completions (idempotent, `ON CONFLICT DO NOTHING`); progress is always derived from completions, never stored. Backlog/ahead/position rules are pure functions in `standing.ts`. Group views read only completions of problems assigned in the group's plan; keep it that way (approved privacy rule). Don't rank members.
 - **SQL CHECK constraints must handle NULL explicitly** (a CHECK that evaluates to NULL passes). Write `col IS NOT NULL AND ...` or `col IS NULL OR ...`, and add a test with the NULL case.
-- **Feed** lives in `modules/feed/`: a post belongs to one group; reads start from the viewer's memberships, writes check membership of the post's group (non-members 404, non-authors 403). Page by post ID (UUIDv7, `?before=`). Render user text only through `components/feed/markdown.tsx` (no raw HTML, no images, safe links; fenced code highlighted by class, coloured by `--code-*` tokens; `spoiler` folds code blocks); never `dangerouslySetInnerHTML`. Automatic posts (`SOLVE`, `WEEK_DONE`, `PLAN_DONE`, no body) are written only by `syncAutomaticPosts` inside `setCompletion`'s transaction, only with `profile.shareSolves` on, only to groups whose active plan assigns the problem; undo sets `withdrawnAt`, redo clears it, the author's `hiddenAt` is permanent. Feed reads filter both. Automatic posts are never edited or deleted.
+- **Feed** lives in `modules/feed/`: a post belongs to one group; reads start from the viewer's memberships, writes check membership of the post's group (non-members 404, non-authors 403). Page by post ID (UUIDv7, `?before=`). Render user text only through `components/feed/markdown.tsx` (no raw HTML, no images, safe links; fenced code highlighted by class, coloured by `--code-*` tokens; `spoiler` folds code blocks); never `dangerouslySetInnerHTML`. Automatic posts (`SOLVE`, `WEEK_DONE`, `PLAN_DONE`, no body) are written only by `syncAutomaticPosts` inside `setCompletion`'s transaction, only with `profile.shareSolves` on, only to groups whose active plan assigns the problem; undo sets `withdrawnAt`, redo clears it, the author's `hiddenAt` is permanent. Feed reads filter both. Automatic posts are never edited or deleted. Reactions (`modules/feed/reactions.ts`) and comments (`modules/feed/comments.ts`) start from `requireVisiblePost`; comments are two levels (trigger), shown on `/posts/[id]`, and a deleted comment with replies becomes a placeholder.
 - **Group authorization** lives in `modules/groups/access.ts` (`requireMembership`, `requireAdmin`). Every group-scoped service function calls one of them first.
 - **Module shape:** `apps/web/src/modules/<domain>/` holds `schemas.ts` (Zod), `service.ts` (server-only domain logic and authorization), `actions.ts` (server actions returning `FormState`), and colocated `*.test.ts` / `*.int.test.ts`.
 - **UI pieces to reuse:** `ConfirmAction` (dialog that runs a server action), `CopyField`, `FormField`, `SettingsSection`, `MemberList`, `ProblemRow` (with a `leading` slot for `CompletionToggle`), `ProgressBar`. Style links as buttons with `buttonVariants()` (it merges classes so variants override the base).
@@ -234,4 +234,4 @@ Prefer secure, simple code over speculative abstraction. Keep dependencies lean.
 
 ## Next task
 
-Continue Phase 2 with **M12** (reactions and two-level comments), then M14, committing at the end of each milestone. Any milestone with a migration must be applied to production (`DATABASE_URL=<direct> pnpm db:deploy`, by the owner) before it is pushed. Do not start extension, analyzer, or chat work.
+Finish Phase 2 with **M14** (privacy journeys, accessibility, docs, Phase 2 summary), committing at the end of each milestone. Any milestone with a migration must be applied to production (`DATABASE_URL=<direct> pnpm db:deploy`, by the owner) before it is pushed. Do not start extension, analyzer, or chat work.

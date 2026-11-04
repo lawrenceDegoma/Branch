@@ -421,3 +421,62 @@ describe("posts", () => {
     ).rejects.toThrow(/Foreign key constraint/);
   });
 });
+
+describe("reactions and comments", () => {
+  async function postInGroup() {
+    const user = await createTestUser();
+    const group = await createTestGroup([{ userId: user.id, role: "ADMIN" }]);
+    const post = await prisma.post.create({
+      data: { groupId: group.id, authorId: user.id, body: "hello" },
+    });
+    return { user, group, post };
+  }
+
+  it("records each reaction kind once per person and post", async () => {
+    const { user, post } = await postInGroup();
+    const data = { postId: post.id, userId: user.id, kind: "KUDOS" as const };
+    await prisma.reaction.create({ data });
+    await expect(prisma.reaction.create({ data })).rejects.toThrow();
+    await prisma.reaction.create({ data: { ...data, kind: "HELPFUL" } });
+  });
+
+  it("requires a body on live comments and none on deleted ones", async () => {
+    const { user, post } = await postInGroup();
+    const base = { postId: post.id, authorId: user.id };
+    await expect(prisma.comment.create({ data: { ...base, body: null } })).rejects.toThrow();
+    await expect(prisma.comment.create({ data: { ...base, body: " \n\t" } })).rejects.toThrow();
+    await expect(
+      prisma.comment.create({ data: { ...base, body: "x".repeat(2001) } }),
+    ).rejects.toThrow();
+    await expect(
+      prisma.comment.create({ data: { ...base, body: "still here", deletedAt: new Date() } }),
+    ).rejects.toThrow();
+    await prisma.comment.create({ data: { ...base, body: "x".repeat(2000) } });
+    await prisma.comment.create({ data: { ...base, body: null, deletedAt: new Date() } });
+  });
+
+  it("keeps replies two levels deep and on their parent's post", async () => {
+    const { user, group, post } = await postInGroup();
+    const other = await prisma.post.create({
+      data: { groupId: group.id, authorId: user.id, body: "other" },
+    });
+    const base = { postId: post.id, authorId: user.id };
+    const top = await prisma.comment.create({ data: { ...base, body: "top" } });
+    const reply = await prisma.comment.create({
+      data: { ...base, body: "reply", parentId: top.id },
+    });
+    await expect(
+      prisma.comment.create({ data: { ...base, body: "too deep", parentId: reply.id } }),
+    ).rejects.toThrow(/top-level comment/);
+    await expect(
+      prisma.comment.create({
+        data: { ...base, postId: other.id, body: "astray", parentId: top.id },
+      }),
+    ).rejects.toThrow(/top-level comment/);
+    // A comment with replies can't become a reply itself.
+    const second = await prisma.comment.create({ data: { ...base, body: "second" } });
+    await expect(
+      prisma.comment.update({ where: { id: top.id }, data: { parentId: second.id } }),
+    ).rejects.toThrow(/has replies/);
+  });
+});

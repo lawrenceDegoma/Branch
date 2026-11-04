@@ -67,7 +67,7 @@ test.describe("reflow at 320px", () => {
         body: `See https://example.com/${"a-very-long-path-segment/".repeat(6)} and\n\n\`\`\`\n${"const wide = 1; ".repeat(12)}\n\`\`\`\n\n| column one | column two | column three | column four |\n|---|---|---|---|\n| 1 | 2 | 3 | 4 |`,
       },
     });
-    await prisma.post.create({
+    const longPost = await prisma.post.create({
       data: {
         groupId: group.id,
         authorId: viewer.id,
@@ -75,11 +75,19 @@ test.describe("reflow at 320px", () => {
         spoiler: true,
       },
     });
+    await prisma.comment.create({
+      data: {
+        postId: longPost.id,
+        authorId: viewer.id,
+        body: `A long link https://example.com/${"segment/".repeat(12)} in a comment`,
+      },
+    });
     await page.goto("/roadmaps");
     await page.getByRole("link", { name: /^Patterns 150/ }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Patterns 150" })).toBeVisible();
     const paths = [
       "/home",
+      `/posts/${longPost.id}`,
       `/groups/${group.id}`,
       `/groups/${group.id}/plan`,
       `/groups/${group.id}/settings`,

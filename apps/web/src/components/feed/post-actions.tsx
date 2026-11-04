@@ -8,49 +8,88 @@ import { SubmitButton } from "@/components/forms/submit-button";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/input";
 import { initialFormState } from "@/lib/form";
-import { deletePostAction, editPostAction } from "@/modules/feed/actions";
-import { POST_BODY_MAX } from "@/modules/feed/schemas";
+import {
+  deleteCommentAction,
+  deletePostAction,
+  editCommentAction,
+  editPostAction,
+} from "@/modules/feed/actions";
+import { COMMENT_BODY_MAX, POST_BODY_MAX } from "@/modules/feed/schemas";
+
+const targets = {
+  post: {
+    field: "postId",
+    max: POST_BODY_MAX,
+    edit: editPostAction,
+    remove: deletePostAction,
+    editLabel: "Edit post",
+    deleteTitle: "Delete this post?",
+    deleteConfirm: "Delete post",
+    ownDelete: "It disappears from the group's feed, with its comments. This can't be undone.",
+    adminDelete:
+      "You're removing a member's post as the group admin. It disappears from the group's feed and the removal is recorded in the group's activity log.",
+  },
+  comment: {
+    field: "commentId",
+    max: COMMENT_BODY_MAX,
+    edit: editCommentAction,
+    remove: deleteCommentAction,
+    editLabel: "Edit comment",
+    deleteTitle: "Delete this comment?",
+    deleteConfirm: "Delete comment",
+    ownDelete: "Replies to it stay, under a deleted-comment note. This can't be undone.",
+    adminDelete:
+      "You're removing a member's comment as the group admin. The removal is recorded in the group's activity log.",
+  },
+} as const;
 
 /**
- * The post's body (rendered on the server and passed in as children) with the author's Edit and
- * the author's or admin's Delete. Editing swaps the body for a form in place.
+ * A post's or comment's body (rendered on the server and passed in as children) with the
+ * author's Edit and the author's or admin's Delete beside an optional footer. Editing swaps the
+ * body for a form in place.
  */
-export function EditablePostBody({
-  postId,
+export function EditableBody({
+  target,
+  id,
   body,
   spoiler,
   canEdit,
   canDelete,
+  footer,
   children,
 }: {
-  postId: string;
+  target: keyof typeof targets;
+  id: string;
   body: string;
   spoiler: boolean;
   canEdit: boolean;
   canDelete: boolean;
+  /** Shown at the start of the actions row (reactions, a comments link). */
+  footer?: React.ReactNode;
   children: React.ReactNode;
 }) {
+  const t = targets[target];
   const [editing, setEditing] = useState(false);
   const [state, action] = useActionState(async (prev: typeof initialFormState, data: FormData) => {
-    const result = await editPostAction(prev, data);
+    const result = await t.edit(prev, data);
     if (result.status === "success") setEditing(false);
     return result;
   }, initialFormState);
 
   if (editing) {
-    const textareaId = `edit-${postId}`;
+    const textareaId = `edit-${id}`;
     return (
       <form action={action} noValidate className="flex flex-col gap-3">
         <FormAlert state={state} />
-        <input type="hidden" name="postId" value={postId} />
+        <input type="hidden" name={t.field} value={id} />
         <label htmlFor={textareaId} className="sr-only">
-          Edit post
+          {t.editLabel}
         </label>
         <Textarea
           id={textareaId}
           name="body"
           defaultValue={state.values?.body ?? body}
-          maxLength={POST_BODY_MAX}
+          maxLength={t.max}
           autoFocus
           aria-invalid={state.fieldErrors?.body ? true : undefined}
           aria-describedby={state.fieldErrors?.body ? `${textareaId}-error` : undefined}
@@ -82,29 +121,28 @@ export function EditablePostBody({
   return (
     <>
       {children}
-      {canEdit || canDelete ? (
-        <div className="-mb-1 flex justify-end gap-1">
-          {canEdit ? (
-            <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
-              Edit
-            </Button>
-          ) : null}
-          {canDelete ? (
-            <ConfirmAction
-              action={deletePostAction}
-              fields={{ postId }}
-              trigger="Delete"
-              title="Delete this post?"
-              description={
-                canEdit
-                  ? "It disappears from the group's feed. This can't be undone."
-                  : "You're removing a member's post as the group admin. It disappears from the group's feed and the removal is recorded in the group's activity log."
-              }
-              confirmLabel="Delete post"
-              pendingLabel="Deleting…"
-              destructive
-            />
-          ) : null}
+      {footer || canEdit || canDelete ? (
+        <div className="-mb-1 flex flex-wrap items-center gap-1">
+          {footer}
+          <div className="ml-auto flex gap-1">
+            {canEdit ? (
+              <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
+                Edit
+              </Button>
+            ) : null}
+            {canDelete ? (
+              <ConfirmAction
+                action={t.remove}
+                fields={{ [t.field]: id }}
+                trigger="Delete"
+                title={t.deleteTitle}
+                description={canEdit ? t.ownDelete : t.adminDelete}
+                confirmLabel={t.deleteConfirm}
+                pendingLabel="Deleting…"
+                destructive
+              />
+            ) : null}
+          </div>
         </div>
       ) : null}
     </>
