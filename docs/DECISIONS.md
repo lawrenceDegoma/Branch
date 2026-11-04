@@ -198,6 +198,38 @@ graphic. Re-check after changing any token.
 - **Eligible roadmaps:** curated, the admin's own, and ones the admin's groups already use;
   published versions only.
 
+## Progress and Home
+
+- **One completion per person and problem**, enforced by the unique `(userId, problemId)` index.
+  Marking a problem solved is `INSERT … ON CONFLICT DO NOTHING`, so retries, double clicks, and
+  racing tabs leave one row; the service reports whether the request changed anything (the hook
+  Phase 2 needs to avoid duplicate celebrations). Unmarking deletes it. Source is `MANUAL` until
+  the extension arrives.
+- **Progress is derived, never stored.** Every view matches the person's completions against the
+  problems it contains, so solving once updates every group, plan, and roadmap together, and
+  changing or ending a plan cannot lose progress.
+- **Backlog and ahead** (pure functions in `modules/progress/standing.ts`): backlog is unsolved
+  problems from weeks before the current one and is only ever cleared by solving; ahead is solved
+  problems from later weeks. Both are computed on the group's calendar, so they move at local
+  midnight like the weeks do.
+- **What members see of each other:** only completions of problems assigned in the group's active
+  plan (the approved "assigned only" rule). The query is restricted to those problems, so nothing
+  else can leak through the page. Members are listed viewer first, then by join order, never
+  ranked; the graph labels state counts ("1 in backlog", "1 ahead") rather than verdicts.
+- **Branch graph** (the signature element planned in M1): the group's calendar is the main line,
+  the current week a shaded column, and each member a branch whose length is their solved count
+  mapped onto the weekly allotments. Drawn in HTML and CSS (percentages on a shared track, rounded
+  borders for the elbows) so lines stay crisp at any width; it is decorative, and each row's text
+  carries the same information for screen readers. Only the viewer's branch is orange.
+- **Home** (Phase 1, before the feed): this week per group with checkboxes, next week behind a
+  disclosure for working ahead, the backlog by group, groups still waiting for a roadmap, and the
+  "Your week" summary as the right rail (a compact card first on narrow screens). Summary counts
+  are per problem, so one shared by two groups counts once; "solved this week" uses the viewer's
+  own timezone.
+- **The toggle** is a button with `aria-pressed`, flipped optimistically; if saving fails, React
+  drops the optimistic value and the reason is shown next to it. Saving revalidates the whole
+  app layout, since one completion appears on many pages.
+
 ## Milestone log
 
 ### M0 — Workspace and tooling (complete)
@@ -329,6 +361,29 @@ change, version upgrade, ending); 151 E2E tests stable across consecutive runs (
 two members seeing the same week-1 problems, moving a problem, member read-only access and 404 on
 setup, future start, pace validation, ending, axe scans of plan pages in both themes).
 
+### M7 — Progress, completion, Home, and branch graph (complete)
+
+- Mark and unmark problems solved from Home, the group page, the schedule, and roadmap pages.
+- Home: this week across all groups, next week for working ahead, backlog, and the "Your week"
+  rail; empty states for no groups and groups without a roadmap.
+- Group page: who solved each of this week's problems, and the branch graph of everyone's
+  progress. Schedule: the viewer's checks, per-week solved counts, and backlog labels. Roadmap
+  page: the viewer's progress overall and per section.
+- The dev seed adds progress for Ada and Grace.
+- Fixed: past weeks on the schedule were dimmed with opacity, which dropped the light-mode
+  difficulty pills below 4.5:1; the dimming is gone. Accessibility scans now wait for the
+  streamed `<title>` (an intermittent "document has no title" result).
+
+Verified: 21 shared tests; 79 unit tests (backlog, ahead, position across empty weeks, labels);
+92 integration tests, including 13 for progress (idempotent and racing completions, undo,
+unknown problems, progress surviving the end of a plan, members seeing only assigned problems,
+non-members 404, backlog persisting across weeks and past the plan's end, work ahead, one
+completion updating two groups and counted once, "solved this week" in the viewer's timezone);
+165 E2E tests passed on two consecutive full runs (marking and undoing with a second member seeing
+it, backlog after two weeks, the same problem in two groups, working ahead, Home without groups,
+axe scans of Home, the group page with the graph, the schedule, and a roadmap in both themes).
+Taste-skill lint: 0 FAIL.
+
 ## Known limitations
 
 - Phase 1 has no email delivery, so there is no email verification or password reset. Sign-up
@@ -342,3 +397,6 @@ setup, future start, pace validation, ending, axe scans of plan pages in both th
   group's member list only.
 - ESLint 9 is end-of-life upstream (see dependency choices).
 - No CI pipeline yet; checks run locally.
+- Marking problems solved is not rate-limited; each toggle is one small idempotent write.
+- The shared-link roadmap view is read-only (no completion toggles); progress shows on the
+  roadmap's own page.

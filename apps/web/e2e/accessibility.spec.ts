@@ -1,12 +1,22 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
-import { createGroupInDb, expect, signUpViaApi, test } from "./support/fixtures";
+import {
+  anotherUser,
+  createGroupInDb,
+  createPlanInDb,
+  expect,
+  mondayWeeksAgo,
+  signUpViaApi,
+  test,
+} from "./support/fixtures";
 
 const publicRoutes = ["/", "/sign-in", "/sign-up", "/missing-page"];
 const appRoutes = ["/home", "/roadmaps", "/groups", "/profile", "/settings"];
 
 async function expectNoViolations(page: Page) {
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  // Next streams metadata, so the <title> can land just after the content.
+  await expect(page).toHaveTitle(/\S/);
   // Scan from the top: otherwise whatever Playwright last scrolled to can sit under the sticky
   // mobile header and be reported as obscured. (Focused elements are kept clear by
   // scroll-padding in globals.css.)
@@ -97,6 +107,32 @@ for (const colorScheme of ["dark", "light"] as const) {
       await expectNoViolations(page);
       await page.goto(`/groups/${group.id}`);
       await expectNoViolations(page);
+    });
+
+    test("progress views have no detectable WCAG A/AA violations", async ({
+      page,
+      viewer,
+      browser,
+      baseURL,
+    }) => {
+      const member = await anotherUser(browser, baseURL!);
+      const group = await createGroupInDb(viewer.id, "Progress crew", [member.account.id]);
+      await createPlanInDb(group.id, viewer.id, mondayWeeksAgo(1)); // week 2, with a backlog
+      await page.goto(`/groups/${group.id}`);
+      await page.waitForFunction(() => document.readyState === "complete");
+      await page.getByRole("button", { name: "Solved: Valid Palindrome" }).click();
+      await expect(page.getByRole("button", { name: "Solved: Valid Palindrome" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      for (const path of ["/home", `/groups/${group.id}`, `/groups/${group.id}/plan`]) {
+        await page.goto(path);
+        await expectNoViolations(page);
+      }
+      await page.getByRole("link", { name: "Starter sample" }).first().click();
+      await expect(page.getByText(/You've solved 1 of 22/)).toBeVisible();
+      await expectNoViolations(page);
+      await member.context.close();
     });
 
     test("/onboarding has no detectable WCAG A/AA violations", async ({ page, baseURL }) => {

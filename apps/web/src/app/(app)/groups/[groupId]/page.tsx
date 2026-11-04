@@ -10,7 +10,7 @@ import { orNotFound } from "@/lib/not-found";
 import { requireViewer } from "@/modules/auth/session";
 import { leaveGroupAction } from "@/modules/groups/actions";
 import { getGroupOverview } from "@/modules/groups/service";
-import { getGroupPlan } from "@/modules/plans/service";
+import { getGroupProgress } from "@/modules/progress/service";
 
 type Params = { params: Promise<{ groupId: string }> };
 
@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Params) {
 export default async function GroupPage({ params }: Params) {
   const { user, profile } = await requireViewer();
   const group = await orNotFound(getGroupOverview(user.id, (await params).groupId));
-  const { plan } = await getGroupPlan(user.id, group.id);
+  const { plan, members } = await getGroupProgress(user.id, group.id);
   const isAdmin = group.viewerRole === "ADMIN";
 
   return (
@@ -50,7 +50,7 @@ export default async function GroupPage({ params }: Params) {
         }
       />
       <div className="mb-4">
-        <PlanSummary groupId={group.id} plan={plan} isAdmin={isAdmin} />
+        <PlanSummary groupId={group.id} plan={plan} members={members} isAdmin={isAdmin} />
       </div>
       <section aria-labelledby="members-heading" className="rounded-xl bg-surface p-4 sm:p-5">
         <h2 id="members-heading" className="mb-4 text-base font-medium">

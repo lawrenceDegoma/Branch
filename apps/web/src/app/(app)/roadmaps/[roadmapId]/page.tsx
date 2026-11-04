@@ -1,6 +1,7 @@
 import { Settings } from "lucide-react";
 import Link from "next/link";
 import { RoadmapContent } from "@/components/roadmaps/roadmap-content";
+import { ProgressBar } from "@/components/progress/progress-bar";
 import { RoadmapMeta } from "@/components/roadmaps/roadmap-header";
 import { PageHeader } from "@/components/shell/page-header";
 import { EmptyState } from "@/components/states/empty-state";
@@ -8,6 +9,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { orNotFound } from "@/lib/not-found";
 import { requireViewer } from "@/modules/auth/session";
 import { startDraftAction } from "@/modules/roadmaps/actions";
+import { solvedAmong } from "@/modules/progress/service";
 import { getRoadmapView } from "@/modules/roadmaps/service";
 
 type Props = {
@@ -33,6 +35,9 @@ export default async function RoadmapPage({ params, searchParams }: Props) {
     getRoadmapView(user.id, roadmapId, versionFrom((await searchParams).version)),
   );
   const { roadmap } = view;
+  const problemIds = view.sections.flatMap((s) => s.items.map((item) => item.problem.id));
+  const solved = await solvedAmong(user.id, problemIds);
+  const solvedCount = problemIds.filter((id) => solved.has(id)).length;
 
   const ownerActions = view.isOwner ? (
     <>
@@ -66,7 +71,18 @@ export default async function RoadmapPage({ params, searchParams }: Props) {
       />
       <RoadmapMeta view={view} timeZone={profile.timezone} basePath={`/roadmaps/${roadmap.id}`} />
       {view.selectedVersion ? (
-        <RoadmapContent sections={view.sections} />
+        <>
+          {problemIds.length > 0 ? (
+            <div className="mb-4 flex items-center gap-3">
+              <ProgressBar value={solvedCount} total={problemIds.length} className="w-40" />
+              <p className="text-ink-muted tabular">
+                You&apos;ve solved <span className="text-ink">{solvedCount}</span> of{" "}
+                {problemIds.length}
+              </p>
+            </div>
+          ) : null}
+          <RoadmapContent sections={view.sections} solved={solved} />
+        </>
       ) : (
         <EmptyState
           title="Not published yet"

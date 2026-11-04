@@ -94,47 +94,30 @@ export async function listPlanCandidates(userId: string) {
   });
 }
 
-/** The group's active plan laid out by week, or null when none is set. */
-export async function getGroupPlan(userId: string, groupId: string, now = new Date()) {
-  const membership = await requireMembership(userId, groupId);
-  const group = await prisma.group.findUniqueOrThrow({
-    where: { id: groupId },
-    select: { timezone: true },
-  });
-  const plan = await prisma.groupRoadmapPlan.findFirst({
-    where: { groupId, status: "ACTIVE" },
+const planInclude = {
+  roadmapVersion: {
+    select: { id: true, number: true, roadmap: { select: { id: true, title: true } } },
+  },
+  assignments: {
     include: {
-      roadmapVersion: {
-        select: { id: true, number: true, roadmap: { select: { id: true, title: true } } },
-      },
-      assignments: {
-        include: {
-          roadmapItem: {
-            select: {
-              id: true,
-              position: true,
-              section: { select: { title: true, position: true } },
-              problem: { select: { id: true, leetcodeSlug: true, title: true, difficulty: true } },
-            },
-          },
+      roadmapItem: {
+        select: {
+          id: true,
+          position: true,
+          section: { select: { title: true, position: true } },
+          problem: { select: { id: true, leetcodeSlug: true, title: true, difficulty: true } },
         },
       },
     },
-  });
-  if (!plan) return { viewerRole: membership.role, timezone: group.timezone, plan: null };
+  },
+} satisfies Prisma.GroupRoadmapPlanInclude;
 
-  const newer = await prisma.roadmapVersion.findFirst({
-    where: {
-      roadmapId: plan.roadmapVersion.roadmap.id,
-      publishedAt: { not: null },
-      number: { gt: plan.roadmapVersion.number },
-    },
-    orderBy: { number: "desc" },
-    select: { number: true },
-  });
+type PlanRecord = Prisma.GroupRoadmapPlanGetPayload<{ include: typeof planInclude }>;
 
+/** Lays a plan out by week, as seen on `now` in the group's timezone. */
+function layoutPlan(plan: PlanRecord, timeZone: string, now: Date) {
   const startDate = fromDbDate(plan.startDate);
-  const today = dateInTimeZone(now, group.timezone);
+  const today = dateInTimeZone(now, timeZone);
   const ordered = [...plan.assignments].sort(
     (a, b) =>
       a.weekNumber - b.weekNumber ||
@@ -152,25 +135,75 @@ export async function getGroupPlan(userId: string, groupId: string, now = new Da
         problem: a.roadmapItem.problem,
       })),
   }));
+  return {
+    id: plan.id,
+    roadmap: plan.roadmapVersion.roadmap,
+    versionNumber: plan.roadmapVersion.number,
+    startDate,
+    pacing: pacingOf(plan),
+    today,
+    currentWeek: weekNumberOn(startDate, today),
+    totalWeeks,
+    weeks,
+  };
+}
+export type PlanLayout = ReturnType<typeof layoutPlan>;
+
+/** The group's active plan laid out by week, or null when none is set. */
+export async function getGroupPlan(userId: string, groupId: string, now = new Date()) {
+  const membership = await requireMembership(userId, groupId);
+  const group = await prisma.group.findUniqueOrThrow({
+    where: { id: groupId },
+    select: { timezone: true },
+  });
+  const plan = await prisma.groupRoadmapPlan.findFirst({
+    where: { groupId, status: "ACTIVE" },
+    include: planInclude,
+  });
+  if (!plan) return { viewerRole: membership.role, timezone: group.timezone, plan: null };
+
+  const newer = await prisma.roadmapVersion.findFirst({
+    where: {
+      roadmapId: plan.roadmapVersion.roadmap.id,
+      publishedAt: { not: null },
+      number: { gt: plan.roadmapVersion.number },
+    },
+    orderBy: { number: "desc" },
+    select: { number: true },
+  });
 
   return {
     viewerRole: membership.role,
     timezone: group.timezone,
-    plan: {
-      id: plan.id,
-      roadmap: plan.roadmapVersion.roadmap,
-      versionNumber: plan.roadmapVersion.number,
-      newerVersionNumber: newer?.number ?? null,
-      startDate,
-      pacing: pacingOf(plan),
-      today,
-      currentWeek: weekNumberOn(startDate, today),
-      totalWeeks,
-      weeks,
-    },
+    plan: { ...layoutPlan(plan, group.timezone, now), newerVersionNumber: newer?.number ?? null },
   };
 }
 export type GroupPlan = NonNullable<Awaited<ReturnType<typeof getGroupPlan>>["plan"]>;
+
+/** Every group the user belongs to, oldest membership first, with its active plan laid out. */
+export async function listViewerPlans(userId: string, now = new Date()) {
+  const memberships = await prisma.groupMembership.findMany({
+    where: { userId },
+    orderBy: { joinedAt: "asc" },
+    include: {
+      group: {
+        select: {
+          id: true,
+          name: true,
+          timezone: true,
+          plans: { where: { status: "ACTIVE" }, take: 1, include: planInclude },
+        },
+      },
+    },
+  });
+  return memberships.map(({ group }) => {
+    const plan = group.plans[0];
+    return {
+      group: { id: group.id, name: group.name },
+      plan: plan ? layoutPlan(plan, group.timezone, now) : null,
+    };
+  });
+}
 
 // ---------------------------------------------------------------------------------------------
 // Changing the plan (admin only)

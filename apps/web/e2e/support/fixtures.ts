@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { prisma } from "@branch/database";
+import { addDays, dateInTimeZone, isoWeekday, toDbDate } from "@branch/shared/calendar";
+import { generateAssignments } from "@branch/shared/schedule";
 import { test as base, expect, type APIRequestContext, type Browser } from "@playwright/test";
 
 export type TestAccount = {
@@ -71,6 +73,52 @@ export async function createGroupInDb(
       },
     },
   });
+}
+
+/** Monday of the current week, `weeksAgo` weeks back, in UTC (the timezone of test groups). */
+export function mondayWeeksAgo(weeksAgo = 0): string {
+  const today = dateInTimeZone(new Date(), "UTC");
+  return addDays(today, -(isoWeekday(today) - 1) - 7 * weeksAgo);
+}
+
+/**
+ * Gives a group a plan on the seeded "Starter sample" roadmap, directly in the database.
+ * Four problems a week: week 1 is Contains Duplicate, Valid Anagram, Two Sum, Group Anagrams.
+ */
+export async function createPlanInDb(groupId: string, adminId: string, startDate: string) {
+  const version = await prisma.roadmapVersion.findFirstOrThrow({
+    where: { roadmap: { slug: "starter-sample" }, publishedAt: { not: null } },
+    orderBy: { number: "desc" },
+    include: {
+      sections: {
+        orderBy: { position: "asc" },
+        include: { items: { orderBy: { position: "asc" } } },
+      },
+    },
+  });
+  const assignments = generateAssignments(
+    version.sections.map((s) => ({ itemIds: s.items.map((i) => i.id) })),
+    { mode: "PER_WEEK", problemsPerWeek: 4 },
+  );
+  const plan = await prisma.groupRoadmapPlan.create({
+    data: {
+      groupId,
+      roadmapVersionId: version.id,
+      startDate: toDbDate(startDate),
+      pacing: "PER_WEEK",
+      problemsPerWeek: 4,
+      createdById: adminId,
+    },
+  });
+  await prisma.weeklyAssignment.createMany({
+    data: assignments.map((a) => ({
+      planId: plan.id,
+      versionId: version.id,
+      roadmapItemId: a.itemId,
+      weekNumber: a.weekNumber,
+    })),
+  });
+  return plan;
 }
 
 /** A second signed-in person in their own browser context. */

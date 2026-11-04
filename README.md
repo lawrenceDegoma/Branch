@@ -26,7 +26,7 @@ pnpm install                 # installs dependencies and generates the Prisma cl
 cp .env.example .env         # then set BETTER_AUTH_SECRET (see below)
 pnpm db:up                   # starts PostgreSQL 18 and waits until it is healthy
 pnpm db:migrate              # applies migrations to the development database
-pnpm db:seed                 # sample catalog, roadmap, dev accounts, and a group (idempotent)
+pnpm db:seed                 # sample catalog, roadmap, dev accounts, a group with a plan (idempotent)
 pnpm dev                     # http://localhost:3000
 ```
 
@@ -38,6 +38,9 @@ Seeded development accounts (local only; the seed refuses to run with `NODE_ENV=
 | -------------------- | --------------------- | ----------------------------- |
 | `ada@example.test`   | `branch-dev-password` | Admin                         |
 | `grace@example.test` | `branch-dev-password` | Member                        |
+
+The group follows the sample roadmap from last Monday (so week 2 is in progress). Ada has one
+problem left in her backlog; Grace has finished week 1 and solved one problem ahead.
 
 ## Environment variables
 

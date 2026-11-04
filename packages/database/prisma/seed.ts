@@ -1,4 +1,5 @@
-// Development seed: catalog, sample roadmap, two dev accounts, and one group. Idempotent.
+// Development seed: catalog, sample roadmap, two dev accounts, one group with a plan, and some
+// progress. Idempotent.
 // Usage: pnpm db:seed   (loads the root .env; refuses to run when NODE_ENV=production)
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -152,6 +153,37 @@ async function main() {
       });
     }
     console.log("Plan: Starter sample, 4 problems a week, started last Monday");
+
+    // Some progress, so Home and the branch graph have something to show: Ada has one problem
+    // left over from week 1; Grace has finished week 1, is halfway through week 2, and has
+    // solved one problem ahead.
+    const plan = await prisma.groupRoadmapPlan.findFirstOrThrow({
+      where: { groupId: group.id, status: "ACTIVE" },
+      include: {
+        assignments: {
+          orderBy: [{ weekNumber: "asc" }, { roadmapItem: { position: "asc" } }],
+          include: { roadmapItem: { select: { problemId: true } } },
+        },
+      },
+    });
+    const week = (n: number) =>
+      plan.assignments.filter((a) => a.weekNumber === n).map((a) => a.roadmapItem.problemId);
+    const solved = {
+      [ada.id]: week(1).slice(0, 3),
+      [grace.id]: [...week(1), ...week(2).slice(0, 2), ...week(3).slice(0, 1)],
+    };
+    await prisma.problemCompletion.createMany({
+      data: Object.entries(solved).flatMap(([userId, problemIds]) =>
+        problemIds.map((problemId) => ({
+          userId,
+          problemId,
+          source: "MANUAL" as const,
+          completedAt: new Date(),
+        })),
+      ),
+      skipDuplicates: true,
+    });
+    console.log("Progress: Ada 3 solved (1 in backlog), Grace 7 solved (1 ahead)");
   } finally {
     await prisma.$disconnect();
   }

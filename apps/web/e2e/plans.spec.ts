@@ -1,12 +1,9 @@
-import { addDays, dateInTimeZone, isoWeekday } from "@branch/shared/calendar";
+import { addDays } from "@branch/shared/calendar";
 import type { Page } from "@playwright/test";
-import { anotherUser, createGroupInDb, expect, test } from "./support/fixtures";
+import { anotherUser, createGroupInDb, expect, mondayWeeksAgo, test } from "./support/fixtures";
 
 // Groups created by createGroupInDb use UTC, so "this week" is computed in UTC.
-function mondayThisWeek(): string {
-  const today = dateInTimeZone(new Date(), "UTC");
-  return addDays(today, -(isoWeekday(today) - 1));
-}
+const mondayThisWeek = () => mondayWeeksAgo(0);
 
 async function choosePlan(
   page: Page,

@@ -5,15 +5,15 @@ import { ConfirmAction } from "@/components/forms/confirm-action";
 import { MoveWeekForm } from "@/components/plans/move-week-form";
 import { paceLabel, planPosition } from "@/components/plans/plan-format";
 import { ProblemRow } from "@/components/plans/problem-row";
+import { CompletionToggle } from "@/components/progress/completion-toggle";
 import { PageHeader } from "@/components/shell/page-header";
 import { EmptyState } from "@/components/states/empty-state";
 import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { orNotFound } from "@/lib/not-found";
 import { requireViewer } from "@/modules/auth/session";
 import { getGroupOverview } from "@/modules/groups/service";
 import { endPlanAction, upgradePlanAction } from "@/modules/plans/actions";
-import { getGroupPlan } from "@/modules/plans/service";
+import { getGroupProgress } from "@/modules/progress/service";
 import { StartDateForm } from "./start-date-form";
 
 export const metadata = { title: "Schedule" };
@@ -21,9 +21,9 @@ export const metadata = { title: "Schedule" };
 export default async function PlanPage({ params }: { params: Promise<{ groupId: string }> }) {
   const { user } = await requireViewer();
   const { groupId } = await params;
-  const [group, { plan, viewerRole }] = await Promise.all([
+  const [group, { plan, viewerRole, members }] = await Promise.all([
     orNotFound(getGroupOverview(user.id, groupId)),
-    orNotFound(getGroupPlan(user.id, groupId)),
+    orNotFound(getGroupProgress(user.id, groupId)),
   ]);
   const isAdmin = viewerRole === "ADMIN";
   const groupLink = (
@@ -59,6 +59,7 @@ export default async function PlanPage({ params }: { params: Promise<{ groupId: 
   }
 
   const position = planPosition(plan);
+  const solved = new Set(members.find((m) => m.isViewer)?.solvedProblemIds);
   const weekOptions = Math.min(MAX_WEEK, plan.totalWeeks + 4);
 
   return (
@@ -133,14 +134,13 @@ export default async function PlanPage({ params }: { params: Promise<{ groupId: 
       <ol className="flex flex-col gap-4">
         {plan.weeks.map((week) => {
           const current = week.number === plan.currentWeek;
+          const past = week.number < plan.currentWeek;
+          const solvedCount = week.items.filter((item) => solved.has(item.problem.id)).length;
           return (
             <li key={week.number}>
               <section
                 aria-labelledby={`week-${week.number}`}
-                className={cn(
-                  "rounded-xl bg-surface p-4 sm:p-5",
-                  week.number < plan.currentWeek && "opacity-90",
-                )}
+                className="rounded-xl bg-surface p-4 sm:p-5"
               >
                 <h2
                   id={`week-${week.number}`}
@@ -156,6 +156,11 @@ export default async function PlanPage({ params }: { params: Promise<{ groupId: 
                       This week
                     </span>
                   ) : null}
+                  {week.items.length > 0 ? (
+                    <span className="ml-auto text-sm font-normal text-ink-muted tabular">
+                      {solvedCount} of {week.items.length} solved
+                    </span>
+                  ) : null}
                 </h2>
                 {week.items.length === 0 ? (
                   <p className="mt-2 text-ink-muted">No problems this week.</p>
@@ -166,7 +171,17 @@ export default async function PlanPage({ params }: { params: Promise<{ groupId: 
                         key={item.roadmapItemId}
                         problem={item.problem}
                         sectionTitle={item.sectionTitle}
+                        leading={
+                          <CompletionToggle
+                            problemId={item.problem.id}
+                            title={item.problem.title}
+                            solved={solved.has(item.problem.id)}
+                          />
+                        }
                       >
+                        {past && !solved.has(item.problem.id) ? (
+                          <span className="text-xs text-ink-muted">Backlog</span>
+                        ) : null}
                         {isAdmin ? (
                           <MoveWeekForm
                             groupId={group.id}
