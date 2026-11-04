@@ -185,3 +185,27 @@ test.describe("password reset", () => {
     await other.close();
   });
 });
+
+test.describe("social sign-in", () => {
+  for (const [label, host, provider] of [
+    ["Google", "accounts.google.com", "google"],
+    ["GitHub", "github.com", "github"],
+  ] as const) {
+    test(`Continue with ${label} hands off to ${label} with Branch's callback`, async ({
+      page,
+      baseURL,
+    }) => {
+      // Stop at the provider: answer its authorize page locally instead of leaving the test.
+      await page.route(`https://${host}/**`, (route) => route.fulfill({ body: "provider" }));
+      for (const path of ["/sign-in", "/sign-up"]) {
+        await page.goto(path);
+        await expect(page.getByRole("button", { name: `Continue with ${label}` })).toBeVisible();
+      }
+      await page.getByRole("button", { name: `Continue with ${label}` }).click();
+      await page.waitForURL(`https://${host}/**`);
+      const url = new URL(page.url());
+      expect(url.searchParams.get("redirect_uri")).toBe(`${baseURL}/api/auth/callback/${provider}`);
+      expect(url.searchParams.get("client_id")).toBe(`e2e-${provider}-client`);
+    });
+  }
+});

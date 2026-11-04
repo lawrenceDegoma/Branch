@@ -7,7 +7,19 @@ import { serverEnv } from "@/lib/env";
 
 const env = serverEnv();
 
-export const githubEnabled = Boolean(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET);
+const socialProviders = {
+  ...(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET
+    ? { github: { clientId: env.GITHUB_CLIENT_ID, clientSecret: env.GITHUB_CLIENT_SECRET } }
+    : {}),
+  ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
+    ? { google: { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET } }
+    : {}),
+};
+
+/** Sign-in providers with credentials configured, in the order their buttons appear. */
+export const enabledSocialProviders = (["google", "github"] as const).filter(
+  (provider) => provider in socialProviders,
+);
 
 export const auth = betterAuth({
   appName: "Branch",
@@ -22,10 +34,7 @@ export const auth = betterAuth({
     // Reset links are issued by the owner (pnpm auth:reset-link); a reset signs out every device.
     revokeSessionsOnPasswordReset: true,
   },
-  socialProviders:
-    env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET
-      ? { github: { clientId: env.GITHUB_CLIENT_ID, clientSecret: env.GITHUB_CLIENT_SECRET } }
-      : {},
+  socialProviders,
   session: {
     expiresIn: 60 * 60 * 24 * 30,
     updateAge: 60 * 60 * 24,

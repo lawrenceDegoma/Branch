@@ -7,7 +7,13 @@ import { errorContext, logger } from "@/lib/logger";
 import { safeNextPath } from "@/lib/redirect";
 import { auth } from "./auth";
 import { authErrorMessage } from "./errors";
-import { changePasswordSchema, resetPasswordSchema, signInSchema, signUpSchema } from "./schemas";
+import {
+  changePasswordSchema,
+  resetPasswordSchema,
+  signInSchema,
+  signUpSchema,
+  socialProviderSchema,
+} from "./schemas";
 import { requireUser } from "./session";
 
 function logUnexpected(action: string, error: unknown) {
@@ -54,13 +60,15 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
   redirect(next ? `/onboarding?next=${encodeURIComponent(next)}` : "/onboarding");
 }
 
-export async function signInWithGitHubAction(formData: FormData): Promise<void> {
+export async function signInWithProviderAction(formData: FormData): Promise<void> {
+  const provider = socialProviderSchema.safeParse(formData.get("provider"));
+  if (!provider.success) redirect("/sign-in?error=oauth");
   const next = safeNextPath(formData.get("next")) ?? "/home";
   const result = await auth.api.signInSocial({
-    body: { provider: "github", callbackURL: next, errorCallbackURL: "/sign-in?error=github" },
+    body: { provider: provider.data, callbackURL: next, errorCallbackURL: "/sign-in?error=oauth" },
     headers: await headers(),
   });
-  if (!result.url) redirect("/sign-in?error=github");
+  if (!result.url) redirect("/sign-in?error=oauth");
   redirect(result.url);
 }
 

@@ -28,6 +28,8 @@ async function expectNoViolations(page: Page) {
   // mobile header and be reported as obscured. (Focused elements are kept clear by
   // scroll-padding in globals.css.)
   await page.evaluate(() => window.scrollTo(0, 0));
+  // Measure settled colours: a colour transition caught midway reads as low contrast.
+  await page.waitForFunction(() => document.getAnimations().length === 0);
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
     .analyze();

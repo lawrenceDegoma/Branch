@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { GitHubButton } from "@/components/forms/github-button";
+import { SocialSignIn } from "@/components/forms/social-sign-in";
 import { safeNextPath } from "@/lib/redirect";
-import { githubEnabled } from "@/modules/auth/auth";
+import { enabledSocialProviders } from "@/modules/auth/auth";
 import { getSession } from "@/modules/auth/session";
 import { SignInForm } from "./sign-in-form";
 
@@ -25,21 +25,13 @@ export default async function SignInPage({
           Password updated. Sign in with your new password.
         </p>
       ) : null}
-      {params.error === "github" ? (
+      {params.error === "oauth" ? (
         <p role="alert" className="mb-4 rounded-[10px] bg-negative-soft px-3 py-2.5 text-ink">
-          GitHub sign-in didn&apos;t complete. Try again or use your email.
+          That sign-in didn&apos;t complete. If you created your account with an email and password,
+          sign in that way.
         </p>
       ) : null}
-      {githubEnabled ? (
-        <>
-          <GitHubButton next={next} />
-          <div className="my-5 flex items-center gap-3 text-xs text-ink-faint" aria-hidden="true">
-            <span className="h-px flex-1 bg-line" />
-            or
-            <span className="h-px flex-1 bg-line" />
-          </div>
-        </>
-      ) : null}
+      <SocialSignIn providers={enabledSocialProviders} next={next} />
       <SignInForm next={next} />
     </>
   );

@@ -15,10 +15,16 @@ const serverEnvSchema = z
     BETTER_AUTH_URL: z.url({ protocol: /^https?$/ }),
     GITHUB_CLIENT_ID: optionalSecret,
     GITHUB_CLIENT_SECRET: optionalSecret,
+    GOOGLE_CLIENT_ID: optionalSecret,
+    GOOGLE_CLIENT_SECRET: optionalSecret,
   })
   .refine((env) => !env.GITHUB_CLIENT_ID === !env.GITHUB_CLIENT_SECRET, {
     message: "set both or neither",
     path: ["GITHUB_CLIENT_ID"],
+  })
+  .refine((env) => !env.GOOGLE_CLIENT_ID === !env.GOOGLE_CLIENT_SECRET, {
+    message: "set both or neither",
+    path: ["GOOGLE_CLIENT_ID"],
   });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

@@ -46,4 +46,11 @@ describe("parseServerEnv", () => {
       expect.objectContaining({ message: expect.not.stringContaining(secret) }),
     );
   });
+  it("requires both Google credentials or neither", () => {
+    expect(() => parseServerEnv({ ...valid, GOOGLE_CLIENT_SECRET: "abc" })).toThrow(
+      /GOOGLE_CLIENT_ID/,
+    );
+    const env = parseServerEnv({ ...valid, GOOGLE_CLIENT_ID: "id", GOOGLE_CLIENT_SECRET: "s" });
+    expect(env.GOOGLE_CLIENT_ID).toBe("id");
+  });
 });

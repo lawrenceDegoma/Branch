@@ -31,6 +31,14 @@ export default defineConfig({
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
-    env: { DATABASE_URL: process.env.DATABASE_URL, BETTER_AUTH_URL: baseURL },
+    env: {
+      DATABASE_URL: process.env.DATABASE_URL,
+      BETTER_AUTH_URL: baseURL,
+      // Placeholder credentials so both sign-in buttons render; tests stop at the provider.
+      GITHUB_CLIENT_ID: "e2e-github-client",
+      GITHUB_CLIENT_SECRET: "e2e-github-secret",
+      GOOGLE_CLIENT_ID: "e2e-google-client",
+      GOOGLE_CLIENT_SECRET: "e2e-google-secret",
+    },
   },
 });

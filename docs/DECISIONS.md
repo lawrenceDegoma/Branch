@@ -449,6 +449,16 @@ through **owner-issued links**, still with no email provider.
 Verified: 24 shared, 80 unit, 96 integration tests; 189 E2E passed (3 skipped by design);
 production build.
 
+### Google sign-in (soft launch)
+
+Owner request (2026-11-03): offer Google, GitHub, and email/password on the sign-in and sign-up
+pages. Google is Better Auth's built-in provider; each provider's button renders only when both of
+its credentials are set (the environment check rejects a half-configured pair). One server action
+handles both providers, validating the provider name. Failed sign-ins land on
+`/sign-in?error=oauth`. E2E tests run with placeholder credentials and stop at the provider,
+checking the client ID and callback URL. Implicit account linking stays off for unverified emails
+(Better Auth default); a "Connected accounts" settings section is proposed, not built.
+
 ## Phase 1 summary
 
 Done when "two test users can join one group, see synchronized assignments, and track independent

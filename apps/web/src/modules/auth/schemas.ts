@@ -36,3 +36,6 @@ export const resetPasswordSchema = z.object({
   token: z.string().min(1).max(200),
   newPassword,
 });
+
+export const socialProviderSchema = z.enum(["google", "github"]);
+export type SocialProvider = z.infer<typeof socialProviderSchema>;

@@ -85,11 +85,24 @@ Send them the printed link privately: whoever holds it can set the password. It 
 expires after an hour. Using it signs that account out on every device. The pooled string works
 here too.
 
-## Optional: GitHub sign-in
+## Optional: Google and GitHub sign-in
 
-Create an OAuth app at https://github.com/settings/developers with the callback URL
-`https://<your-domain>/api/auth/callback/github`. Add `GITHUB_CLIENT_ID` and
-`GITHUB_CLIENT_SECRET` in Vercel, then redeploy.
+Each button appears only when both of its variables are set; setting just one stops the app from
+starting. Redeploy after adding them.
+
+- **GitHub:** create an OAuth app at https://github.com/settings/developers with the callback URL
+  `https://<your-domain>/api/auth/callback/github`, then set `GITHUB_CLIENT_ID` and
+  `GITHUB_CLIENT_SECRET`. An OAuth app has one callback URL, so local development needs its own
+  app with `http://localhost:3000/api/auth/callback/github`.
+- **Google:** in Google Cloud Console, set up the OAuth consent screen (audience **External**,
+  basic scopes only) and create an OAuth client ID of type "Web application" with the redirect
+  URI `https://<your-domain>/api/auth/callback/google`. Set `GOOGLE_CLIENT_ID` and
+  `GOOGLE_CLIENT_SECRET`. While the consent screen is in **Testing**, only the test users you list
+  can sign in; add your friends' Google addresses, or publish the app.
+
+Branch can't confirm email addresses, so Better Auth won't attach a Google or GitHub sign-in to an
+existing email-and-password account with the same address (it would let anyone claim an account).
+That person sees "That sign-in didn't complete" and should keep using their password.
 
 ## Backups
 

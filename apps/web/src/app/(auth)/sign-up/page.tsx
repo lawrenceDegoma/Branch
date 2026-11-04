@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { GitHubButton } from "@/components/forms/github-button";
+import { SocialSignIn } from "@/components/forms/social-sign-in";
 import { safeNextPath } from "@/lib/redirect";
-import { githubEnabled } from "@/modules/auth/auth";
+import { enabledSocialProviders } from "@/modules/auth/auth";
 import { getSession } from "@/modules/auth/session";
 import { SignUpForm } from "./sign-up-form";
 
@@ -19,16 +19,7 @@ export default async function SignUpPage({
     <>
       <h1 className="text-2xl leading-8 font-semibold tracking-tight">Join Branch</h1>
       <p className="mt-1 mb-6 text-ink-muted">Grow together. Solve better.</p>
-      {githubEnabled ? (
-        <>
-          <GitHubButton next={next} />
-          <div className="my-5 flex items-center gap-3 text-xs text-ink-faint" aria-hidden="true">
-            <span className="h-px flex-1 bg-line" />
-            or
-            <span className="h-px flex-1 bg-line" />
-          </div>
-        </>
-      ) : null}
+      <SocialSignIn providers={enabledSocialProviders} next={next} />
       <SignUpForm next={next} />
     </>
   );
