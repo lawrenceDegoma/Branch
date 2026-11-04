@@ -41,6 +41,8 @@ function describeEvent(action: GroupAuditAction, actor: string, subject: string)
       return `${actor} turned off an invite link`;
     case "PLAN_CHANGED":
       return `${actor} changed the group's roadmap`;
+    case "POST_REMOVED":
+      return `${actor} removed a post by ${subject}`;
   }
 }
 

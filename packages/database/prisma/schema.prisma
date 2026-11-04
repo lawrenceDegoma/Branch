@@ -38,6 +38,7 @@ model User {
   roadmapsOwned    Roadmap[]
   plansCreated     GroupRoadmapPlan[]
   completions      ProblemCompletion[]
+  posts            Post[]
 
   @@unique([email])
   @@map("user")
@@ -155,6 +156,7 @@ model Group {
   invites     GroupInvite[]
   auditEvents GroupAuditEvent[]
   plans       GroupRoadmapPlan[]
+  posts       Post[]
 
   @@map("group")
 }
@@ -203,6 +205,7 @@ enum GroupAuditAction {
   INVITE_CREATED
   INVITE_REVOKED
   PLAN_CHANGED
+  POST_REMOVED
 }
 
 /// Record of sensitive group administration actions (PRD §7).
@@ -258,6 +261,7 @@ model Problem {
   tags               ProblemTag[]
   roadmapItems       RoadmapItem[]
   completions        ProblemCompletion[]
+  posts              Post[]
 
   @@map("problem")
 }
@@ -450,3 +454,29 @@ model ProblemCompletion {
   @@index([problemId])
   @@map("problem_completion")
 }
+
+// ---------------------------------------------------------------------------------------------
+// Social: posts in a group's feed. Every post belongs to exactly one group; feeds are the union
+// of the viewer's groups. IDs are UUIDv7, so ordering by id is ordering by creation time.
+// ---------------------------------------------------------------------------------------------
+
+model Post {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  groupId   String    @db.Uuid
+  group     Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  /// Markdown source, 1-5000 characters (CHECK). Rendered without raw HTML.
+  body      String
+  /// The problem the post is about, if any.
+  problemId String?   @db.Uuid
+  problem   Problem?  @relation(fields: [problemId], references: [id], onDelete: Restrict)
+  createdAt DateTime  @default(now())
+  editedAt  DateTime?
+
+  @@index([groupId, id(sort: Desc)])
+  @@index([authorId, createdAt])
+  @@index([problemId])
+  @@map("post")
+}
+

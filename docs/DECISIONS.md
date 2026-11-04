@@ -238,6 +238,39 @@ Approved by the owner on 2026-11-03, with these decisions:
   drops the optimistic value and the reason is shown next to it. Saving revalidates the whole
   app layout, since one completion appears on many pages.
 
+## Social feed (Phase 2)
+
+Phase 2 plan approved 2026-11-04, with the owner's decisions:
+
+- **Milestones:** M9 feed and text posts; M10 code highlighting and spoilers; M11 automatic posts;
+  M12 reactions and comments; M14 privacy journeys and docs. **M13 (images) is deferred** at the
+  owner's request, so PRD scenario 4 ("a help post with code and an image") ships without the
+  image until images are scheduled. When they are, Vercel Blob (private store, Hobby: 1 GB, 2,000
+  uploads a month, hard cap) behind a storage adapter was the recommendation.
+- **Automatic posts:** off by default; a "Share my solves" setting. When on, a solve posts only to
+  groups whose plan assigns the problem. Any single post can be hidden.
+- **Reactions:** a fixed set of four (kudos, impressive, helpful, same here).
+- **Home:** the feed is the centre column; the rail holds "Your week", this week's problems, and
+  the backlog. On narrow screens the summary comes first with a link to this week's problems,
+  then the feed, then the lists.
+
+Feed rules:
+
+- Every post belongs to exactly one group (no cross-posting). A feed is the union of the viewer's
+  memberships; a single-group feed for a group the viewer isn't in is a 404, and a foreign
+  `?group=` on Home falls back to all of the viewer's groups.
+- Post IDs are UUIDv7, so the feed orders and pages by ID (`?before=<id>`), 20 per page, with an
+  "Older posts" link rather than infinite scroll: server-rendered and works without JavaScript.
+- Markdown via `react-markdown` + `remark-gfm`: raw HTML is never rendered, unsafe URL schemes are
+  dropped, Markdown images are disallowed (tracking pixels; uploads are deferred), headings render
+  as bold text, links open in a new tab with `noopener noreferrer nofollow ugc`.
+- The author edits (marked "edited"); the author or the group admin deletes. An admin removing
+  someone else's post is recorded in the group's audit log (`POST_REMOVED`). Deletion is a hard
+  delete. Posts stay when their author leaves the group.
+- Posting is limited to 5 posts a minute per person (counted in Postgres, no extra service).
+- The body is 1-5000 characters and not only whitespace (CHECK `body ~ '\S'`; `btrim` alone keeps
+  newlines).
+
 ## Milestone log
 
 ### M0 — Workspace and tooling (complete)
@@ -458,6 +491,24 @@ handles both providers, validating the provider name. Failed sign-ins land on
 `/sign-in?error=oauth`. E2E tests run with placeholder credentials and stop at the provider,
 checking the client ID and callback URL. Implicit account linking stays off for unverified emails
 (Better Auth default); a "Connected accounts" settings section is proposed, not built.
+
+### M9 — Feed and text posts (complete)
+
+- `Post` model and migration `posts` (body CHECK, feed index on group and ID, `POST_REMOVED`
+  audit action).
+- `modules/feed/`: schemas, service (`listFeed`, `listComposerGroups`, `createPost`, `editPost`,
+  `deletePost`), actions. Home and group pages render `Feed`: the composer, posts, and paging;
+  Home adds the group filter.
+- `SearchSelect`: the timezone combobox generalised; the composer's optional problem field uses it
+  (the selected group's plan problems).
+- Tests: 13 feed integration tests (isolation, filter 404, paging, rate limit, edit and delete
+  rights, admin removal audit); Markdown sanitisation unit tests; a body CHECK test; 5 E2E feed
+  journeys on desktop and mobile (visibility and outsiders, filter and group posting, edit and
+  delete and admin removal, hostile Markdown, paging); axe scans of feeds in both themes, including
+  the edit and error states; 320px reflow with a long URL, wide code, and a table.
+
+Verified: 24 shared, 89 unit, 107 integration tests; 209 E2E passed (3 skipped by design);
+production build; taste-skill lint 0 FAIL on the shipped files.
 
 ## Phase 1 summary
 

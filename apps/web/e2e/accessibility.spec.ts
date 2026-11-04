@@ -1,4 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
+import { prisma } from "@branch/database";
 import type { Page } from "@playwright/test";
 import {
   anotherUser,
@@ -140,6 +141,48 @@ for (const colorScheme of ["dark", "light"] as const) {
       }
       await page.getByRole("link", { name: "Starter sample" }).first().click();
       await expect(page.getByText(/You've solved 1 of 22/)).toBeVisible();
+      await expectNoViolations(page);
+      await member.context.close();
+    });
+
+    test("feeds have no detectable WCAG A/AA violations", async ({
+      page,
+      viewer,
+      browser,
+      baseURL,
+    }) => {
+      const member = await anotherUser(browser, baseURL!);
+      const group = await createGroupInDb(viewer.id, "Feed crew", [member.account.id]);
+      await createGroupInDb(viewer.id, "Second crew");
+      const twoSum = await prisma.problem.findUniqueOrThrow({ where: { leetcodeSlug: "two-sum" } });
+      await prisma.post.createMany({
+        data: [
+          {
+            groupId: group.id,
+            authorId: member.account.id,
+            problemId: twoSum.id,
+            body: "Hash map or **two pointers**?\n\n> quoted\n\n- a `map`\n- [a link](https://example.com)\n\n```\nconst seen = new Map();\n```\n\n| a | b |\n|---|---|\n| 1 | 2 |",
+            editedAt: new Date(),
+          },
+          { groupId: group.id, authorId: viewer.id, body: "Week one done." },
+        ],
+      });
+      for (const path of ["/home", `/home?group=${group.id}`, `/groups/${group.id}`]) {
+        await page.goto(path);
+        await expectNoViolations(page);
+      }
+      // Editing in place, and a composer error.
+      await page.waitForFunction(() => document.readyState === "complete");
+      await page
+        .getByRole("article")
+        .filter({ hasText: "Week one done." })
+        .getByRole("button", { name: "Edit" })
+        .click();
+      await page
+        .getByRole("form", { name: "New post" })
+        .getByRole("button", { name: "Post" })
+        .click();
+      await expect(page.getByText("Write something first.")).toBeVisible();
       await expectNoViolations(page);
       await member.context.close();
     });

@@ -1,8 +1,15 @@
 import { ProgressBar } from "@/components/progress/progress-bar";
 import type { HomeView } from "@/modules/progress/service";
 
-/** "Your week": the right rail on wide screens, a compact card above the list on narrow ones. */
-export function WeekSummary({ summary }: { summary: HomeView["summary"] }) {
+/** "Your week": the right rail on wide screens, a compact card above the feed on narrow ones. */
+export function WeekSummary({
+  summary,
+  weekLink = false,
+}: {
+  summary: HomeView["summary"];
+  /** Narrow screens list this week's problems below the feed; link down to them. */
+  weekLink?: boolean;
+}) {
   const stats = [
     { label: "Backlog", value: summary.backlog },
     { label: "Ahead", value: summary.ahead },
@@ -32,6 +39,14 @@ export function WeekSummary({ summary }: { summary: HomeView["summary"] }) {
           </div>
         ))}
       </dl>
+      {weekLink ? (
+        <a
+          href="#this-week"
+          className="self-start font-medium text-ink underline-offset-4 hover:underline xl:hidden"
+        >
+          This week&apos;s problems
+        </a>
+      ) : null}
     </section>
   );
 }

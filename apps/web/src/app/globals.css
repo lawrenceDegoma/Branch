@@ -215,6 +215,62 @@
   color: oklch(0.9 0.06 var(--avatar-hue));
 }
 
+/* Rendered Markdown in posts: body-size text with modest spacing; long lines wrap, and wide code
+   or tables scroll inside themselves so the page never scrolls sideways. */
+.markdown {
+  overflow-wrap: anywhere;
+}
+.markdown > * + * {
+  margin-top: 0.625rem;
+}
+.markdown ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+.markdown ol {
+  list-style: decimal;
+  padding-left: 1.25rem;
+}
+.markdown li + li {
+  margin-top: 0.25rem;
+}
+.markdown blockquote {
+  border-left: 2px solid var(--line);
+  padding-left: 0.75rem;
+  color: var(--ink-muted);
+}
+.markdown :not(pre) > code {
+  border-radius: 0.375rem;
+  background: var(--raised);
+  padding: 0.0625rem 0.3125rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+}
+.markdown pre {
+  overflow-x: auto;
+  border-radius: var(--radius-inner);
+  background: var(--raised);
+  padding: 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  overflow-wrap: normal;
+}
+.markdown hr {
+  border-color: var(--line);
+}
+.markdown table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+.markdown th,
+.markdown td {
+  border: 1px solid var(--line);
+  padding: 0.25rem 0.5rem;
+  text-align: left;
+}
+
 @utility tabular {
   font-variant-numeric: tabular-nums;
 }

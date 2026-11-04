@@ -1,3 +1,4 @@
+import { prisma } from "@branch/database";
 import { createGroupInDb, createPlanInDb, expect, mondayWeeksAgo, test } from "./support/fixtures";
 
 const ready = (page: import("@playwright/test").Page) =>
@@ -59,6 +60,13 @@ test.describe("reflow at 320px", () => {
   test("main pages fit without horizontal scrolling", async ({ page, viewer }) => {
     const group = await createGroupInDb(viewer.id, "A group with a rather long name for testing");
     await createPlanInDb(group.id, viewer.id, mondayWeeksAgo(1));
+    await prisma.post.create({
+      data: {
+        groupId: group.id,
+        authorId: viewer.id,
+        body: `See https://example.com/${"a-very-long-path-segment/".repeat(6)} and\n\n\`\`\`\n${"const wide = 1; ".repeat(12)}\n\`\`\`\n\n| column one | column two | column three | column four |\n|---|---|---|---|\n| 1 | 2 | 3 | 4 |`,
+      },
+    });
     await page.goto("/roadmaps");
     await page.getByRole("link", { name: /^Patterns 150/ }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Patterns 150" })).toBeVisible();

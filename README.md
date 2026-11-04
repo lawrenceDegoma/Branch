@@ -7,7 +7,7 @@ friends: shared roadmaps, calendar-based weekly assignments, and individual prog
 still solve problems on LeetCode; Branch tracks the progress and community around that work. It is
 not affiliated with LeetCode or NeetCode.
 
-## What works today (Phase 1)
+## What works today
 
 - **Accounts:** email and password sign-up (optional GitHub sign-in), a username and timezone,
   profile, and Dark / Light / System appearance that follows your account.
@@ -18,6 +18,9 @@ not affiliated with LeetCode or NeetCode.
   to a free version.
 - **Weekly plans:** the admin picks a roadmap, start date, and pace; the problems spread across
   weeks that advance on the group's calendar.
+- **Feed (Phase 2, in progress):** Home shows posts from all your groups, with a group filter;
+  each group page shows its own. Write Markdown posts to one group, optionally about a problem in
+  its plan; edit or delete your own; admins can remove posts in their group.
 - **Progress:** mark problems solved once and it counts in every group and roadmap. Home shows
   this week across your groups, next week for working ahead, and your backlog. The group page
   shows who solved this week's problems and a branch graph of everyone's progress.

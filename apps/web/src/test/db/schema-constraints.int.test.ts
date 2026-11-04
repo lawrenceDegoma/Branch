@@ -328,3 +328,15 @@ describe("plans and assignments", () => {
     await expect(prisma.roadmap.delete({ where: { id: version.roadmapId } })).rejects.toThrow();
   });
 });
+
+describe("posts", () => {
+  it("rejects blank or overlong bodies", async () => {
+    const user = await createTestUser();
+    const group = await createTestGroup([{ userId: user.id, role: "ADMIN" }]);
+    const post = (body: string) =>
+      prisma.post.create({ data: { groupId: group.id, authorId: user.id, body } });
+    await expect(post(" \n ")).rejects.toThrow();
+    await expect(post("x".repeat(5001))).rejects.toThrow();
+    await expect(post("x".repeat(5000))).resolves.toBeDefined();
+  });
+});
