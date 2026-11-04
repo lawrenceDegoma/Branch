@@ -5,6 +5,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./catalog-import": "./src/catalog-import.ts",
+    "./password-reset": "./src/password-reset.ts",
     "./testing": "./src/testing.ts"
   },
   "scripts": {
@@ -17,7 +18,8 @@
     "lint": "eslint .",
     "postinstall": "prisma generate",
     "seed": "tsx --env-file-if-exists=../../.env prisma/seed.ts",
-    "import-curated": "tsx --env-file-if-exists=../../.env prisma/import-curated.ts"
+    "import-curated": "tsx --env-file-if-exists=../../.env prisma/import-curated.ts",
+    "reset-link": "tsx --env-file-if-exists=../../.env prisma/reset-link.ts"
   },
   "dependencies": {
     "@branch/shared": "workspace:*",

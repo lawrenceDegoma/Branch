@@ -4,7 +4,7 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 
 ## Current status (updated 2026-11-03)
 
-**Phase 1 (Foundation) complete; awaiting the owner's approval before Phase 2.** The Phase 1 plan was approved on 2026-11-03; decisions, dependency pins, and the per-milestone log live in `docs/DECISIONS.md`. Setup and commands are in `README.md`.
+**Phase 1 (Foundation) complete, plus a soft-launch milestone (deploy guide and owner-issued password resets); awaiting the owner's approval before Phase 2.** The Phase 1 plan was approved on 2026-11-03; decisions, dependency pins, and the per-milestone log live in `docs/DECISIONS.md`. Setup and commands are in `README.md`.
 
 | Milestone | Status |
 |---|---|
@@ -17,6 +17,7 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 | M6 Group plans and weekly schedules | Done |
 | M7 Progress, completion, Home, branch graph | Done |
 | M8 E2E journeys, accessibility pass, docs | Done |
+| Soft launch: deploy guide (Neon + Vercel), password reset | Done |
 
 **Approved Phase 1 decisions** (details in `docs/DECISIONS.md`): verified seed catalog plus a JSON importer; curated lists Patterns 150 and Essentials 75 (approved 2026-11-03, see below; Grind 75 skipped: no openly licensed source); email/password plus optional GitHub OAuth with no email delivery; group members see each other's status on assigned problems only; users may add problems by LeetCode URL (`source: USER`); exactly one admin per group; link-based hashed invites; weeks computed from the plan's start date and IANA timezone (Monday default); Review nav hidden until Phase 4; commit at the end of each milestone and push `main`.
 
@@ -26,6 +27,7 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 - **Pinned versions:** TypeScript 6.0 (typescript-eslint caps below 6.1), Prisma 7.10 (npm `latest` is an 8.0 RC; Better Auth supports ≤7), ESLint 9 (Next's lint plugins). Do not bump these without checking compatibility.
 - **Prisma 7:** `pnpm db:migrate` regenerates the client; Prisma no longer does it on its own. Constraints Prisma can't express (CHECK, partial unique indexes, triggers) go in the migration SQL, with an integration test proving each one.
 - **Data invariants enforced by the database:** one admin per group, one active plan per group, one draft per roadmap, one completion per user and problem, published roadmap versions immutable (triggers), weekly assignments only from the plan's own version (composite foreign keys). Services should translate these violations into friendly errors, not re-implement them.
+- **Production:** `docs/DEPLOY.md` (Neon Free + Vercel Hobby). Migrations run from the owner's machine with `DATABASE_URL=<direct> pnpm db:deploy` before pushing; curated data with `pnpm db:load-curated`; never `db:seed`. No email: password resets are owner-issued with `pnpm auth:reset-link -- <email>`, which writes a token in Better Auth's `reset-password:<token>` format (pinned by `e2e/auth.spec.ts`; recheck when upgrading Better Auth).
 - **Seed and catalog:** `pnpm db:seed` (idempotent) loads `packages/database/prisma/data/` through the validated contracts in `@branch/shared/catalog` and the importer in `@branch/database/catalog-import`. Dev accounts: `ada@example.test` / `grace@example.test`, password `branch-dev-password`.
 - **Authorization:** every app page and server action starts from `requireViewer()` (`apps/web/src/modules/auth/session.ts`). `src/proxy.ts` is an optimistic cookie check only. Never accept user IDs from the client. Return paths go through `safeNextPath()`.
 - **Private resources return 404.** Services throw `NotFoundError` for non-members and `ForbiddenError` for members lacking a role; pages wrap reads in `orNotFound()` so both render the 404 page with a real 404 status. Never put a route-level `loading.tsx` above a page that can 404 (a Suspense boundary starts streaming with status 200); `home/` is the only one.

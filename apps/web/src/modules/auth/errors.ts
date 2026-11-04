@@ -9,6 +9,7 @@ const messages: Record<string, string> = {
   PASSWORD_TOO_SHORT: "Use at least 10 characters.",
   PASSWORD_TOO_LONG: "Use at most 128 characters.",
   INVALID_EMAIL: "Enter a valid email address.",
+  INVALID_TOKEN: "This reset link has expired or was already used. Ask for a new one.",
   CREDENTIAL_ACCOUNT_NOT_FOUND: "This account signs in with GitHub and has no password to change.",
 };
 

@@ -31,6 +31,12 @@ export function SignInForm({ next }: { next: string | null }) {
       <FormField name="password" label="Password" error={state.fieldErrors?.password}>
         {(props) => <Input {...props} type="password" autoComplete="current-password" required />}
       </FormField>
+      <Link
+        href="/forgot-password"
+        className="-mt-2 self-start text-ink-muted underline-offset-4 hover:text-ink hover:underline"
+      >
+        Forgot password?
+      </Link>
       <SubmitButton className="mt-2 w-full" pendingLabel="Signing in…">
         Sign in
       </SubmitButton>

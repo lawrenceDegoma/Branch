@@ -31,3 +31,8 @@ export const changePasswordSchema = z
     message: "Choose a password different from your current one.",
     path: ["newPassword"],
   });
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1).max(200),
+  newPassword,
+});

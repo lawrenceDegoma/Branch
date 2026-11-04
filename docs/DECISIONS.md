@@ -427,6 +427,28 @@ Verified: 24 shared tests; 80 unit tests; 94 integration tests; 179 E2E tests pa
 consecutive full runs (3 skipped by design: keyboard journeys run on desktop only); production
 build; taste-skill lint 0 FAIL.
 
+### Soft launch (between Phase 1 and Phase 2)
+
+Owner decisions (2026-11-03): deploy before Phase 2 for the owner and one friend; host on Vercel
+Hobby with Neon Free (terms checked 2026-11-03, recorded in `docs/DEPLOY.md`); password reset
+through **owner-issued links**, still with no email provider.
+
+- `pnpm auth:reset-link -- <email>` (`@branch/database/password-reset`) writes a one-hour token in
+  Better Auth's own verification format (`reset-password:<token>` → user ID) and prints
+  `/reset-password?token=…`. Better Auth's `resetPassword` endpoint validates it, consumes it once,
+  and sets the password; `revokeSessionsOnPasswordReset` signs out every device. Writing the token
+  ourselves avoids running the auth instance outside Next; the E2E test pins the format against the
+  installed Better Auth (exact version 1.7.15), so an upgrade that changes it fails the suite.
+- `/forgot-password` explains that the owner issues links. `/reset-password` is rate-limited like
+  the other credential endpoints (5 a minute). The public `/request-password-reset` endpoint stays
+  disabled (no `sendResetPassword` configured).
+- `pnpm db:load-curated` imports the catalog and the two approved lists (not the dev starter
+  sample) into any database. Migrations run from the owner's machine against Neon's direct
+  connection (`pnpm db:deploy`) before pushing a migration, not during the Vercel build.
+
+Verified: 24 shared, 80 unit, 96 integration tests; 189 E2E passed (3 skipped by design);
+production build.
+
 ## Phase 1 summary
 
 Done when "two test users can join one group, see synchronized assignments, and track independent
@@ -437,7 +459,8 @@ approval.
 
 ## Known limitations
 
-- Phase 1 has no email delivery, so there is no email verification or password reset. Sign-up
+- There is no email delivery, so no email verification, and password resets need the owner to run
+  `pnpm auth:reset-link`. Sign-up
   reveals whether an email is already registered; acceptable for invite-only groups of friends,
   to revisit before public sign-up.
 - Accounts cannot yet be deleted from the UI.
@@ -450,3 +473,6 @@ approval.
 - Marking problems solved is not rate-limited; each toggle is one small idempotent write.
 - The shared-link roadmap view is read-only (no completion toggles); progress shows on the
   roadmap's own page.
+- Sign-up is open to anyone who finds the deployed URL (they see nothing without an invite).
+  Acceptable for the soft launch; revisit before a wider one.
+- Neon Free keeps 6 hours of restore history; backups are manual `pg_dump`s (see `docs/DEPLOY.md`).

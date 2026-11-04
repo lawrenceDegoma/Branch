@@ -1,4 +1,5 @@
 import { prisma } from "@branch/database";
+import { createPasswordResetLink } from "@branch/database/password-reset";
 import { expect, newAccountDetails, signUpViaApi, test } from "./support/fixtures";
 
 test.describe("authentication", () => {
@@ -143,5 +144,44 @@ test.describe("profile", () => {
     await page.getByLabel("Password", { exact: true }).fill(newPassword);
     await page.getByRole("button", { name: "Sign in" }).click();
     await expect(page).toHaveURL(/\/home$/);
+  });
+});
+
+test.describe("password reset", () => {
+  test("an owner-issued link sets a new password once and signs out other devices", async ({
+    page,
+    viewer,
+    baseURL,
+  }) => {
+    // The viewer is signed in here; the reset link is opened on another device.
+    const link = await createPasswordResetLink(prisma, viewer.email, baseURL!);
+    const newPassword = "a-freshly-reset-password";
+    const other = await page.context().browser()!.newContext({ baseURL });
+    const device = await other.newPage();
+
+    await device.goto("/sign-in");
+    await device.getByRole("link", { name: "Forgot password?" }).click();
+    await expect(device.getByRole("heading", { level: 1 })).toHaveText("Forgot your password?");
+
+    await device.goto(link!.url);
+    await device.getByLabel("New password").fill(newPassword);
+    await device.getByRole("button", { name: "Set new password" }).click();
+    await expect(device).toHaveURL(/\/sign-in\?reset=done$/);
+    await expect(device.getByRole("main").getByRole("status")).toContainText("Password updated");
+    await device.getByLabel("Email").fill(viewer.email);
+    await device.getByLabel("Password", { exact: true }).fill(newPassword);
+    await device.getByRole("button", { name: "Sign in" }).click();
+    await expect(device).toHaveURL(/\/home$/);
+
+    // The old session is gone, and the link can't be used twice.
+    await page.goto("/home");
+    await expect(page).toHaveURL(/\/sign-in/);
+    await page.goto(link!.url);
+    await page.getByLabel("New password").fill("yet-another-password");
+    await page.getByRole("button", { name: "Set new password" }).click();
+    await expect(page.getByRole("main").getByRole("alert")).toContainText(
+      "expired or was already used",
+    );
+    await other.close();
   });
 });

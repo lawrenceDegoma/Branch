@@ -10,7 +10,7 @@ export const metadata = { title: "Sign in" };
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; error?: string }>;
+  searchParams: Promise<{ next?: string; error?: string; reset?: string }>;
 }) {
   const params = await searchParams;
   const next = safeNextPath(params.next);
@@ -20,6 +20,11 @@ export default async function SignInPage({
     <>
       <h1 className="text-2xl leading-8 font-semibold tracking-tight">Sign in to Branch</h1>
       <p className="mt-1 mb-6 text-ink-muted">Pick up where your group left off.</p>
+      {params.reset === "done" ? (
+        <p role="status" className="mb-4 rounded-[10px] bg-positive-soft px-3 py-2.5 text-ink">
+          Password updated. Sign in with your new password.
+        </p>
+      ) : null}
       {params.error === "github" ? (
         <p role="alert" className="mb-4 rounded-[10px] bg-negative-soft px-3 py-2.5 text-ink">
           GitHub sign-in didn&apos;t complete. Try again or use your email.

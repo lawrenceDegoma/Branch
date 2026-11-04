@@ -26,7 +26,9 @@
     "db:studio": "pnpm --filter @branch/database studio",
     "test:integration": "pnpm --filter @branch/web test:integration",
     "db:seed": "pnpm --filter @branch/database seed",
-    "db:import-curated": "pnpm --filter @branch/database import-curated"
+    "db:import-curated": "pnpm --filter @branch/database import-curated",
+    "auth:reset-link": "pnpm --filter @branch/database reset-link",
+    "db:load-curated": "pnpm db:import-curated -- --catalog prisma/data/catalog.json prisma/data/roadmaps/patterns-150.json prisma/data/roadmaps/essentials-75.json"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

@@ -10,7 +10,14 @@ import {
   test,
 } from "./support/fixtures";
 
-const publicRoutes = ["/", "/sign-in", "/sign-up", "/missing-page"];
+const publicRoutes = [
+  "/",
+  "/sign-in",
+  "/sign-up",
+  "/forgot-password",
+  "/reset-password?token=example",
+  "/missing-page",
+];
 const appRoutes = ["/home", "/roadmaps", "/groups", "/profile", "/settings"];
 
 async function expectNoViolations(page: Page) {

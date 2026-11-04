@@ -19,6 +19,8 @@ export const auth = betterAuth({
     minPasswordLength: 10,
     maxPasswordLength: 128,
     autoSignIn: true,
+    // Reset links are issued by the owner (pnpm auth:reset-link); a reset signs out every device.
+    revokeSessionsOnPasswordReset: true,
   },
   socialProviders:
     env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET
@@ -36,6 +38,7 @@ export const auth = betterAuth({
       "/sign-in/email": { window: 60, max: 5 },
       "/sign-up/email": { window: 60, max: 5 },
       "/change-password": { window: 60, max: 5 },
+      "/reset-password": { window: 60, max: 5 },
     },
   },
   // Must be last: lets server actions set the session cookie.

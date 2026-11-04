@@ -7,7 +7,7 @@ import { errorContext, logger } from "@/lib/logger";
 import { safeNextPath } from "@/lib/redirect";
 import { auth } from "./auth";
 import { authErrorMessage } from "./errors";
-import { changePasswordSchema, signInSchema, signUpSchema } from "./schemas";
+import { changePasswordSchema, resetPasswordSchema, signInSchema, signUpSchema } from "./schemas";
 import { requireUser } from "./session";
 
 function logUnexpected(action: string, error: unknown) {
@@ -91,4 +91,23 @@ export async function changePasswordAction(
   // Changing the password rotates the session cookie, which re-renders the page; confirm via the
   // URL rather than client state so the message survives that refresh.
   redirect("/settings?password=updated#account");
+}
+
+/** Public by design: the one-time token from an owner-issued link is the authorization. */
+export async function resetPasswordAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const parsed = resetPasswordSchema.safeParse({
+    token: formData.get("token"),
+    newPassword: formData.get("newPassword"),
+  });
+  if (!parsed.success) return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error) };
+  try {
+    await auth.api.resetPassword({ body: parsed.data, headers: await headers() });
+  } catch (error) {
+    logUnexpected("reset-password", error);
+    return { status: "error", message: authErrorMessage(error) };
+  }
+  redirect("/sign-in?reset=done");
 }

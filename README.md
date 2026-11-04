@@ -37,6 +37,7 @@ browser to see the same week from the member's side.
 - Product requirements: [PRD.md](PRD.md)
 - Engineering specification: [CLAUDE.md](CLAUDE.md)
 - Architecture decisions and milestone log: [docs/DECISIONS.md](docs/DECISIONS.md)
+- Deploying to Neon and Vercel, and issuing password reset links: [docs/DEPLOY.md](docs/DEPLOY.md)
 
 ## Prerequisites
 
