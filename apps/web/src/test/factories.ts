@@ -34,16 +34,41 @@ export const testCatalog: Catalog = {
     { slug: "stack", name: "Stack" },
   ],
   problems: [
-    { slug: "two-sum", title: "Two Sum", difficulty: "EASY", tags: ["arrays-hashing"] },
-    { slug: "valid-anagram", title: "Valid Anagram", difficulty: "EASY", tags: ["arrays-hashing"] },
+    {
+      slug: "two-sum",
+      title: "Two Sum",
+      difficulty: "EASY",
+      premium: false,
+      tags: ["arrays-hashing"],
+    },
+    {
+      slug: "valid-anagram",
+      title: "Valid Anagram",
+      difficulty: "EASY",
+      premium: false,
+      tags: ["arrays-hashing"],
+    },
     {
       slug: "group-anagrams",
       title: "Group Anagrams",
       difficulty: "MEDIUM",
+      premium: false,
       tags: ["arrays-hashing"],
     },
-    { slug: "valid-parentheses", title: "Valid Parentheses", difficulty: "EASY", tags: ["stack"] },
-    { slug: "min-stack", title: "Min Stack", difficulty: "MEDIUM", tags: ["stack"] },
+    {
+      slug: "valid-parentheses",
+      title: "Valid Parentheses",
+      difficulty: "EASY",
+      premium: false,
+      tags: ["stack"],
+    },
+    {
+      slug: "min-stack",
+      title: "Min Stack",
+      difficulty: "MEDIUM",
+      premium: false,
+      tags: ["stack"],
+    },
   ],
 };
 

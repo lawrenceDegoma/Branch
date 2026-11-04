@@ -34,7 +34,7 @@ test.describe("group plans", () => {
 
     await expect(page).toHaveURL(new RegExp(`/groups/${group.id}/plan$`));
     await expect(page.getByRole("heading", { level: 2, name: /^Week \d/ })).toHaveCount(6);
-    const week1 = page.getByRole("region", { name: /^Week 1/ });
+    const week1 = page.getByRole("region", { name: /^Week 1\b/ });
     await expect(week1.getByText("This week")).toBeVisible();
 
     // Both people see week 1 of 6 with the same four problems on the group page.
@@ -62,7 +62,7 @@ test.describe("group plans", () => {
       page.getByRole("region", { name: /^Week 2/ }).getByRole("link", twoSum),
     ).toBeVisible();
     await expect(
-      page.getByRole("region", { name: /^Week 1/ }).getByRole("link", twoSum),
+      page.getByRole("region", { name: /^Week 1\b/ }).getByRole("link", twoSum),
     ).toHaveCount(0);
   });
 
@@ -79,7 +79,7 @@ test.describe("group plans", () => {
     await expect(owner.page).toHaveURL(/\/plan$/);
 
     await page.goto(`/groups/${group.id}/plan`);
-    await expect(page.getByRole("heading", { level: 2, name: /^Week 1/ })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: /^Week 1\b/ })).toBeVisible();
     await expect(page.getByRole("button", { name: /^Move / })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "End plan" })).toHaveCount(0);
     expect((await page.goto(`/groups/${group.id}/plan/new`))?.status()).toBe(404);

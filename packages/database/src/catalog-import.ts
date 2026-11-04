@@ -17,15 +17,16 @@ export async function syncCatalog(
       (await tx.tag.findMany({ select: { id: true, slug: true } })).map((t) => [t.slug, t.id]),
     );
     for (const problem of catalog.problems) {
+      const details = {
+        title: problem.title,
+        difficulty: problem.difficulty,
+        premium: problem.premium,
+        freeAlternativeUrl: problem.freeUrl ?? null,
+      };
       const saved = await tx.problem.upsert({
         where: { leetcodeSlug: problem.slug },
-        update: { title: problem.title, difficulty: problem.difficulty },
-        create: {
-          leetcodeSlug: problem.slug,
-          title: problem.title,
-          difficulty: problem.difficulty,
-          source,
-        },
+        update: details,
+        create: { leetcodeSlug: problem.slug, ...details, source },
       });
       await tx.problemTag.deleteMany({ where: { problemId: saved.id } });
       await tx.problemTag.createMany({

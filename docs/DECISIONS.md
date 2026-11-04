@@ -165,17 +165,25 @@ graphic. Re-check after changing any token.
 
 ## Curated lists
 
-- NeetCode 150 and Blind 75 are drafted in `packages/database/prisma/data/curated-drafts/` from
-  `neetcode-gh/leetcode`'s `.problemSiteData.json` (MIT), pinned to a commit and cited on each
-  roadmap. Only identifiers and metadata were taken. They are not imported until the owner
-  approves; the README there lists what to check (title casing, seven Premium problems, naming).
-- Cross-check: every seed problem that appears in NeetCode 150 has the same difficulty in both
-  sources; three titles differ only in capitalization.
-- **Grind 75 is out of scope** (owner decision, 2026-11-03): there is no openly licensed,
-  machine-readable source (the Tech Interview Handbook repo only proxies to a separately hosted
-  site). Branch ships NeetCode 150 and Blind 75 once approved.
-- `pnpm db:import-curated` imports approved files into any environment, refuses `curated-drafts/`
-  without `--allow-draft`, and is idempotent.
+Approved by the owner on 2026-11-03, with these decisions:
+
+- **Patterns 150 and Essentials 75**, not "NeetCode 150" and "Blind 75": other parties' list names
+  are kept out of titles and descriptions to avoid legal risk (a data test enforces this). The MIT
+  license's attribution requirement is met by each roadmap's "Source" link to the pinned file and
+  the notices in `packages/database/prisma/data/SOURCES.md`.
+- **Essentials 75 is the version most people practise from**: NeetCode's rendition of the original
+  forum list (which has no license). Every problem is also in Patterns 150 (tested).
+- **LeetCode's official titles.** 27 NeetCode titles were re-cased to LeetCode's (cross-checked
+  against an MIT-licensed LeetCode index, pinned); difficulties follow NeetCode's data, which
+  reflects LeetCode's current ratings. No existing seed title changed.
+- **Premium problems** (7) show a "Premium" label and a "Free version" link to the free equivalent
+  recorded in the source data (LintCode). New columns `problem.premium` and
+  `problem.freeAlternativeUrl`, with a CHECK allowing only NULL or an https URL of at most 300
+  characters. The owner spot-checked the links.
+- The 150-problem catalog replaces the 31-problem seed catalog (a superset), so one file is the
+  record for every problem's title, difficulty, and tags.
+- **Grind 75 is out of scope** (owner decision): there is no openly licensed, machine-readable
+  source, and scraping its site would not be appropriate.
 
 ## Plans and weekly schedules
 
@@ -361,6 +369,17 @@ change, version upgrade, ending); 151 E2E tests stable across consecutive runs (
 two members seeing the same week-1 problems, moving a problem, member read-only access and 404 on
 setup, future start, pace validation, ending, axe scans of plan pages in both themes).
 
+### Curated lists approved (between M7 and M8)
+
+- Patterns 150 and Essentials 75 loaded by the seed and E2E setup; Premium label and free-version
+  link; LeetCode titles; the drafts folder retired in favour of `SOURCES.md`.
+
+Verified: 24 shared tests (Premium contract); data-file tests (sizes, pinned source, no
+third-party list names, the seven Premium problems with https free links, Essentials ⊂ Patterns);
+integration tests for the new CHECK (NULL allowed, http, `javascript:`, and overlong rejected) and
+for the importer setting and clearing Premium fields; E2E for the curated lists, the Source link,
+and Premium rows; accessibility scans now include a 19-week schedule with Premium rows.
+
 ### M7 — Progress, completion, Home, and branch graph (complete)
 
 - Mark and unmark problems solved from Home, the group page, the schedule, and roadmap pages.
@@ -390,7 +409,6 @@ Taste-skill lint: 0 FAIL.
   reveals whether an email is already registered; acceptable for invite-only groups of friends,
   to revisit before public sign-up.
 - Accounts cannot yet be deleted from the UI.
-- Problems have no Premium flag; Premium problems link to LeetCode like any other.
 - User-added problems become part of the shared catalog with user-entered titles; there is no
   moderation of catalog edits yet.
 - Other people's profile pages don't exist yet; members see each other's name and username in the

@@ -241,19 +241,23 @@ enum ProblemSource {
 /// A canonical LeetCode problem. The URL is derived from the slug. Stores identifiers and
 /// metadata only, never problem statements.
 model Problem {
-  id           String              @id @default(uuid(7)) @db.Uuid
+  id                 String              @id @default(uuid(7)) @db.Uuid
   /// Lowercase kebab-case (CHECK).
-  leetcodeSlug String              @unique
-  title        String
-  difficulty   Difficulty
-  source       ProblemSource
-  createdById  String?
-  createdBy    User?               @relation(fields: [createdById], references: [id], onDelete: SetNull)
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
-  tags         ProblemTag[]
-  roadmapItems RoadmapItem[]
-  completions  ProblemCompletion[]
+  leetcodeSlug       String              @unique
+  title              String
+  difficulty         Difficulty
+  source             ProblemSource
+  /// Requires a LeetCode subscription.
+  premium            Boolean             @default(false)
+  /// A free equivalent elsewhere, for premium problems (https only, at most 300 characters; CHECK).
+  freeAlternativeUrl String?
+  createdById        String?
+  createdBy          User?               @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  tags               ProblemTag[]
+  roadmapItems       RoadmapItem[]
+  completions        ProblemCompletion[]
 
   @@map("problem")
 }

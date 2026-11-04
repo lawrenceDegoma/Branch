@@ -71,7 +71,7 @@ test.describe("progress", () => {
     await expect(summary.getByText("Backlog").locator("..")).toContainText("7");
 
     await page.goto(`/groups/${group.id}/plan`);
-    const week1 = page.getByRole("region", { name: /^Week 1/ });
+    const week1 = page.getByRole("region", { name: /^Week 1\b/ });
     await expect(week1.getByRole("heading")).toContainText("1 of 4 solved");
     await expect(week1.getByText("Backlog")).toHaveCount(3);
   });

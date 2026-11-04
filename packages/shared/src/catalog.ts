@@ -21,6 +21,13 @@ export const catalogProblemSchema = z.object({
   title: z.string().trim().min(1).max(200),
   difficulty: difficultySchema,
   tags: z.array(tagSlugSchema).default([]),
+  /** Requires a LeetCode subscription. */
+  premium: z.boolean().default(false),
+  /** A free equivalent elsewhere, for premium problems. */
+  freeUrl: z
+    .url({ protocol: /^https$/ })
+    .max(300)
+    .optional(),
 });
 
 export const catalogSchema = z
@@ -41,6 +48,12 @@ export const catalogSchema = z
         ctx.addIssue({ code: "custom", message: `Duplicate problem "${problem.slug}"` });
       }
       problemSlugs.add(problem.slug);
+      if (problem.freeUrl && !problem.premium) {
+        ctx.addIssue({
+          code: "custom",
+          message: `Problem "${problem.slug}" has a free alternative but isn't premium`,
+        });
+      }
       for (const tag of problem.tags) {
         if (!tagSlugs.has(tag)) {
           ctx.addIssue({

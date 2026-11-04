@@ -1,13 +1,13 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 const dataDir = path.resolve(import.meta.dirname, "../../../../packages/database/prisma/data");
 const readJson = (file: string): unknown =>
   JSON.parse(readFileSync(path.join(dataDir, file), "utf8"));
 
-// Migrates and empties the test database once before the run, then loads the seed catalog and
-// the sample curated roadmap (no accounts).
+// Migrates and empties the test database once before the run, then loads the catalog and every
+// curated roadmap (no accounts).
 export default async function globalSetup() {
   if (!process.env.DATABASE_URL?.includes("_test")) {
     throw new Error("E2E tests must run against a database whose name ends in _test.");
@@ -23,9 +23,10 @@ export default async function globalSetup() {
   const { importCuratedRoadmap, syncCatalog } = await import("@branch/database/catalog-import");
   const { catalogSchema, roadmapDefinitionSchema } = await import("@branch/shared/catalog");
   await syncCatalog(prisma, catalogSchema.parse(readJson("catalog.json")), "SEED");
-  await importCuratedRoadmap(
-    prisma,
-    roadmapDefinitionSchema.parse(readJson("roadmaps/starter-sample.json")),
-  );
+  for (const file of readdirSync(path.join(dataDir, "roadmaps")).filter((f) =>
+    f.endsWith(".json"),
+  )) {
+    await importCuratedRoadmap(prisma, roadmapDefinitionSchema.parse(readJson(`roadmaps/${file}`)));
+  }
   await prisma.$disconnect();
 }

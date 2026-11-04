@@ -1,7 +1,7 @@
 {
-  "slug": "neetcode-150",
-  "title": "NeetCode 150",
-  "description": "The NeetCode 150 problem list, grouped by pattern in NeetCode's order. Not affiliated with NeetCode or LeetCode.",
+  "slug": "patterns-150",
+  "title": "Patterns 150",
+  "description": "Grouped by pattern, from arrays and hashing to advanced graphs and dynamic programming.",
   "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/5a3c1b2d59b4e5c6252006343d73849ebc75f796/.problemSiteData.json",
   "sections": [
     {

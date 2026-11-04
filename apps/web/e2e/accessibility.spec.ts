@@ -103,7 +103,7 @@ for (const colorScheme of ["dark", "light"] as const) {
       await page.goto(`/groups/${group.id}/plan/new`);
       await expectNoViolations(page);
       await page.getByRole("button", { name: "Start plan" }).click();
-      await expect(page.getByRole("heading", { level: 2, name: /^Week 1/ })).toBeVisible();
+      await expect(page.getByRole("heading", { level: 2, name: /^Week 1\b/ })).toBeVisible();
       await expectNoViolations(page);
       await page.goto(`/groups/${group.id}`);
       await expectNoViolations(page);

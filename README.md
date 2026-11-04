@@ -26,7 +26,7 @@ pnpm install                 # installs dependencies and generates the Prisma cl
 cp .env.example .env         # then set BETTER_AUTH_SECRET (see below)
 pnpm db:up                   # starts PostgreSQL 18 and waits until it is healthy
 pnpm db:migrate              # applies migrations to the development database
-pnpm db:seed                 # sample catalog, roadmap, dev accounts, a group with a plan (idempotent)
+pnpm db:seed                 # catalog, curated roadmaps, dev accounts, a group with a plan (idempotent)
 pnpm dev                     # http://localhost:3000
 ```
 
@@ -62,26 +62,26 @@ their values.
 
 Run from the repository root.
 
-| Command                  | What it does                                                                                                                    |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm dev`               | Next.js dev server                                                                                                              |
-| `pnpm build`             | Production build of the web app                                                                                                 |
-| `pnpm start`             | Serve the production build                                                                                                      |
-| `pnpm typecheck`         | Strict TypeScript across all packages                                                                                           |
-| `pnpm lint`              | ESLint across all packages                                                                                                      |
-| `pnpm format`            | Format with Prettier (`format:check` verifies only)                                                                             |
-| `pnpm test`              | Unit tests (Vitest, no database)                                                                                                |
-| `pnpm test:integration`  | Service and database tests against `TEST_DATABASE_URL`                                                                          |
-| `pnpm test:e2e`          | Browser tests (Playwright, desktop + mobile, uses the test DB)                                                                  |
-| `pnpm check`             | Typecheck, lint, format check, unit and integration tests                                                                       |
-| `pnpm db:up` / `db:down` | Start / stop local PostgreSQL                                                                                                   |
-| `pnpm db:migrate`        | Create and apply a migration in development                                                                                     |
-| `pnpm db:deploy`         | Apply committed migrations (production/CI)                                                                                      |
-| `pnpm db:reset`          | Drop, recreate, and re-migrate the development database                                                                         |
-| `pnpm db:generate`       | Regenerate the Prisma client                                                                                                    |
-| `pnpm db:seed`           | Load development seed data (idempotent)                                                                                         |
-| `pnpm db:import-curated` | Import an approved catalog and curated roadmaps (any environment; see `packages/database/prisma/data/curated-drafts/README.md`) |
-| `pnpm db:studio`         | Browse data in Prisma Studio                                                                                                    |
+| Command                  | What it does                                                                                                      |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`               | Next.js dev server                                                                                                |
+| `pnpm build`             | Production build of the web app                                                                                   |
+| `pnpm start`             | Serve the production build                                                                                        |
+| `pnpm typecheck`         | Strict TypeScript across all packages                                                                             |
+| `pnpm lint`              | ESLint across all packages                                                                                        |
+| `pnpm format`            | Format with Prettier (`format:check` verifies only)                                                               |
+| `pnpm test`              | Unit tests (Vitest, no database)                                                                                  |
+| `pnpm test:integration`  | Service and database tests against `TEST_DATABASE_URL`                                                            |
+| `pnpm test:e2e`          | Browser tests (Playwright, desktop + mobile, uses the test DB)                                                    |
+| `pnpm check`             | Typecheck, lint, format check, unit and integration tests                                                         |
+| `pnpm db:up` / `db:down` | Start / stop local PostgreSQL                                                                                     |
+| `pnpm db:migrate`        | Create and apply a migration in development                                                                       |
+| `pnpm db:deploy`         | Apply committed migrations (production/CI)                                                                        |
+| `pnpm db:reset`          | Drop, recreate, and re-migrate the development database                                                           |
+| `pnpm db:generate`       | Regenerate the Prisma client                                                                                      |
+| `pnpm db:seed`           | Load development seed data (idempotent)                                                                           |
+| `pnpm db:import-curated` | Import an approved catalog and curated roadmaps (any environment; see `packages/database/prisma/data/SOURCES.md`) |
+| `pnpm db:studio`         | Browse data in Prisma Studio                                                                                      |
 
 First-time E2E setup: `pnpm --filter @branch/web exec playwright install chromium`. Integration and
 E2E runs migrate and empty the test database themselves; they refuse to touch a database whose name

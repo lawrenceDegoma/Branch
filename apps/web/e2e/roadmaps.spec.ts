@@ -151,4 +151,30 @@ test.describe("roadmaps", () => {
     const id = page.url().split("/").at(-1)!;
     expect((await page.goto(`/roadmaps/${id}/edit`))?.status()).toBe(404);
   });
+
+  test("Patterns 150 and Essentials 75 are curated, credit their source, and offer free versions of Premium problems", async ({
+    page,
+    viewer: _viewer,
+  }) => {
+    await page.goto("/roadmaps");
+    const curated = page.getByRole("region", { name: "Curated lists" });
+    await expect(curated.getByRole("link", { name: /^Essentials 75/ })).toBeVisible();
+    await curated.getByRole("link", { name: /^Patterns 150/ }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Patterns 150" })).toBeVisible();
+    await expect(page.getByText(/150 problems/).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /Source/ })).toHaveAttribute(
+      "href",
+      /^https:\/\/github\.com\/neetcode-gh\/leetcode\/blob\/[0-9a-f]{40}\//,
+    );
+
+    const meetingRooms = page.getByRole("listitem").filter({ hasText: /^Meeting Rooms(?! II)/ });
+    await expect(meetingRooms).toContainText("Premium");
+    await expect(
+      meetingRooms.getByRole("link", { name: /^Free version of Meeting Rooms/ }),
+    ).toHaveAttribute("href", "https://www.lintcode.com/problem/920/");
+    // Free problems carry neither.
+    const twoSum = page.getByRole("listitem").filter({ hasText: /^Two Sum(?! II)/ });
+    await expect(twoSum).not.toContainText("Premium");
+    await expect(twoSum.getByRole("link", { name: /Free version/ })).toHaveCount(0);
+  });
 });

@@ -57,6 +57,30 @@ describe("catalogSchema", () => {
   });
 });
 
+describe("catalog Premium problems", () => {
+  const withProblem = (problem: Record<string, unknown>) =>
+    catalogSchema.safeParse({
+      tags: [],
+      problems: [{ slug: "meeting-rooms", title: "Meeting Rooms", difficulty: "EASY", ...problem }],
+    });
+
+  it("defaults to not Premium", () => {
+    const result = withProblem({});
+    expect(result.success && result.data.problems[0]!.premium).toBe(false);
+  });
+
+  it("accepts an https free alternative on a Premium problem", () => {
+    expect(
+      withProblem({ premium: true, freeUrl: "https://www.lintcode.com/problem/920/" }).success,
+    ).toBe(true);
+  });
+
+  it("rejects insecure free alternatives, and free alternatives on free problems", () => {
+    expect(withProblem({ premium: true, freeUrl: "http://example.test/920" }).success).toBe(false);
+    expect(withProblem({ freeUrl: "https://www.lintcode.com/problem/920/" }).success).toBe(false);
+  });
+});
+
 describe("leetcodeProblemUrl", () => {
   it("derives the canonical problem URL", () => {
     expect(leetcodeProblemUrl("two-sum")).toBe("https://leetcode.com/problems/two-sum/");

@@ -71,6 +71,8 @@ async function versionContent(db: Db, versionId: string) {
           problem: {
             select: {
               ...problemSummary,
+              premium: true,
+              freeAlternativeUrl: true,
               tags: { select: { tag: { select: { slug: true, name: true } } } },
             },
           },
@@ -88,6 +90,8 @@ async function versionContent(db: Db, versionId: string) {
         leetcodeSlug: item.problem.leetcodeSlug,
         title: item.problem.title,
         difficulty: item.problem.difficulty,
+        premium: item.problem.premium,
+        freeAlternativeUrl: item.problem.freeAlternativeUrl,
         tags: item.problem.tags.map((t) => t.tag),
       },
     })),

@@ -31,6 +31,26 @@ describe("syncCatalog", () => {
     });
     expect(twoSum.tags.map((t) => t.tag.slug)).toEqual(["stack"]);
   });
+
+  it("records Premium status and the free alternative, and clears them when dropped", async () => {
+    const premium = {
+      ...testCatalog,
+      problems: testCatalog.problems.map((p) =>
+        p.slug === "min-stack"
+          ? { ...p, premium: true, freeUrl: "https://www.lintcode.com/problem/12/" }
+          : p,
+      ),
+    };
+    await syncCatalog(prisma, premium, "CURATED");
+    expect(
+      await prisma.problem.findUniqueOrThrow({ where: { leetcodeSlug: "min-stack" } }),
+    ).toMatchObject({ premium: true, freeAlternativeUrl: "https://www.lintcode.com/problem/12/" });
+
+    await syncCatalog(prisma, testCatalog, "CURATED");
+    expect(
+      await prisma.problem.findUniqueOrThrow({ where: { leetcodeSlug: "min-stack" } }),
+    ).toMatchObject({ premium: false, freeAlternativeUrl: null });
+  });
 });
 
 describe("importCuratedRoadmap", () => {

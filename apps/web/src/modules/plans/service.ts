@@ -105,7 +105,16 @@ const planInclude = {
           id: true,
           position: true,
           section: { select: { title: true, position: true } },
-          problem: { select: { id: true, leetcodeSlug: true, title: true, difficulty: true } },
+          problem: {
+            select: {
+              id: true,
+              leetcodeSlug: true,
+              title: true,
+              difficulty: true,
+              premium: true,
+              freeAlternativeUrl: true,
+            },
+          },
         },
       },
     },

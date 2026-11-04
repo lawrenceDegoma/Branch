@@ -8,7 +8,13 @@ export function ProblemRow({
   leading,
   children,
 }: {
-  problem: { leetcodeSlug: string; title: string; difficulty: "EASY" | "MEDIUM" | "HARD" };
+  problem: {
+    leetcodeSlug: string;
+    title: string;
+    difficulty: "EASY" | "MEDIUM" | "HARD";
+    premium?: boolean;
+    freeAlternativeUrl?: string | null;
+  };
   sectionTitle?: string;
   /** Shown before the title, such as the viewer's completion toggle. */
   leading?: React.ReactNode;
@@ -29,6 +35,22 @@ export function ProblemRow({
           <span className="sr-only">(opens LeetCode in a new tab)</span>
         </a>
         <DifficultyPill difficulty={problem.difficulty} />
+        {problem.premium ? (
+          <span className="inline-flex h-5 flex-none items-center rounded-full bg-raised px-2 text-xs font-medium whitespace-nowrap text-ink-muted">
+            Premium
+          </span>
+        ) : null}
+        {problem.freeAlternativeUrl ? (
+          <a
+            href={problem.freeAlternativeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-ink-muted underline underline-offset-4 hover:text-ink"
+          >
+            Free version
+            <span className="sr-only"> of {problem.title} (opens in a new tab)</span>
+          </a>
+        ) : null}
         {sectionTitle ? <span className="text-xs text-ink-muted">{sectionTitle}</span> : null}
         {children ? <div className="ml-auto flex items-center gap-2">{children}</div> : null}
       </div>

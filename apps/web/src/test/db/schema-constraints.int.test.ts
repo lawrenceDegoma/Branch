@@ -71,6 +71,25 @@ describe("catalog", () => {
       }),
     ).rejects.toThrow();
   });
+
+  it("allows no free alternative, or an https one of reasonable length", async () => {
+    const problem = (slug: string, freeAlternativeUrl: string | null) =>
+      prisma.problem.create({
+        data: {
+          leetcodeSlug: slug,
+          title: slug,
+          difficulty: "EASY",
+          source: "SEED",
+          premium: true,
+          freeAlternativeUrl,
+        },
+      });
+    await expect(problem("no-alternative", null)).resolves.toBeTruthy();
+    await expect(problem("secure", "https://www.lintcode.com/problem/920/")).resolves.toBeTruthy();
+    await expect(problem("insecure", "http://www.lintcode.com/problem/920/")).rejects.toThrow();
+    await expect(problem("script", "javascript:alert(1)")).rejects.toThrow();
+    await expect(problem("too-long", `https://example.test/${"a".repeat(300)}`)).rejects.toThrow();
+  });
 });
 
 describe("completions", () => {

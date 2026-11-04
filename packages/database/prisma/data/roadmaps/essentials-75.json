@@ -1,7 +1,7 @@
 {
-  "slug": "blind-75",
-  "title": "Blind 75",
-  "description": "The Blind 75 list as organized by NeetCode, grouped by pattern. Not affiliated with Blind, NeetCode, or LeetCode.",
+  "slug": "essentials-75",
+  "title": "Essentials 75",
+  "description": "The shorter core set, grouped by pattern. Every problem is also in Patterns 150.",
   "sourceUrl": "https://github.com/neetcode-gh/leetcode/blob/5a3c1b2d59b4e5c6252006343d73849ebc75f796/.problemSiteData.json",
   "sections": [
     {
