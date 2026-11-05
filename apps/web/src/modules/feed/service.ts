@@ -10,11 +10,14 @@ import {
   type EditPostInput,
   type ReactionKindValue,
 } from "./schemas";
+import { threadInclude, toThread, type CommentThread } from "./threads";
 
 // Posts belong to exactly one group. A feed is the union of the viewer's groups, so every read
 // starts from the viewer's memberships, and every write checks membership of the post's group.
 
 const POSTS_PER_MINUTE = 5;
+/** Top-level comments shown inline under a feed post; the post's page pages through the rest. */
+const FEED_THREADS = 20;
 
 const postInclude = {
   author: { select: { id: true, name: true, profile: { select: { username: true } } } },
@@ -23,7 +26,7 @@ const postInclude = {
   plan: {
     select: { roadmapVersion: { select: { roadmap: { select: { id: true, title: true } } } } },
   },
-  _count: { select: { comments: { where: { deletedAt: null } } } },
+  _count: { select: { comments: true } },
 } as const;
 
 /** Automatic posts the author hid, or whose solve was undone, show to no one. */
@@ -106,7 +109,10 @@ function toFeedItem(
     canHide: !written && isAuthor,
   };
 }
-export type FeedItem = ReturnType<typeof toFeedItem>;
+export type FeedItem = ReturnType<typeof toFeedItem> & {
+  /** In a feed: the first top-level comments with their replies, shown inside the post. */
+  threads?: CommentThread[];
+};
 export type FeedPage = { items: FeedItem[]; nextCursor: string | null };
 
 /**
@@ -134,7 +140,15 @@ export async function listFeed(
     },
     orderBy: { id: "desc" },
     take: limit + 1,
-    include: postInclude,
+    include: {
+      ...postInclude,
+      comments: {
+        where: { parentId: null },
+        orderBy: { id: "asc" },
+        take: FEED_THREADS,
+        include: threadInclude,
+      },
+    },
   });
   const admin = new Set(memberships.filter((m) => m.role === "ADMIN").map((m) => m.groupId));
   const page = posts.slice(0, limit);
@@ -143,7 +157,10 @@ export async function listFeed(
     page.map((post) => post.id),
   );
   return {
-    items: page.map((post) => toFeedItem(post, viewerId, admin, reactionsOf(post.id))),
+    items: page.map((post) => ({
+      ...toFeedItem(post, viewerId, admin, reactionsOf(post.id)),
+      threads: post.comments.map((c) => toThread(c, viewerId, admin.has(post.groupId))),
+    })),
     nextCursor: posts.length > limit ? page.at(-1)!.id : null,
   };
 }

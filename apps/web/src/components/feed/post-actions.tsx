@@ -25,7 +25,7 @@ const targets = {
     remove: deletePostAction,
     editLabel: "Edit post",
     deleteTitle: "Delete this post?",
-    /** Where focus goes once the deleted item is gone. */
+    /** Where focus goes once the deleted item is gone, unless the caller says otherwise. */
     afterRemoval: "activity-heading",
     deleteConfirm: "Delete post",
     ownDelete: "It disappears from the group's feed, with its comments. This can't be undone.",
@@ -39,11 +39,11 @@ const targets = {
     remove: deleteCommentAction,
     editLabel: "Edit comment",
     deleteTitle: "Delete this comment?",
-    afterRemoval: "comments-heading",
+    afterRemoval: "activity-heading",
     deleteConfirm: "Delete comment",
-    ownDelete: "Replies to it stay, under a deleted-comment note. This can't be undone.",
+    ownDelete: "Any replies to it are deleted too. This can't be undone.",
     adminDelete:
-      "You're removing a member's comment as the group admin. The removal is recorded in the group's activity log.",
+      "You're removing a member's comment as the group admin. Any replies to it are deleted too, and the removal is recorded in the group's activity log.",
   },
 } as const;
 
@@ -61,6 +61,7 @@ export function EditableBody({
   canDelete,
   footer,
   returnTo,
+  focusAfterRemoval,
   children,
 }: {
   target: keyof typeof targets;
@@ -73,6 +74,8 @@ export function EditableBody({
   footer?: React.ReactNode;
   /** After deleting, go here instead of staying (a post's own page would be a 404). */
   returnTo?: string;
+  /** Element ID that takes focus after deleting, when the target's default doesn't fit. */
+  focusAfterRemoval?: string;
   children: React.ReactNode;
 }) {
   const t = targets[target];
@@ -167,7 +170,7 @@ export function EditableBody({
               <ConfirmAction
                 action={t.remove}
                 fields={{ [t.field]: id, ...(returnTo ? { returnTo } : {}) }}
-                focusAfterRemoval={t.afterRemoval}
+                focusAfterRemoval={focusAfterRemoval ?? t.afterRemoval}
                 trigger="Delete"
                 title={t.deleteTitle}
                 description={canEdit ? t.ownDelete : t.adminDelete}

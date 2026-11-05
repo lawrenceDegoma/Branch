@@ -8,39 +8,13 @@ import {
   type EditCommentInput,
 } from "./schemas";
 import { requireVisiblePost } from "./service";
+import { threadInclude, toThread, type CommentThread } from "./threads";
 
 // Comments live on a post and are visible exactly when the post is: to members of its group,
 // while it isn't hidden or withdrawn. Two levels: top-level comments, and replies filed under one
-// (a database trigger enforces it). Deleting a comment that has replies keeps a placeholder so
-// the replies stay in context.
+// (a database trigger enforces it). Deleting a comment deletes its replies with it.
 
 const COMMENTS_PER_MINUTE = 10;
-/** Replies shown under one comment; generous for a group of friends, but bounded. */
-const REPLIES_SHOWN = 100;
-
-const commentInclude = { author: { select: { id: true, name: true } } } as const;
-type CommentRow = Awaited<
-  ReturnType<typeof prisma.comment.findMany<{ include: typeof commentInclude }>>
->[number];
-
-function toCommentItem(row: CommentRow, viewerId: string, isAdmin: boolean) {
-  const deleted = row.deletedAt !== null;
-  return {
-    id: row.id,
-    deleted,
-    // A deleted comment keeps nothing of its author's but its place in the thread.
-    body: deleted ? null : row.body,
-    spoiler: row.spoiler,
-    author: deleted ? null : row.author,
-    createdAt: row.createdAt,
-    editedAt: row.editedAt,
-    canEdit: !deleted && row.authorId === viewerId,
-    canDelete: !deleted && (row.authorId === viewerId || isAdmin),
-  };
-}
-export type CommentItem = ReturnType<typeof toCommentItem>;
-export type CommentThread = CommentItem & { replies: CommentItem[] };
-
 /** Top-level comments oldest first, each with its replies; paged by `after` (a comment ID). */
 export async function listComments(
   viewerId: string,
@@ -54,17 +28,11 @@ export async function listComments(
     where: { postId, parentId: null, ...(options.after ? { id: { gt: options.after } } : {}) },
     orderBy: { id: "asc" },
     take: limit + 1,
-    include: {
-      ...commentInclude,
-      replies: { orderBy: { id: "asc" }, take: REPLIES_SHOWN, include: commentInclude },
-    },
+    include: threadInclude,
   });
   const page = rows.slice(0, limit);
   return {
-    items: page.map((row) => ({
-      ...toCommentItem(row, viewerId, isAdmin),
-      replies: row.replies.map((reply) => toCommentItem(reply, viewerId, isAdmin)),
-    })),
+    items: page.map((row) => toThread(row, viewerId, isAdmin)),
     nextCursor: rows.length > limit ? page.at(-1)!.id : null,
   };
 }
@@ -107,7 +75,7 @@ async function requireVisibleComment(viewerId: string, commentId: string) {
     throw new NotFoundError("We couldn't find that comment.");
   }
   const comment = await prisma.comment.findUnique({ where: { id: commentId } });
-  if (!comment || comment.deletedAt) throw new NotFoundError("We couldn't find that comment.");
+  if (!comment) throw new NotFoundError("We couldn't find that comment.");
   try {
     const { post, membership } = await requireVisiblePost(viewerId, comment.postId);
     return { comment, post, membership };
@@ -135,31 +103,17 @@ export async function editComment(
 }
 
 /**
- * The author, or the group's admin (recorded in the audit log), deletes a comment. One with
- * replies becomes a placeholder; one without is removed, along with a placeholder parent it
- * leaves with no replies.
+ * The author, or the group's admin (recorded in the audit log), deletes a comment. Its replies go
+ * with it (the parent foreign key cascades).
  */
-export async function deleteComment(viewerId: string, commentId: string, now = new Date()) {
+export async function deleteComment(viewerId: string, commentId: string) {
   const { comment, post, membership } = await requireVisibleComment(viewerId, commentId);
   const isAuthor = comment.authorId === viewerId;
   if (!isAuthor && membership.role !== "ADMIN") {
     throw new ForbiddenError("Only the author or the group admin can delete a comment.");
   }
   await prisma.$transaction(async (tx) => {
-    const replies = await tx.comment.count({ where: { parentId: commentId } });
-    if (replies > 0) {
-      await tx.comment.update({
-        where: { id: commentId },
-        data: { body: null, deletedAt: now },
-      });
-    } else {
-      await tx.comment.delete({ where: { id: commentId } });
-      if (comment.parentId) {
-        await tx.comment.deleteMany({
-          where: { id: comment.parentId, deletedAt: { not: null }, replies: { none: {} } },
-        });
-      }
-    }
+    await tx.comment.delete({ where: { id: commentId } });
     if (!isAuthor) {
       await tx.groupAuditEvent.create({
         data: {

@@ -240,14 +240,15 @@ for (const colorScheme of ["dark", "light"] as const) {
       await prisma.comment.create({
         data: { postId: post.id, authorId: viewer.id, parentId: top.id, body: "Close!" },
       });
-      const gone = await prisma.comment.create({
-        data: { postId: post.id, authorId: member.account.id, body: null, deletedAt: new Date() },
-      });
-      await prisma.comment.create({
-        data: { postId: post.id, authorId: viewer.id, parentId: gone.id, body: "Still here" },
-      });
       await page.goto(`/posts/${post.id}`);
       await expectNoViolations(page);
+      // The same thread opened inside the post in the group's feed.
+      await page.goto(`/groups/${group.id}`);
+      await page.waitForFunction(() => document.readyState === "complete");
+      await page.getByRole("button", { name: "2 comments" }).click();
+      await expect(page.getByRole("list", { name: "Comments" })).toBeVisible();
+      await expectNoViolations(page);
+      await page.goto(`/posts/${post.id}`);
       // An open reply form and opened spoiler code.
       await page.locator("summary", { hasText: "Reply" }).first().click();
       await page.getByText("Show spoiler code").click();

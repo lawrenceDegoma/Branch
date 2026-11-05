@@ -1,12 +1,13 @@
-import { CircleCheck, Flag, MessageCircle } from "lucide-react";
+import { CircleCheck, Flag } from "lucide-react";
 import Link from "next/link";
 import { ConfirmAction } from "@/components/forms/confirm-action";
 import { DifficultyPill } from "@/components/roadmaps/difficulty-pill";
-import { buttonVariants } from "@/components/ui/button";
 import { Avatar } from "@/components/user/avatar";
 import { formatDateTime, formatRelative } from "@/lib/format";
 import { hidePostAction } from "@/modules/feed/actions";
 import type { FeedItem } from "@/modules/feed/service";
+import { PostComments } from "./comments";
+import { CommentsDisclosure, CommentsPanel, CommentsToggle } from "./comments-disclosure";
 import { Markdown } from "./markdown";
 import { EditableBody } from "./post-actions";
 import { ReactionBar } from "./reactions";
@@ -16,15 +17,17 @@ export function PostCard({
   now,
   timeZone,
   showGroup,
-  linkComments = true,
+  comments,
+  commentsOpen = false,
   returnTo,
 }: {
   post: FeedItem;
   now: Date;
   timeZone: string;
   showGroup: boolean;
-  /** In a feed, link to the post's page for its comments; on that page, the thread is below. */
-  linkComments?: boolean;
+  /** The thread to show when comments open; by default, the threads the feed loaded. */
+  comments?: React.ReactNode;
+  commentsOpen?: boolean;
   /** Where to go after deleting or hiding the post, when the current page would be gone. */
   returnTo?: string;
 }) {
@@ -32,17 +35,7 @@ export function PostCard({
   const footer = (
     <>
       <ReactionBar postId={post.id} reactions={post.reactions} />
-      {linkComments ? (
-        <Link
-          href={`/posts/${post.id}#comments`}
-          className={buttonVariants({ variant: "ghost", size: "sm", className: "text-ink-muted" })}
-        >
-          <MessageCircle aria-hidden className="size-4" />
-          {post.commentCount === 0
-            ? "Comment"
-            : `${post.commentCount} ${post.commentCount === 1 ? "comment" : "comments"}`}
-        </Link>
-      ) : null}
+      <CommentsToggle postId={post.id} count={post.commentCount} />
     </>
   );
   return (
@@ -50,79 +43,92 @@ export function PostCard({
       aria-labelledby={headingId}
       className="flex flex-col gap-3 rounded-xl bg-surface p-4 sm:p-5"
     >
-      <header className="flex items-start gap-3">
-        <Avatar userId={post.author.id} name={post.author.name} />
-        <div className="min-w-0 flex-1">
-          <p className="flex flex-wrap items-baseline gap-x-1.5">
-            <span id={headingId} className="font-medium">
-              {post.author.name}
-            </span>
-            {showGroup ? (
-              <span className="text-ink-muted">
-                in{" "}
-                <Link
-                  href={`/groups/${post.group.id}`}
-                  className="text-ink underline-offset-4 hover:underline"
-                >
-                  {post.group.name}
-                </Link>
+      <CommentsDisclosure defaultOpen={commentsOpen}>
+        <header className="flex items-start gap-3">
+          <Avatar userId={post.author.id} name={post.author.name} />
+          <div className="min-w-0 flex-1">
+            <p className="flex flex-wrap items-baseline gap-x-1.5">
+              <span id={headingId} className="font-medium">
+                {post.author.name}
               </span>
-            ) : null}
-          </p>
-          <p className="text-xs text-ink-muted">
-            <time
-              dateTime={post.createdAt.toISOString()}
-              title={formatDateTime(post.createdAt, timeZone)}
-            >
-              {formatRelative(post.createdAt, now, timeZone)}
-            </time>
-            {post.editedAt ? <span> · edited</span> : null}
-          </p>
-        </div>
-      </header>
-      {post.kind === "TEXT" ? (
-        <>
-          {post.problem ? (
-            <p className="flex flex-wrap items-center gap-2 text-ink-muted">
-              <span>About</span>
-              <ProblemLink problem={post.problem} />
+              {showGroup ? (
+                <span className="text-ink-muted">
+                  in{" "}
+                  <Link
+                    href={`/groups/${post.group.id}`}
+                    className="text-ink underline-offset-4 hover:underline"
+                  >
+                    {post.group.name}
+                  </Link>
+                </span>
+              ) : null}
             </p>
-          ) : null}
-          <EditableBody
-            target="post"
-            id={post.id}
-            body={post.body ?? ""}
-            spoiler={post.spoiler}
-            canEdit={post.canEdit}
-            canDelete={post.canDelete}
-            footer={footer}
-            returnTo={returnTo}
-          >
-            <Markdown spoiler={post.spoiler}>{post.body ?? ""}</Markdown>
-          </EditableBody>
-        </>
-      ) : (
-        <>
-          <AutomaticPostBody post={post} />
-          <div className="-mb-1 flex flex-wrap items-center gap-1">
-            {footer}
-            {post.canHide ? (
-              <div className="ml-auto">
-                <ConfirmAction
-                  action={hidePostAction}
-                  fields={{ postId: post.id, ...(returnTo ? { returnTo } : {}) }}
-                  focusAfterRemoval="activity-heading"
-                  trigger="Hide"
-                  title="Hide this post?"
-                  description="It disappears from the group's feed for everyone and won't be posted again. Your progress doesn't change."
-                  confirmLabel="Hide post"
-                  pendingLabel="Hiding…"
-                />
-              </div>
-            ) : null}
+            <p className="text-xs text-ink-muted">
+              <time
+                dateTime={post.createdAt.toISOString()}
+                title={formatDateTime(post.createdAt, timeZone)}
+              >
+                {formatRelative(post.createdAt, now, timeZone)}
+              </time>
+              {post.editedAt ? <span> · edited</span> : null}
+            </p>
           </div>
-        </>
-      )}
+        </header>
+        {post.kind === "TEXT" ? (
+          <>
+            {post.problem ? (
+              <p className="flex flex-wrap items-center gap-2 text-ink-muted">
+                <span>About</span>
+                <ProblemLink problem={post.problem} />
+              </p>
+            ) : null}
+            <EditableBody
+              target="post"
+              id={post.id}
+              body={post.body ?? ""}
+              spoiler={post.spoiler}
+              canEdit={post.canEdit}
+              canDelete={post.canDelete}
+              footer={footer}
+              returnTo={returnTo}
+            >
+              <Markdown spoiler={post.spoiler}>{post.body ?? ""}</Markdown>
+            </EditableBody>
+          </>
+        ) : (
+          <>
+            <AutomaticPostBody post={post} />
+            <div className="-mb-1 flex flex-wrap items-center gap-1">
+              {footer}
+              {post.canHide ? (
+                <div className="ml-auto">
+                  <ConfirmAction
+                    action={hidePostAction}
+                    fields={{ postId: post.id, ...(returnTo ? { returnTo } : {}) }}
+                    focusAfterRemoval="activity-heading"
+                    trigger="Hide"
+                    title="Hide this post?"
+                    description="It disappears from the group's feed for everyone and won't be posted again. Your progress doesn't change."
+                    confirmLabel="Hide post"
+                    pendingLabel="Hiding…"
+                  />
+                </div>
+              ) : null}
+            </div>
+          </>
+        )}
+        <CommentsPanel postId={post.id}>
+          {comments ?? (
+            <PostComments
+              postId={post.id}
+              threads={post.threads ?? []}
+              total={post.commentCount}
+              now={now}
+              timeZone={timeZone}
+            />
+          )}
+        </CommentsPanel>
+      </CommentsDisclosure>
     </article>
   );
 }

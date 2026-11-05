@@ -440,19 +440,27 @@ describe("reactions and comments", () => {
     await prisma.reaction.create({ data: { ...data, kind: "HELPFUL" } });
   });
 
-  it("requires a body on live comments and none on deleted ones", async () => {
+  it("requires every comment to have a body", async () => {
     const { user, post } = await postInGroup();
     const base = { postId: post.id, authorId: user.id };
-    await expect(prisma.comment.create({ data: { ...base, body: null } })).rejects.toThrow();
+    // NULL can't reach the database through Prisma's types, so it goes in as raw SQL.
+    await expect(
+      prisma.$executeRaw`INSERT INTO "comment" ("id", "postId", "authorId", "body") VALUES (gen_random_uuid(), ${post.id}::uuid, ${user.id}, NULL)`,
+    ).rejects.toThrow();
     await expect(prisma.comment.create({ data: { ...base, body: " \n\t" } })).rejects.toThrow();
     await expect(
       prisma.comment.create({ data: { ...base, body: "x".repeat(2001) } }),
     ).rejects.toThrow();
-    await expect(
-      prisma.comment.create({ data: { ...base, body: "still here", deletedAt: new Date() } }),
-    ).rejects.toThrow();
     await prisma.comment.create({ data: { ...base, body: "x".repeat(2000) } });
-    await prisma.comment.create({ data: { ...base, body: null, deletedAt: new Date() } });
+  });
+
+  it("deletes a comment's replies with it", async () => {
+    const { user, post } = await postInGroup();
+    const base = { postId: post.id, authorId: user.id };
+    const top = await prisma.comment.create({ data: { ...base, body: "top" } });
+    await prisma.comment.create({ data: { ...base, body: "reply", parentId: top.id } });
+    await prisma.comment.delete({ where: { id: top.id } });
+    expect(await prisma.comment.count()).toBe(0);
   });
 
   it("keeps replies two levels deep and on their parent's post", async () => {

@@ -1,18 +1,66 @@
 import { ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
 import { Avatar } from "@/components/user/avatar";
 import { formatDateTime, formatRelative } from "@/lib/format";
-import type { CommentItem, CommentThread } from "@/modules/feed/comments";
+import type { CommentItem, CommentThread } from "@/modules/feed/threads";
 import { CommentForm } from "./comment-form";
+import { commentsToggleId } from "./comment-ids";
 import { Markdown } from "./markdown";
 import { EditableBody } from "./post-actions";
 
 /**
- * The conversation under a post: top-level comments in order, each with its replies hanging off a
- * thread line beneath the commenter's avatar, and a folded "Reply" form at the end of the thread.
- * Rendered inside the post page's single comments surface, so it reads as one thread rather than
- * a stack of cards.
+ * The thread inside a post's card: its comments, links to the rest when there are more than
+ * shown, and the form for a new comment.
  */
-export function CommentList({
+export function PostComments({
+  postId,
+  threads,
+  total,
+  earlier,
+  later,
+  now,
+  timeZone,
+}: {
+  postId: string;
+  threads: CommentThread[];
+  /** Every comment on the post, replies included. */
+  total: number;
+  /** Paging links on the post's own page. */
+  earlier?: string;
+  later?: string;
+  now: Date;
+  timeZone: string;
+}) {
+  const shown = threads.reduce((sum, thread) => sum + 1 + thread.replies.length, 0);
+  // In a feed (no paging links), the post's page has whatever didn't fit.
+  const seeAll = !earlier && !later && shown < total ? `/posts/${postId}` : undefined;
+  const link = (href: string, label: string) => (
+    <Link
+      href={href}
+      className={buttonVariants({ variant: "outline", size: "sm", className: "self-start" })}
+    >
+      {label}
+    </Link>
+  );
+  return (
+    <div className="mt-1 flex flex-col gap-5 border-t border-line pt-4">
+      {earlier ? link(earlier, "Earlier comments") : null}
+      {threads.length > 0 ? (
+        <CommentList postId={postId} threads={threads} now={now} timeZone={timeZone} />
+      ) : null}
+      {later ? link(later, "Later comments") : null}
+      {seeAll ? link(seeAll, `See all ${total} comments`) : null}
+      <CommentForm postId={postId} label="Add a comment" submitLabel="Post comment" />
+    </div>
+  );
+}
+
+/**
+ * Top-level comments in order, each with its replies hanging off a thread line beneath the
+ * commenter's avatar, and a folded "Reply" form at the end of the thread.
+ */
+function CommentList({
   postId,
   threads,
   now,
@@ -27,17 +75,14 @@ export function CommentList({
     <ol aria-label="Comments" className="flex flex-col gap-5">
       {threads.map((thread) => (
         <li key={thread.id} className="flex flex-col gap-3">
-          <Comment comment={thread} now={now} timeZone={timeZone} />
+          <Comment postId={postId} comment={thread} now={now} timeZone={timeZone} />
           {/* The line sits under the avatar's centre; the text column starts past the avatar. */}
           <div className="ml-[0.6875rem] flex flex-col gap-3 border-l-2 border-line pl-[1.1875rem]">
             {thread.replies.length > 0 ? (
-              <ol
-                aria-label={`Replies to ${thread.author?.name ?? "a deleted comment"}`}
-                className="flex flex-col gap-3"
-              >
+              <ol aria-label={`Replies to ${thread.author.name}`} className="flex flex-col gap-3">
                 {thread.replies.map((reply) => (
                   <li key={reply.id}>
-                    <Comment comment={reply} now={now} timeZone={timeZone} />
+                    <Comment postId={postId} comment={reply} now={now} timeZone={timeZone} />
                   </li>
                 ))}
               </ol>
@@ -54,7 +99,7 @@ export function CommentList({
                 <CommentForm
                   postId={postId}
                   parentId={thread.id}
-                  label={`Reply to ${thread.author?.name ?? "this thread"}`}
+                  label={`Reply to ${thread.author.name}`}
                   submitLabel="Reply"
                 />
               </div>
@@ -67,21 +112,16 @@ export function CommentList({
 }
 
 function Comment({
+  postId,
   comment,
   now,
   timeZone,
 }: {
+  postId: string;
   comment: CommentItem;
   now: Date;
   timeZone: string;
 }) {
-  if (comment.deleted || !comment.author) {
-    return (
-      <article aria-label="Deleted comment" className="flex min-h-6 items-center">
-        <p className="text-ink-muted italic">Comment deleted.</p>
-      </article>
-    );
-  }
   const headingId = `comment-${comment.id}-author`;
   return (
     <article aria-labelledby={headingId} className="flex gap-3">
@@ -104,12 +144,13 @@ function Comment({
         <EditableBody
           target="comment"
           id={comment.id}
-          body={comment.body ?? ""}
+          body={comment.body}
           spoiler={comment.spoiler}
           canEdit={comment.canEdit}
           canDelete={comment.canDelete}
+          focusAfterRemoval={commentsToggleId(postId)}
         >
-          <Markdown spoiler={comment.spoiler}>{comment.body ?? ""}</Markdown>
+          <Markdown spoiler={comment.spoiler}>{comment.body}</Markdown>
         </EditableBody>
       </div>
     </article>

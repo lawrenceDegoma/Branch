@@ -86,7 +86,7 @@ test.describe("keyboard", () => {
     const form = page.getByRole("form", { name: "Add a comment" });
     await form.getByRole("textbox").focus();
     await page.keyboard.type("First comment");
-    const submit = form.getByRole("button", { name: "Comment" });
+    const submit = form.getByRole("button", { name: "Post comment" });
     await submit.focus();
     await page.keyboard.press("Enter");
     await expect(page.getByRole("list", { name: "Comments" })).toContainText("First comment");
@@ -99,13 +99,23 @@ test.describe("keyboard", () => {
     await page.keyboard.press("Tab");
     await expect(page.getByRole("textbox", { name: `Reply to ${viewer.name}` })).toBeFocused();
 
-    // Deleting the comment moves focus to the Comments heading rather than the page body.
+    // Deleting the comment moves focus to the post's comments toggle rather than the page body.
     await page
       .getByRole("list", { name: "Comments" })
       .getByRole("button", { name: "Delete" })
       .click();
     await page.getByRole("button", { name: "Delete comment" }).click();
-    await expect(page.getByRole("heading", { level: 2, name: /^Comments/ })).toBeFocused();
+    await expect(card.getByRole("button", { name: "Comment", exact: true })).toBeFocused();
+
+    // In the feed, the toggle opens the thread inside the post and keeps focus.
+    await page.goto(`/groups/${group.id}`);
+    await ready(page);
+    const toggle = page.getByRole("button", { name: "Comment", exact: true });
+    await toggle.focus();
+    await page.keyboard.press("Enter");
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await expect(toggle).toBeFocused();
+    await expect(page.getByRole("form", { name: "Add a comment" })).toBeVisible();
   });
 });
 

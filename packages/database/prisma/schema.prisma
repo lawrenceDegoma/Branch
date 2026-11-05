@@ -547,14 +547,12 @@ model Comment {
   parentId  String?   @db.Uuid
   parent    Comment?  @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
   replies   Comment[] @relation("Replies")
-  /// Markdown, 1-2000 characters (CHECK); null once deleted.
-  body      String?
+  /// Markdown, 1-2000 characters (CHECK).
+  body      String
   /// Code blocks render folded, as on posts.
   spoiler   Boolean   @default(false)
   createdAt DateTime  @default(now())
   editedAt  DateTime?
-  /// Deleted while it had replies: the text is gone and the replies stay under a placeholder.
-  deletedAt DateTime?
 
   @@index([postId, parentId, id])
   @@index([parentId, id])

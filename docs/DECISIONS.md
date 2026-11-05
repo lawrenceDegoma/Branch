@@ -303,16 +303,18 @@ Feed rules:
   feed shows counts and the viewer's own (two queries per page); not who reacted. Buttons flip
   optimistically and revert with a message on failure; pressed ones carry an outline, not only a
   fill. The emoji are `aria-hidden`; the label is the accessible name.
-- **Comments** (M12) live on the post's own page, `/posts/[id]` (members of its group only; hidden,
-  withdrawn, foreign, or malformed IDs are a 404). The feed shows the count and links there, which
-  keeps feed reads bounded. Two levels: top-level comments oldest first (50 a page, `?after=`),
+- **Comments** (M12; inline since 2026-11-04) open inside the post's card: the count is a toggle,
+  and the feed query loads each post's first 20 top-level comments with their replies (bounded),
+  with "See all N comments" linking to the post's own page, `/posts/[id]`, when there are more.
+  That page is the permalink and pages long threads (members of its group only; hidden,
+  withdrawn, foreign, or malformed IDs are a 404). Two levels: top-level comments oldest first (50 a page, `?after=`),
   each with its replies (up to 100 shown) and a folded "Reply" form at the end of the thread;
   replying to a reply files it in the same thread (a trigger enforces two levels and the same
   post). Markdown and the spoiler mark work as in posts; 1-2000 characters; 10 comments a minute
   per person. The author edits; the author or the group admin deletes (admin removals are audited
-  as `COMMENT_REMOVED`). A deleted comment with replies becomes "Comment deleted." (text and
-  author gone, CHECK-enforced), and goes entirely when its last reply does. Deleting a post takes
-  its comments and reactions with it.
+  as `COMMENT_REMOVED`). Deleting a comment deletes its replies with it (owner decision,
+  2026-11-04, replacing the M12 "Comment deleted." placeholder; the parent foreign key cascades).
+  Deleting a post takes its comments and reactions with it.
 - **Focus** (M14): nothing a person does leaves keyboard focus on the page body. `SubmitButton` is
   `aria-disabled` while pending and ignores clicks, but is never natively disabled (a disabled
   button drops focus; this applies to every form in the app). Leaving an edit form returns focus
@@ -611,7 +613,7 @@ production build; taste-skill lint 0 FAIL.
 - UI: `ReactionBar`; a footer on every post card (reactions, comments link, the owner's actions);
   `EditableBody` now serves posts and comments; `CommentList`, `CommentForm`, and the post page.
 - Tests: 11 integration tests (reaction toggling and races, visibility, threading and the
-  reply-to-reply rule, foreign parents, edit rights, placeholders and their cleanup, admin removal
+  reply-to-reply rule, foreign parents, edit rights, deletion with replies, admin removal
   audit, rate limit, paging, cascade with the post); constraint tests for reactions, comment
   bodies (NULL cases included), and the two-level trigger; 2 E2E journeys (PRD scenario 4 without
   the image; edit, delete, admin removal, and a surviving reply); axe scans of the post page with
@@ -658,10 +660,18 @@ group activity", met except images, which the owner deferred (M13):
 
 ### After Phase 2: threaded comments (2026-11-04)
 
-The owner asked for comments to read as one thread rather than separate posts. The post page now
-shows a single comments surface: top-level comments in order, replies hanging off a line under
-the commenter's avatar, the Reply control at the end of each thread, and Edit/Delete as a small
-row directly under each comment's text. Data model, two-level cap, and permissions are unchanged.
+The owner asked for comments to read as one thread rather than separate posts, then for the
+thread to be part of the post itself rather than a separate screen, and for a deleted comment's
+replies to go with it.
+
+- Comments open inside the post's card in every feed (Home, group pages) from the count, which
+  is a toggle (`aria-expanded`); the post's page shows the same card with comments open. Replies
+  hang off a line under the commenter's avatar; Edit and Delete sit right under each comment's
+  text; the form's button is "Post comment" (distinct from the toggle's "Comment").
+- Deleting a comment deletes its replies; the confirmation says so. Migration
+  `comment_delete_with_replies` removes existing placeholders (with their replies), drops
+  `deletedAt`, makes `body` NOT NULL, and narrows the `comment_body` CHECK.
+- After a comment is deleted, focus goes to the post's comments toggle.
 
 ## Phase 1 summary
 

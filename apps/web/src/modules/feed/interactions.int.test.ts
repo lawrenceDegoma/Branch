@@ -127,23 +127,32 @@ describe("comments", () => {
     });
   });
 
-  it("keeps replies under a placeholder when their comment is deleted", async () => {
+  it("deletes a comment's replies with it", async () => {
     const { ada, grace, post } = await setup();
     const top = await comment(grace.id, post.id, "Is this O(n)?");
-    const reply = await comment(ada.id, post.id, "Yes", top.id, later(1));
-    await deleteComment(grace.id, top.id, later(2));
+    await comment(ada.id, post.id, "Yes", top.id, later(1));
+    const other = await comment(ada.id, post.id, "Unrelated", undefined, later(2));
+    await deleteComment(grace.id, top.id);
 
-    const [thread] = (await listComments(ada.id, post.id)).items;
-    expect(thread).toMatchObject({ deleted: true, body: null, author: null, canDelete: false });
-    expect(thread!.replies.map((r) => r.body)).toEqual(["Yes"]);
+    const { items } = await listComments(ada.id, post.id);
+    expect(items.map((c) => [c.body, c.replies.length])).toEqual([["Unrelated", 0]]);
     expect((await getPost(ada.id, post.id)).commentCount).toBe(1);
     await expect(
       editComment(grace.id, top.id, { body: "x", spoiler: false }),
     ).rejects.toBeInstanceOf(NotFoundError);
-
-    // The last reply going takes the empty placeholder with it.
-    await deleteComment(ada.id, reply.id);
+    await deleteComment(ada.id, other.id);
     expect(await prisma.comment.count()).toBe(0);
+  });
+
+  it("shows a post's first threads inline in the feed", async () => {
+    const { ada, grace, post } = await setup();
+    const top = await comment(grace.id, post.id, "Try a hash map", undefined, later(1));
+    await comment(ada.id, post.id, "Thanks!", top.id, later(2));
+    const { items } = await listFeed(ada.id);
+    expect(
+      items[0]!.threads!.map((c) => [c.body, c.canDelete, c.replies.map((r) => r.body)]),
+    ).toEqual([["Try a hash map", true, ["Thanks!"]]]);
+    expect(items[0]!.commentCount).toBe(2);
   });
 
   it("lets the admin remove a member's comment, recorded in the audit log", async () => {
