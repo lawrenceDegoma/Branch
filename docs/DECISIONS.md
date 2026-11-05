@@ -688,6 +688,43 @@ when the extension saw the Submit in that tab and then an accepted verdict for t
   the API, waiting notice, code, delete, disconnect), plus axe scans and 320px reflow of the new
   page.
 
+### M17 — The Chrome extension (complete)
+
+- **Stack:** WXT 0.21.4 (pinned; 0.21.5 was under two weeks old), Manifest V3, plain TypeScript
+  (no UI framework in the popup). New package `apps/extension`; the payload contract moved to
+  `@branch/shared/extension` so the extension and the API validate the same schema.
+- **Detection** (`src/detect.ts`, pure, unit-tested against the spike's recorded shapes): a
+  submission counts only when its Submit was seen in that tab and then `submissionDetails`
+  reported statusCode 10 with every test passed; the older `/check/` polling and LeetCode's
+  "Accepted" label are fallbacks. Old submissions, runs, failures, unknown shapes, and submits
+  with no verdict within 10 minutes send nothing. Only the six contract fields are sent; never the
+  username or anything else in LeetCode's responses.
+- **Page script** runs in LeetCode's page context (`world: "MAIN"`, `document_start`), wraps
+  `fetch` and XHR (decoding blob responses), never alters requests or responses, never makes one,
+  and swallows its own errors. A separate isolated content script validates and forwards.
+- **Background:** connection and a queue of at most 50 in `storage.local`; sends one at a time;
+  `ok` and permanent refusals leave the queue, 401 disconnects (Branch revoked the key),
+  429/5xx/offline retry by alarm with backoff (1, 2, 4 … 60 minutes). Nothing is collected while
+  disconnected; disconnecting clears the queue and revokes the key in Branch. Every message's
+  sender is checked: submissions only from leetcode.com tabs, connecting only from Branch's origin
+  or the popup.
+- **Connecting:** Settings hands the new key to the extension's content script on Branch's
+  Settings page (`window.postMessage`, origin-checked both ways), which needs no extension ID
+  configured in the web app. If no extension answers within 1.5 s, the key is shown to paste into
+  the popup instead. Trade-off: another extension with access to Branch's pages could read the key
+  in transit; such an extension could already read the session, so this adds no new exposure.
+- **Permissions:** `storage`, `alarms`, and host access to the Branch origin (to send without
+  CORS); content scripts on `https://leetcode.com/*` and Branch's `/settings*`. No `tabs`,
+  `webRequest`, `cookies`, or `<all_urls>`.
+- **Popup:** connection, last sync, anything waiting (with Retry now), Disconnect, a paste-key
+  fallback, and "What this extension sends". Branch's tokens, system theme, axe-clean in both
+  states.
+- **Tests:** 17 unit tests (detector, API outcomes, queue); `e2e/extension-browser.spec.ts` loads
+  the built extension into Chromium with a Playwright-served fake LeetCode (submit, then GraphQL
+  read as a blob, judging then accepted): connect from Settings without copying, an old accepted
+  submission ignored, one submission and one `EXTENSION` completion, the popup, and disconnect
+  revoking the key. `pnpm test:e2e` builds the extension first.
+
 ## Phase 2 summary
 
 Done when "members can post questions with code/images, react/reply, and see only authorized

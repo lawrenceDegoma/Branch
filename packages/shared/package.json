@@ -5,7 +5,8 @@
   "exports": {
     "./catalog": "./src/catalog.ts",
     "./calendar": "./src/schedule/calendar.ts",
-    "./schedule": "./src/schedule/generate.ts"
+    "./schedule": "./src/schedule/generate.ts",
+    "./extension": "./src/extension.ts"
   },
   "scripts": {
     "typecheck": "tsc",

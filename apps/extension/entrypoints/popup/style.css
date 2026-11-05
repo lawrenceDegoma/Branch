@@ -1,0 +1,153 @@
+/* Branch's tokens (apps/web/src/app/globals.css), following the system theme. */
+:root {
+  color-scheme: light dark;
+  --ground: #f7f7f5;
+  --surface: #ffffff;
+  --raised: #efefec;
+  --line: #e4e4e1;
+  --control: #80858c;
+  --ink: #16181c;
+  --ink-muted: #52565d;
+  --focus: #d9480f;
+  --negative: #c4242a;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground: #17191d;
+    --surface: #1e2125;
+    --raised: #262a30;
+    --line: #2c3036;
+    --control: #70757e;
+    --ink: #f3f4f6;
+    --ink-muted: #b3b6bc;
+    --focus: #ff683b;
+    --negative: #f0677d;
+  }
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  width: 340px;
+  background: var(--ground);
+  color: var(--ink);
+  font:
+    14px/1.5 system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+}
+header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+}
+.wordmark {
+  font-weight: 600;
+  font-size: 16px;
+}
+.dot {
+  color: var(--focus);
+}
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 16px 16px;
+}
+section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--surface);
+}
+[hidden] {
+  display: none !important;
+}
+h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+p {
+  margin: 0;
+}
+.muted,
+summary,
+dt,
+label {
+  color: var(--ink-muted);
+}
+dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0;
+}
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--control);
+  border-radius: 10px;
+  background: var(--ground);
+  color: var(--ink);
+  font: inherit;
+}
+button {
+  padding: 7px 14px;
+  border: 1px solid var(--control);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+button:hover {
+  background: var(--raised);
+}
+/* The primary action is an inverted pill, as in Branch. */
+button.primary {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--ground);
+}
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+#message:empty {
+  display: none;
+}
+#message.error {
+  color: var(--negative);
+}
+details {
+  color: var(--ink-muted);
+}
+summary {
+  cursor: pointer;
+  font-weight: 500;
+}
+details p {
+  margin-top: 6px;
+}

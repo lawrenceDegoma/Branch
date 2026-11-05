@@ -35,7 +35,7 @@ export function ExtensionPanel({
                   {" · "}
                   {connection.lastUsedAt ? (
                     <>
-                      last synced{" "}
+                      last used{" "}
                       <time
                         dateTime={connection.lastUsedAt.toISOString()}
                         title={formatDateTime(connection.lastUsedAt, timeZone)}

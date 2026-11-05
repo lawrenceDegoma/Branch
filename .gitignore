@@ -33,3 +33,7 @@ blob-report/
 
 # generated
 **/src/generated/
+
+# extension build output
+.output/
+.wxt/

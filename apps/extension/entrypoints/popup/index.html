@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Branch</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header>
+      <img src="/icon/32.png" alt="" width="20" height="20" />
+      <span class="wordmark">branch<span class="dot">.</span></span>
+    </header>
+    <main>
+      <section id="disconnected" hidden aria-labelledby="disconnected-heading">
+        <h1 id="disconnected-heading">Not connected</h1>
+        <p class="muted">
+          Open Branch, go to Settings, and choose <strong>Connect a browser</strong>. This extension
+          picks up the key by itself.
+        </p>
+        <button type="button" id="open-settings" class="primary">Open Branch settings</button>
+        <form id="key-form" novalidate>
+          <label for="key">Or paste a key</label>
+          <div class="row">
+            <input id="key" name="key" autocomplete="off" spellcheck="false" placeholder="brx_…" />
+            <button type="submit">Connect</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="connected" hidden aria-labelledby="connected-heading">
+        <h1 id="connected-heading">Connected</h1>
+        <p id="account" class="muted"></p>
+        <dl>
+          <dt>Last sync</dt>
+          <dd id="last-sync">Nothing yet</dd>
+          <dt>Waiting to send</dt>
+          <dd id="pending">None</dd>
+        </dl>
+        <div class="row">
+          <button type="button" id="retry" hidden>Retry now</button>
+          <button type="button" id="disconnect">Disconnect</button>
+        </div>
+      </section>
+
+      <p id="message" role="status" aria-live="polite"></p>
+
+      <details>
+        <summary>What this extension sends</summary>
+        <p>
+          When LeetCode accepts a submission you make in this browser, Branch receives the problem,
+          the language, your code, and the time. Your code is visible only to you in Branch. Nothing
+          else on LeetCode is read or sent, and the extension never makes requests to LeetCode
+          itself.
+        </p>
+      </details>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

@@ -9,3 +9,5 @@ CLAUDE.md
 coverage/
 playwright-report/
 test-results/
+**/.output/
+**/.wxt/

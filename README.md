@@ -113,7 +113,8 @@ Run from the repository root.
 | `pnpm format`            | Format with Prettier (`format:check` verifies only)                                                               |
 | `pnpm test`              | Unit tests (Vitest, no database)                                                                                  |
 | `pnpm test:integration`  | Service and database tests against `TEST_DATABASE_URL`                                                            |
-| `pnpm test:e2e`          | Browser tests (Playwright, desktop + mobile, uses the test DB)                                                    |
+| `pnpm test:e2e`          | Builds the extension for tests, then browser tests (Playwright, desktop + mobile, uses the test DB)               |
+| `pnpm build:extension`   | Production build of the Chrome extension into `apps/extension/.output/chrome-mv3`                                 |
 | `pnpm check`             | Typecheck, lint, format check, unit and integration tests                                                         |
 | `pnpm db:up` / `db:down` | Start / stop local PostgreSQL                                                                                     |
 | `pnpm db:migrate`        | Create and apply a migration in development                                                                       |
@@ -135,14 +136,30 @@ client; Prisma 7 no longer does this automatically).
 
 ```text
 apps/web/            Next.js App Router app (UI, server actions, route handlers, domain modules)
+apps/extension/      Chrome extension (WXT): syncs accepted LeetCode submissions to Branch
 packages/database/   Prisma schema, migrations, seed data, catalog importer, Prisma client
 packages/shared/     Contracts and pure logic shared across apps (catalog, calendar weeks, schedules)
 infra/docker/        Docker Compose for local PostgreSQL (dev + test databases)
 docs/                Architecture decisions and milestone log
 ```
 
-Directories for the browser extension (`apps/extension`) and analysis service (`services/analyzer`)
-are created only when their phases begin.
+The analysis service (`services/analyzer`) is created only when Phase 4 begins.
+
+## The Chrome extension
+
+`apps/extension` is a Manifest V3 extension built with WXT. It watches only the traffic the
+LeetCode page already makes, never calls LeetCode itself, and sends accepted submissions to the
+Branch origin it was built for (production by default). How it detects a submission is in
+[docs/LEETCODE-SPIKE.md](docs/LEETCODE-SPIKE.md).
+
+- **Try it against local Branch:** `WXT_BRANCH_URL=http://localhost:3000 pnpm --filter @branch/extension build`,
+  then in Chrome open `chrome://extensions`, turn on Developer mode, choose **Load unpacked**, and
+  pick `apps/extension/.output/chrome-mv3`. Connect it from Branch's Settings → LeetCode extension.
+- **Production build:** `pnpm build:extension` (points at the production URL in
+  `apps/extension/src/config.ts`); `pnpm --filter @branch/extension zip` packages it for the Chrome
+  Web Store.
+- **Tests:** unit tests for detection and the sync queue (`pnpm test`), and an E2E test that loads
+  the built extension into Chromium against a fake LeetCode page (`e2e/extension-browser.spec.ts`).
 
 ## Health check
 
