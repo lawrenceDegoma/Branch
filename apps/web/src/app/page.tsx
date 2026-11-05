@@ -26,6 +26,11 @@ export default async function LandingPage() {
           Sign in
         </Link>
       </div>
+      <p className="text-xs text-ink-muted">
+        <Link href="/privacy" className="underline underline-offset-4 hover:text-ink">
+          Privacy
+        </Link>
+      </p>
     </main>
   );
 }

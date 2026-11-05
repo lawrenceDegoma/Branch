@@ -47,12 +47,13 @@ an old schema.
    Node.js version to 22.x in **Settings → Build and Deployment**.
 3. Add these under **Environment Variables**, for Production only:
 
-   | Name                 | Value                                                                    |
-   | -------------------- | ------------------------------------------------------------------------ |
-   | `DATABASE_URL`       | Neon's **pooled** string                                                 |
-   | `BETTER_AUTH_SECRET` | A new secret from `openssl rand -base64 32`. Don't reuse your local one. |
-   | `BETTER_AUTH_URL`    | The production URL, for example `https://branch-xyz.vercel.app`          |
-   | `CRON_SECRET`        | A new secret from `openssl rand -base64 32` (for the daily job, below)   |
+   | Name                    | Value                                                                    |
+   | ----------------------- | ------------------------------------------------------------------------ |
+   | `DATABASE_URL`          | Neon's **pooled** string                                                 |
+   | `BETTER_AUTH_SECRET`    | A new secret from `openssl rand -base64 32`. Don't reuse your local one. |
+   | `BETTER_AUTH_URL`       | The production URL, for example `https://branch-xyz.vercel.app`          |
+   | `CRON_SECRET`           | A new secret from `openssl rand -base64 32` (for the daily job, below)   |
+   | `PRIVACY_CONTACT_EMAIL` | The address shown on `/privacy` for data questions and deletion requests |
 
    Leave `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` unset unless you want GitHub sign-in (see
    below).

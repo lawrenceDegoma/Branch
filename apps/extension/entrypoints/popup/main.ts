@@ -1,6 +1,8 @@
 import { browser } from "wxt/browser";
 import { BRANCH_ORIGIN } from "@/src/config";
 import type { ConnectResult, ExtensionMessage, Status } from "@/src/messages";
+import { fillText } from "@/src/ui/disclosure";
+import "@/src/ui/branch.css";
 
 // The toolbar popup: connection, last sync, anything waiting, and what's sent.
 
@@ -21,12 +23,22 @@ function say(text: string, error = false) {
   message.classList.toggle("error", error);
 }
 
+const STAGES = {
+  submitted: "submitted, waiting for the verdict",
+  "not-accepted": "not accepted, so nothing was sent",
+  accepted: "accepted",
+} as const;
+
 function render(status: Status) {
   $("connected").hidden = !status.connection;
   $("disconnected").hidden = !!status.connection;
+  $("what-is-sent").hidden = !status.connection;
   if (status.connection) {
     const { name, username } = status.connection;
     $("account").textContent = `Syncing to ${name}${username ? ` (@${username})` : ""}.`;
+    $("last-seen").textContent = status.lastSeen
+      ? `${status.lastSeen.slug}, ${STAGES[status.lastSeen.stage]}, ${ago(status.lastSeen.at)}`
+      : "Nothing yet";
     $("last-sync").textContent = status.lastSync
       ? `${status.lastSync.problemSlug}, ${status.lastSync.counted ? "counted" : "waiting for the problem to be added"}, ${ago(status.lastSync.at)}`
       : "Nothing yet";
@@ -39,6 +51,9 @@ function render(status: Status) {
 async function refresh() {
   render(await send<Status>({ type: "status" }));
 }
+
+fillText();
+$<HTMLAnchorElement>("privacy").href = `${BRANCH_ORIGIN}/privacy`;
 
 $("open-settings").addEventListener("click", () => {
   void browser.tabs.create({ url: `${BRANCH_ORIGIN}/settings#extension` });

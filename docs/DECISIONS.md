@@ -725,6 +725,48 @@ when the extension saw the Submit in that tab and then an accepted verdict for t
   submission ignored, one submission and one `EXTENSION` completion, the popup, and disconnect
   revoking the key. `pnpm test:e2e` builds the extension first.
 
+### M18 — Journeys, docs, and the store listing (complete)
+
+- **Owner decision (2026-11-05):** publish publicly on the Chrome Web Store; the owner submits it
+  from their developer account (`docs/CHROME-WEB-STORE.md`).
+- **Store policy:** user data needs a prominent disclosure and consent inside the product before
+  collection, a privacy policy, a Limited Use statement, and no human reading of user data except
+  for support, security, or law. So: a welcome page opens on install with the disclosure;
+  the popup shows it in full while disconnected ("Agree and open Branch settings", "Agree and
+  connect"); Settings shows it beside "Connect a browser" ("Connecting means you agree"). The text
+  is one constant, `EXTENSION_DISCLOSURE`, in `@branch/shared/extension-text`.
+- **Privacy policy** at `/privacy` (public; linked from the landing page, auth pages, Settings, the
+  welcome page, and the popup): what the web app and extension collect, use, sharing (Vercel,
+  Neon, OAuth providers), human access, retention (30-day waiting submissions), choices, Limited
+  Use. Account deletion is by request to `PRIVACY_CONTACT_EMAIL` (no self-serve deletion yet; a
+  candidate follow-up).
+- **Popup:** "Last seen on LeetCode" (submitted / not accepted / accepted; slug only, never code;
+  nothing recorded while disconnected) and a note that only tabs loaded since install or update
+  are watched (the owner's first sync was missed for that reason).
+- **Size:** text constants split from the zod schemas, so the Branch-page script is 4 KB; the two
+  LeetCode scripts keep zod to validate payloads. Package: 66 KB, version 1.0.0,
+  `branch-for-leetcode-1.0.0-chrome.zip`.
+- **Store images:** `apps/extension/store/` (five 1280×800 screenshots, 440×280 and 1400×560
+  tiles), generated from the real app and extension by `e2e/store-assets.spec.ts`
+  (`STORE_ASSETS=1`), with seeded example data; no LeetCode artwork.
+- **Tests:** the real-extension E2E covers the welcome page (and its axe scan), "Last seen", and
+  the popup in both states; `/privacy` joins the axe scans and 320px reflow.
+
+## Phase 3 summary
+
+Done when "supported accepted submissions sync once without exposing source to groups; failures
+do not corrupt progress":
+
+- Accepted submissions made in a connected Chrome sync once (keyed by LeetCode's submission ID)
+  and mark the problem solved through the same path as manual completion; groups never see code.
+- Failures can't corrupt progress: unknown LeetCode shapes send nothing, refused payloads are
+  dropped, transient failures retry, a revoked key stops syncing, and manual completion is
+  unchanged.
+- Two migrations: `comment_delete_with_replies` (owner request) and `extension_submissions`. One new
+  env var each for the daily job and the privacy contact.
+- Open for the owner: publishing (`docs/CHROME-WEB-STORE.md`), the name/logo rights check before
+  the public listing, and Phase 4 (review and analysis), which starts only after approval.
+
 ## Phase 2 summary
 
 Done when "members can post questions with code/images, react/reply, and see only authorized

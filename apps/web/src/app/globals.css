@@ -371,6 +371,35 @@
   text-align: left;
 }
 
+/* Long-form pages (the privacy policy): readable measure, quiet hierarchy. */
+.prose-branch {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  line-height: 1.65;
+}
+.prose-branch h1 {
+  font-size: 1.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.prose-branch h2 {
+  margin-top: 1rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.prose-branch ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+.prose-branch a {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
 @utility tabular {
   font-variant-numeric: tabular-nums;
 }

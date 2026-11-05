@@ -32,13 +32,4 @@ export type ApiErrorResponse = { error: { code: string; message: string } };
 /** GET /api/extension/connection. */
 export type ConnectionResponse = { name: string; username: string | null };
 
-// Messages between Branch's Settings page and the extension's content script on it. Both sides
-// check `event.source === window` and the page's origin.
-export const PAGE_MESSAGE = {
-  /** Content script → page: the extension is installed and listening. */
-  present: "branch:extension-present",
-  /** Page → content script: connect with this token. */
-  connect: "branch:extension-connect",
-  /** Content script → page: the result of connecting. */
-  connected: "branch:extension-connected",
-} as const;
+export { EXTENSION_DISCLOSURE, PAGE_MESSAGE } from "./extension-text";

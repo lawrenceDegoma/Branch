@@ -101,6 +101,19 @@ test.describe("the Chrome extension", () => {
     try {
       const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent("serviceworker"));
       const extensionId = new URL(worker.url()).host;
+
+      // Installing opens the welcome page: what's read and sent, before anything is collected.
+      const welcome =
+        context.pages().find((p) => p.url().endsWith("/welcome.html")) ??
+        (await context.waitForEvent("page", (p) => p.url().endsWith("/welcome.html")));
+      await expect(welcome.getByRole("heading", { level: 1 })).toHaveText(
+        "Sync your LeetCode solves to Branch",
+      );
+      await expect(
+        welcome.getByText("it sends Branch the problem, the language, your code"),
+      ).toBeVisible();
+      await expectAccessible(welcome);
+      await welcome.close();
       const account = await signUpViaApi(context.request, baseURL!, newAccountDetails("ext"));
       await fakeLeetCode(context);
       const page = await context.newPage();
@@ -137,6 +150,7 @@ test.describe("the Chrome extension", () => {
       await popup.goto(`chrome-extension://${extensionId}/popup.html`);
       await expect(popup.getByText(`Syncing to ${account.name}`)).toBeVisible();
       await expect(popup.locator("#last-sync")).toContainText("two-sum, counted");
+      await expect(popup.locator("#last-seen")).toContainText("two-sum, accepted");
       await expectAccessible(popup);
       if (process.env.SHOT_DIR)
         await popup.screenshot({ path: `${process.env.SHOT_DIR}/popup-connected.png` });

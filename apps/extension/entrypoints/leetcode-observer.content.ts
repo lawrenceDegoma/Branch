@@ -11,8 +11,8 @@ import { OBSERVER_MESSAGE } from "@/src/messages";
 
 // Runs in LeetCode's own page context, because that's the only place its traffic is visible. It
 // only observes: requests and responses pass through untouched, it never makes a request, and
-// any error in here is swallowed rather than breaking the page. Accepted submissions go to the
-// relay content script, which hands them to the extension.
+// any error in here is swallowed rather than breaking the page. What it sees (a submit, a
+// verdict, an accepted submission) goes to the relay content script, which hands it on.
 
 export default defineContentScript({
   matches: ["https://leetcode.com/*"],
@@ -22,9 +22,9 @@ export default defineContentScript({
     const detector = createDetector();
 
     function feed(observation: Observation) {
-      const payload = observe(detector, observation);
-      if (payload) {
-        window.postMessage({ type: OBSERVER_MESSAGE, payload }, window.location.origin);
+      const outcome = observe(detector, observation);
+      if (outcome) {
+        window.postMessage({ type: OBSERVER_MESSAGE, outcome }, window.location.origin);
       }
       if (observation.kind === "submit") watchResultLabel();
     }

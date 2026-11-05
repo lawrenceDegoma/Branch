@@ -155,6 +155,9 @@ Branch origin it was built for (production by default). How it detects a submiss
 - **Try it against local Branch:** `WXT_BRANCH_URL=http://localhost:3000 pnpm --filter @branch/extension build`,
   then in Chrome open `chrome://extensions`, turn on Developer mode, choose **Load unpacked**, and
   pick `apps/extension/.output/chrome-mv3`. Connect it from Branch's Settings → LeetCode extension.
+- **Publishing:** [docs/CHROME-WEB-STORE.md](docs/CHROME-WEB-STORE.md) has the listing text,
+  privacy answers, and step-by-step dashboard instructions; store images are in
+  `apps/extension/store/`.
 - **Production build:** `pnpm build:extension` (points at the production URL in
   `apps/extension/src/config.ts`); `pnpm --filter @branch/extension zip` packages it for the Chrome
   Web Store.

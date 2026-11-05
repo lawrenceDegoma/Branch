@@ -10,6 +10,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-12">
         {children}
       </main>
+      <footer className="text-center text-xs text-ink-muted">
+        <Link href="/privacy" className="underline underline-offset-4 hover:text-ink">
+          Privacy
+        </Link>
+      </footer>
     </div>
   );
 }

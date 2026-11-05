@@ -1,5 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { checkId, createDetector, observe, pageSubmissionId, submitSlug } from "./detect";
+import {
+  checkId,
+  createDetector,
+  observe as observeOutcome,
+  pageSubmissionId,
+  submitSlug,
+  type DetectorState,
+  type Observation,
+} from "./detect";
+
+/** The payload to send, if the observation completed an accepted submission. */
+const observe = (state: DetectorState, observation: Observation, now?: number) => {
+  const outcome = observeOutcome(state, observation, now);
+  return outcome?.type === "accepted" ? outcome.payload : null;
+};
 
 // Shapes recorded during the feasibility spike (docs/LEETCODE-SPIKE.md), with real code replaced.
 
@@ -174,6 +188,24 @@ describe("detecting accepted submissions", () => {
     const state = createDetector();
     observe(state, { ...submit(13), slug: "Not A Slug" }, T0);
     expect(observe(state, details(13, { statusCode: 10, question: {} }), T0)).toBeNull();
+  });
+});
+
+describe("reporting what was seen", () => {
+  it("reports a submit, then its verdict, without code until it's accepted", () => {
+    const state = createDetector();
+    expect(observeOutcome(state, submit(20), T0)).toEqual({
+      type: "submitted",
+      slug: "contains-duplicate",
+    });
+    expect(observeOutcome(state, judging(20), T0)).toBeNull();
+    const wrong = details(20, { statusCode: 11, totalCorrect: 3, totalTestcases: 80 });
+    expect(observeOutcome(state, wrong, T0)).toEqual({
+      type: "not-accepted",
+      slug: "contains-duplicate",
+    });
+    observeOutcome(state, submit(21), T0);
+    expect(observeOutcome(state, accepted(21), T0)).toMatchObject({ type: "accepted" });
   });
 });
 

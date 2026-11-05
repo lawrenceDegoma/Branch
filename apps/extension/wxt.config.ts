@@ -6,6 +6,7 @@ const branch = new URL(process.env.WXT_BRANCH_URL || "https://branch-omega-vert.
 
 export default defineConfig({
   imports: false,
+  zip: { artifactTemplate: "branch-for-leetcode-{{version}}-chrome.zip" },
   manifest: {
     name: "Branch for LeetCode",
     description:

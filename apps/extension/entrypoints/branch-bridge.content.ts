@@ -1,4 +1,4 @@
-import { PAGE_MESSAGE } from "@branch/shared/extension";
+import { PAGE_MESSAGE } from "@branch/shared/extension-text";
 import { browser } from "wxt/browser";
 import { defineContentScript } from "wxt/utils/define-content-script";
 import { BRANCH_ORIGIN } from "@/src/config";

@@ -17,6 +17,13 @@ const serverEnvSchema = z
     GITHUB_CLIENT_SECRET: optionalSecret,
     GOOGLE_CLIENT_ID: optionalSecret,
     GOOGLE_CLIENT_SECRET: optionalSecret,
+    /** Shown on /privacy for questions and deletion requests. */
+    PRIVACY_CONTACT_EMAIL: z
+      .string()
+      .trim()
+      .transform((value) => value || undefined)
+      .pipe(z.email().optional())
+      .optional(),
     /** Vercel sends it to the daily job; without it the job refuses every request. */
     CRON_SECRET: z
       .string()

@@ -3,8 +3,12 @@ import type { QueueItem } from "./queue";
 
 // Messages inside the extension (content scripts and popup → background).
 
+/** What the extension last saw on LeetCode; never any code. */
+export type Activity = { stage: "submitted" | "not-accepted" | "accepted"; slug: string };
+
 export type ExtensionMessage =
   | { type: "submission"; payload: SubmissionPayload }
+  | { type: "activity"; activity: Activity }
   | { type: "connect"; token: string }
   | { type: "disconnect" }
   | { type: "status" }
@@ -17,6 +21,7 @@ export type Status = {
   queue: QueueItem[];
   lastSync: { at: number; problemSlug: string; counted: boolean } | null;
   lastError: { at: number; message: string } | null;
+  lastSeen: (Activity & { at: number }) | null;
 };
 
 /** Page script → relay content script on leetcode.com, via window.postMessage. */

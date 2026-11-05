@@ -30,6 +30,15 @@ type Pending = { slug: string; language: string; code: string; at: number };
 
 export type DetectorState = { pending: Map<string, Pending>; sent: Set<string> };
 
+/**
+ * What an observation completed: a Submit seen (now awaiting its verdict), a verdict that wasn't
+ * an accept, or an accepted submission to send. Only the last carries any code.
+ */
+export type Outcome =
+  | { type: "submitted"; slug: string }
+  | { type: "not-accepted"; slug: string }
+  | { type: "accepted"; payload: SubmissionPayload };
+
 export const createDetector = (): DetectorState => ({ pending: new Map(), sent: new Set() });
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -38,12 +47,12 @@ const str = (value: unknown) => (typeof value === "string" && value !== "" ? val
 const num = (value: unknown) =>
   typeof value === "number" && Number.isFinite(value) ? value : undefined;
 
-/** Feeds one observation in; returns a payload to send when it completes an accepted submission. */
+/** Feeds one observation in; returns what it completed, if anything. */
 export function observe(
   state: DetectorState,
   observation: Observation,
   now = Date.now(),
-): SubmissionPayload | null {
+): Outcome | null {
   for (const [id, pending] of state.pending) {
     if (now - pending.at > PENDING_TTL_MS) state.pending.delete(id);
   }
@@ -63,14 +72,14 @@ function onSubmit(
   state: DetectorState,
   { slug, request, response }: Extract<Observation, { kind: "submit" }>,
   now: number,
-) {
+): Outcome | null {
   if (!isRecord(request) || !isRecord(response)) return null;
   const id = num(response.submission_id);
   const language = str(request.lang);
   const code = str(request.typed_code);
   if (id === undefined || !language || !code) return null;
   state.pending.set(String(id), { slug, language, code, at: now });
-  return null;
+  return { type: "submitted", slug };
 }
 
 function onGraphql(
@@ -96,8 +105,7 @@ function onGraphql(
       status !== ACCEPTED ||
       (correct !== undefined && total !== undefined && correct !== total)
     ) {
-      state.pending.delete(id); // judged, and not accepted
-      continue;
+      return reject(state, id); // judged, and not accepted
     }
     const question = isRecord(details.question) ? details.question : {};
     const lang = isRecord(details.lang) ? details.lang : {};
@@ -124,10 +132,7 @@ function onCheck(
 ) {
   // Runs ("runcode_…") never reach here as pending, so only real submissions count.
   if (!isRecord(response) || response.state !== "SUCCESS" || !state.pending.has(id)) return null;
-  if (num(response.status_code) !== ACCEPTED) {
-    state.pending.delete(id);
-    return null;
-  }
+  if (num(response.status_code) !== ACCEPTED) return reject(state, id);
   const finished = num(response.task_finish_time);
   return accept(
     state,
@@ -140,13 +145,19 @@ function onCheck(
   );
 }
 
+function reject(state: DetectorState, id: string): Outcome | null {
+  const pending = state.pending.get(id);
+  state.pending.delete(id);
+  return pending ? { type: "not-accepted", slug: pending.slug } : null;
+}
+
 /** Completes a pending submission, preferring the verdict's own fields over the submit's. */
 function accept(
   state: DetectorState,
   id: string,
   fields: { slug?: string; language?: string; code?: string; submittedAt?: number },
   now: number,
-): SubmissionPayload | null {
+): Outcome | null {
   const pending = state.pending.get(id);
   if (!pending || state.sent.has(id)) return null;
   const parsed = submissionPayloadSchema.safeParse({
@@ -160,7 +171,7 @@ function accept(
   state.pending.delete(id);
   if (!parsed.success) return null;
   state.sent.add(id);
-  return parsed.data;
+  return { type: "accepted", payload: parsed.data };
 }
 
 /** The problem slug from a submit URL path, e.g. /problems/two-sum/submit/. */

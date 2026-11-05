@@ -173,6 +173,7 @@ test.describe("reflow at 320px", () => {
       "/roadmaps",
       "/settings",
       "/settings/submissions",
+      "/privacy",
       "/profile",
     ];
     for (const path of paths) {

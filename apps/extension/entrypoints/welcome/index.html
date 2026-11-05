@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Welcome to Branch for LeetCode</title>
+  </head>
+  <body class="page">
+    <header>
+      <img src="/icon/32.png" alt="" width="24" height="24" />
+      <span class="wordmark">branch<span class="dot">.</span></span>
+    </header>
+    <main>
+      <section aria-labelledby="welcome-heading">
+        <h1 id="welcome-heading">Sync your LeetCode solves to Branch</h1>
+        <p>
+          When LeetCode accepts a solution you submit, this extension marks the problem solved in
+          Branch, in every group and roadmap that includes it.
+        </p>
+        <h2>What it reads and sends</h2>
+        <p data-text="disclosure"></p>
+        <p class="muted">
+          Your groups see a solve only if you turn on "Share my solves" in Branch. You can
+          disconnect, or delete synced code, at any time.
+        </p>
+        <div class="row">
+          <button type="button" id="open-settings" class="primary">
+            Agree and connect in Branch
+          </button>
+          <button type="button" id="close">Not now</button>
+        </div>
+        <p class="muted small" data-text="reload-hint"></p>
+        <p class="small"><a id="privacy" target="_blank" rel="noopener">Privacy policy</a></p>
+        <p class="muted small">Branch is independent and not affiliated with LeetCode.</p>
+      </section>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

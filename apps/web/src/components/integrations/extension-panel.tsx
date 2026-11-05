@@ -1,3 +1,4 @@
+import { EXTENSION_DISCLOSURE } from "@branch/shared/extension";
 import Link from "next/link";
 import { ConfirmAction } from "@/components/forms/confirm-action";
 import { buttonVariants } from "@/components/ui/button";
@@ -64,6 +65,12 @@ export function ExtensionPanel({
       ) : (
         <p className="text-ink-muted">No browser is connected.</p>
       )}
+      <p className="text-ink-muted">
+        {EXTENSION_DISCLOSURE} Connecting means you agree to this.{" "}
+        <Link href="/privacy" className="text-ink underline underline-offset-4">
+          Privacy policy
+        </Link>
+      </p>
       <ConnectForm />
       <div className="border-t border-line pt-4">
         <Link
