@@ -17,6 +17,13 @@ const serverEnvSchema = z
     GITHUB_CLIENT_SECRET: optionalSecret,
     GOOGLE_CLIENT_ID: optionalSecret,
     GOOGLE_CLIENT_SECRET: optionalSecret,
+    /** The extension's Chrome Web Store page; Settings links to it once it's set. */
+    EXTENSION_STORE_URL: z
+      .string()
+      .trim()
+      .transform((value) => value || undefined)
+      .pipe(z.url({ protocol: /^https$/, hostname: /^chromewebstore\.google\.com$/ }).optional())
+      .optional(),
     /** Shown on /privacy for questions and deletion requests. */
     PRIVACY_CONTACT_EMAIL: z
       .string()

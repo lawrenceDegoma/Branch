@@ -37,6 +37,24 @@ describe("parseServerEnv", () => {
     expect(() => parseServerEnv({ ...valid, CRON_SECRET: "short" })).toThrow(/CRON_SECRET/);
   });
 
+  it("accepts only a Chrome Web Store link for the extension", () => {
+    const url =
+      "https://chromewebstore.google.com/detail/branch-for-leetcode/abcdefghijklmnopabcdefghijklmnop";
+    expect(parseServerEnv({ ...valid, EXTENSION_STORE_URL: url }).EXTENSION_STORE_URL).toBe(url);
+    expect(
+      parseServerEnv({ ...valid, EXTENSION_STORE_URL: "" }).EXTENSION_STORE_URL,
+    ).toBeUndefined();
+    for (const bad of [
+      "http://chromewebstore.google.com/x",
+      "https://example.com/x",
+      "not a url",
+    ]) {
+      expect(() => parseServerEnv({ ...valid, EXTENSION_STORE_URL: bad })).toThrow(
+        /EXTENSION_STORE_URL/,
+      );
+    }
+  });
+
   it("treats blank GitHub credentials as absent", () => {
     const env = parseServerEnv({ ...valid, GITHUB_CLIENT_ID: " ", GITHUB_CLIENT_SECRET: "" });
     expect(env.GITHUB_CLIENT_ID).toBeUndefined();

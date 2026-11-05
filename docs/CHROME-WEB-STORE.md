@@ -156,7 +156,9 @@ for changes, tell me what they said and I'll make them.
 
 ### 7. After it's live
 
-- Copy the listing's URL and send it to me: I'll link it from Branch's Settings ("Install the
-  extension") so people can find it.
+- Copy the listing's URL (`https://chromewebstore.google.com/detail/…`), set it as
+  `EXTENSION_STORE_URL` in Vercel (Production), and redeploy. Settings → LeetCode extension then
+  shows **Get the extension** to anyone whose browser doesn't have it; until then it says the
+  extension is coming soon.
 - Every update: bump `version` in `apps/extension/package.json`, run the zip command, and upload
   the new zip on the item's **Package** tab, then submit for review again.

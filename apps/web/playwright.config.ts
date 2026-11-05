@@ -39,6 +39,7 @@ export default defineConfig({
       GITHUB_CLIENT_SECRET: "e2e-github-secret",
       GOOGLE_CLIENT_ID: "e2e-google-client",
       GOOGLE_CLIENT_SECRET: "e2e-google-secret",
+      EXTENSION_STORE_URL: "https://chromewebstore.google.com/detail/branch-for-leetcode/e2e",
     },
   },
 });

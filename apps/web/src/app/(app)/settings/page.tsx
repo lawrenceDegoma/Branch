@@ -3,6 +3,7 @@ import { SettingsSection } from "@/components/settings/settings-section";
 import { PageHeader } from "@/components/shell/page-header";
 import { ThemeSelect } from "@/components/theme/theme-select";
 import { Button } from "@/components/ui/button";
+import { serverEnv } from "@/lib/env";
 import { hasPasswordAccount } from "@/modules/auth/accounts";
 import { signOutAction } from "@/modules/auth/actions";
 import { requireViewer } from "@/modules/auth/session";
@@ -54,7 +55,12 @@ export default async function SettingsPage({
         title="LeetCode extension"
         description="Syncs accepted submissions you make on leetcode.com while a browser is connected. Your code is private to you; groups only see a solve if sharing is on."
       >
-        <ExtensionPanel connections={connections} now={new Date()} timeZone={profile.timezone} />
+        <ExtensionPanel
+          connections={connections}
+          storeUrl={serverEnv().EXTENSION_STORE_URL}
+          now={new Date()}
+          timeZone={profile.timezone}
+        />
       </SettingsSection>
       <SettingsSection
         id="appearance"

@@ -6,19 +6,24 @@ import { formatDateTime, formatRelative } from "@/lib/format";
 import { disconnectExtensionAction } from "@/modules/integrations/actions";
 import type { listConnections } from "@/modules/integrations/connections";
 import { CONNECT_BUTTON_ID, ConnectForm } from "./connect-form";
+import { GetExtension } from "./get-extension";
 
 /** Settings: the browsers connected to this account, connecting another, and synced submissions. */
 export function ExtensionPanel({
   connections,
+  storeUrl,
   now,
   timeZone,
 }: {
   connections: Awaited<ReturnType<typeof listConnections>>;
+  /** The Chrome Web Store page, once the extension is published. */
+  storeUrl?: string;
   now: Date;
   timeZone: string;
 }) {
   return (
     <div className="flex flex-col gap-4">
+      <GetExtension storeUrl={storeUrl} />
       {connections.length > 0 ? (
         <ul aria-label="Connected browsers" className="flex flex-col gap-3">
           {connections.map((connection, index) => (

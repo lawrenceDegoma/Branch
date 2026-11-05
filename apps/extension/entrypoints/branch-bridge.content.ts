@@ -17,9 +17,11 @@ export default defineContentScript({
     if (window.location.origin !== BRANCH_ORIGIN) return;
     const reply = (result: ConnectResult) =>
       window.postMessage({ type: PAGE_MESSAGE.connected, result }, BRANCH_ORIGIN);
+    const announce = () => window.postMessage({ type: PAGE_MESSAGE.present }, BRANCH_ORIGIN);
 
     window.addEventListener("message", (event) => {
       if (event.source !== window || event.origin !== BRANCH_ORIGIN) return;
+      if (event.data?.type === PAGE_MESSAGE.ping) return announce();
       if (event.data?.type !== PAGE_MESSAGE.connect) return;
       const token = event.data.token;
       if (typeof token !== "string" || !/^brx_[A-Za-z0-9_-]{43}$/.test(token)) return;
@@ -29,6 +31,6 @@ export default defineContentScript({
         .then((result: ConnectResult) => reply(result))
         .catch(() => reply({ ok: false, message: "The extension didn't respond." }));
     });
-    window.postMessage({ type: PAGE_MESSAGE.present }, BRANCH_ORIGIN);
+    announce();
   },
 });

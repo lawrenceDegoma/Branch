@@ -121,6 +121,11 @@ test.describe("the Chrome extension", () => {
       // Connecting hands the key to the extension; nothing to copy.
       await page.goto("/settings");
       await page.waitForFunction(() => document.readyState === "complete");
+      // The installed extension is recognized, so there's nothing to download.
+      await expect(page.locator("#extension")).toContainText(
+        "The extension is installed in this browser.",
+      );
+      await expect(page.getByRole("link", { name: /Get the extension/ })).toHaveCount(0);
       await page.getByRole("button", { name: "Connect a browser" }).click();
       await expect(page.locator("#extension").getByRole("status")).toContainText(
         `syncs to ${account.name}'s account`,

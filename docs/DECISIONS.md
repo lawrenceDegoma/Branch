@@ -752,6 +752,15 @@ when the extension saw the Submit in that tab and then an accepted verdict for t
 - **Tests:** the real-extension E2E covers the welcome page (and its axe scan), "Last seen", and
   the popup in both states; `/privacy` joins the axe scans and 320px reflow.
 
+### After M18: "Get the extension" in Settings (2026-11-05)
+
+Owner request. Settings → LeetCode extension shows **Get the extension** (the Chrome Web Store
+page, from `EXTENSION_STORE_URL`; "coming soon" until it's set) unless this browser already has the
+extension, which it learns by pinging the extension's content script on the page
+(`PAGE_MESSAGE.ping`, answered with `present`; the extension's on-load `present` can arrive before
+the page hydrates). Only a `https://chromewebstore.google.com` link is accepted. A direct zip
+download was not offered: installing unpacked needs Developer mode and gets no updates.
+
 ## Phase 3 summary
 
 Done when "supported accepted submissions sync once without exposing source to groups; failures

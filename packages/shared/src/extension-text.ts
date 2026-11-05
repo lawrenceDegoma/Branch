@@ -4,8 +4,10 @@
 // Messages between Branch's Settings page and the extension's content script on it. Both sides
 // check `event.source === window` and the page's origin.
 export const PAGE_MESSAGE = {
-  /** Content script → page: the extension is installed and listening. */
+  /** Content script → page: the extension is installed and listening (on load, and on ping). */
   present: "branch:extension-present",
+  /** Page → content script: is the extension installed? (The page may hydrate after `present`.) */
+  ping: "branch:extension-ping",
   /** Page → content script: connect with this token. */
   connect: "branch:extension-connect",
   /** Content script → page: the result of connecting. */

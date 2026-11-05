@@ -10,6 +10,11 @@ test.describe("LeetCode extension", () => {
     await page.waitForFunction(() => document.readyState === "complete");
     const section = page.locator("#extension");
     await expect(section).toContainText("No browser is connected.");
+    // No extension in this browser: offer the store page.
+    await expect(section.getByRole("link", { name: /Get the extension/ })).toHaveAttribute(
+      "href",
+      "https://chromewebstore.google.com/detail/branch-for-leetcode/e2e",
+    );
     await section.getByRole("button", { name: "Connect a browser" }).click();
     const key = await section.getByLabel("Extension key").inputValue();
     expect(key).toMatch(/^brx_/);
