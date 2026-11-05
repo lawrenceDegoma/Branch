@@ -14,7 +14,7 @@ conventions in [CLAUDE.md](../CLAUDE.md). This file records how those were appli
 | Admin model               | Exactly one admin per group, enforced by a partial unique index; transfer is a single transaction.                                                                                                                                                                                  |
 | Invites                   | Link-based (no email). Tokens are stored hashed, with expiry, optional use limit, and revocation.                                                                                                                                                                                   |
 | Calendar                  | Weeks are computed from the plan's start date and IANA timezone at request time; no scheduler. Week starts Monday by default.                                                                                                                                                       |
-| Navigation                | The Review tab stays hidden until Phase 4; Phase 1 Home shows this week, backlog, and progress (the feed arrives in Phase 2).                                                                                                                                                       |
+| Navigation                | The Review tab stays hidden until the review phase (Phase 3 since 2026-11-04); Phase 1 Home shows this week, backlog, and progress (the feed arrives in Phase 2).                                                                                                                   |
 | 21st.dev                  | No API key or MCP. Used only as visual reference; components are built on shadcn/ui and Branch tokens.                                                                                                                                                                              |
 | Repository                | Docs live at the root. Commit at the end of each milestone and push `main` to GitHub.                                                                                                                                                                                               |
 
@@ -118,8 +118,8 @@ graphic. Re-check after changing any token.
 - **Weekly assignments** carry the plan's version ID and reference both the plan and the roadmap
   item by composite foreign keys, so a plan can only schedule items from its own version.
 - **Completions:** one row per user and problem (unique), shared by every group and roadmap. The
-  external submission ID belongs to the `Submission` table that arrives with the extension in
-  Phase 3.
+  external submission ID belongs to the `Submission` table that arrives with the extension (Phase 4
+  since 2026-11-04).
 - **Deletion:** removing a user cascades their memberships, profile, and completions, and nulls
   authorship fields; a roadmap version used by any plan cannot be deleted.
 
@@ -243,10 +243,9 @@ Approved by the owner on 2026-11-03, with these decisions:
 Phase 2 plan approved 2026-11-04, with the owner's decisions:
 
 - **Milestones:** M9 feed and text posts; M10 code highlighting and spoilers; M11 automatic posts;
-  M12 reactions and comments; M14 privacy journeys and docs. **M13 (images) is deferred** at the
-  owner's request, so PRD scenario 4 ("a help post with code and an image") ships without the
-  image until images are scheduled. When they are, Vercel Blob (private store, Hobby: 1 GB, 2,000
-  uploads a month, hard cap) behind a storage adapter was the recommendation.
+  M12 reactions and comments; M14 privacy journeys and docs. **M13 (images) was dropped** by the
+  owner on 2026-11-04 (first deferred, then judged unnecessary), and PRD scenario 4 no longer
+  includes an image.
 - **Automatic posts:** off by default; a "Share my solves" setting. When on, a solve posts only to
   groups whose plan assigns the problem. Any single post can be hidden.
 - **Reactions:** a fixed set of four (kudos, impressive, helpful, same here).
@@ -626,7 +625,7 @@ production build; taste-skill lint 0 FAIL on the shipped files.
 - Focus fixes above, found by probing where focus lands after each feed action (it fell to the
   page body after editing, posting, commenting, and deleting). Deleting a post from its own page
   no longer shows a 404.
-- PRD scenario coverage, end to end: 4 in `e2e/comments.spec.ts` (without the image); 5 in
+- PRD scenario coverage, end to end: 4 in `e2e/comments.spec.ts`; 5 in
   `e2e/privacy.spec.ts` (outsider and former member across the feed, crafted filter and cursor
   links, group pages, and post pages) and `modules/feed/privacy.int.test.ts` (every feed read and
   write, as an outsider and as a former member, plus malformed IDs); 6 and 7 in
@@ -653,9 +652,16 @@ group activity", met except images, which the owner deferred (M13):
   the problem.
 - Four migrations (`posts`, `post_spoiler`, `automatic_posts`, `reactions_comments`), each
   additive and applied to production before its code was pushed.
-- Owner decisions still open: when to schedule images (M13; Vercel Blob was the recommendation),
-  and whether to add reporting or blocking before inviting people beyond friends. Phase 3 (the
-  LeetCode extension) starts only after the owner's approval.
+- Owner decisions (2026-11-04): image uploads are dropped (M13 cancelled; posts stay text and
+  code); reporting and blocking are deferred to a later phase; review and analysis move ahead of
+  the LeetCode extension, so Phase 3 is review and analysis and Phase 4 is the extension.
+
+### After Phase 2: threaded comments (2026-11-04)
+
+The owner asked for comments to read as one thread rather than separate posts. The post page now
+shows a single comments surface: top-level comments in order, replies hanging off a line under
+the commenter's avatar, the Reply control at the end of each thread, and Edit/Delete as a small
+row directly under each comment's text. Data model, two-level cap, and permissions are unchanged.
 
 ## Phase 1 summary
 

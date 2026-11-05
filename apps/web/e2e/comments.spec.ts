@@ -16,7 +16,7 @@ async function comment(page: Page, body: string) {
 }
 
 test.describe("reactions and comments", () => {
-  // PRD scenario 4 (without the image, deferred): a help post with spoiler code gets threaded
+  // PRD scenario 4: a help post with spoiler code gets threaded
   // replies and reactions.
   test("a help post with spoiler code gets reactions and threaded replies", async ({
     page,

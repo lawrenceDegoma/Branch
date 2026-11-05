@@ -5,7 +5,7 @@ import remarkGfm from "remark-gfm";
 
 // User-written Markdown. Raw HTML is never rendered (react-markdown escapes it without a raw
 // plugin), unsafe URL schemes are dropped by its default URL transform, and only the elements
-// below are allowed: no images (tracking pixels; uploads are deferred) and headings are rendered
+// below are allowed: no images (tracking pixels; Branch has no uploads) and headings are rendered
 // as bold text so a post can't out-shout the page. Spans come only from the highlighter.
 const allowedElements = [
   "p",

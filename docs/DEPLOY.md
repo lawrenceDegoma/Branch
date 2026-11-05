@@ -120,5 +120,5 @@ Store the dumps outside the repository: they contain password hashes.
 
 Anyone who finds the URL can create an account. They can't see any group without an invite, but
 open sign-up and a public URL are fine only for a soft launch. Before a wider launch, revisit:
-email delivery and verification, rate limits on completions, reporting and blocking people (only
+email delivery and verification, rate limits on completions, reporting and blocking people (deferred by the owner; only
 deletion by authors and admins exists today), CI, and monitoring (Phase 5).

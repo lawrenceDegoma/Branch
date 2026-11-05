@@ -52,7 +52,11 @@ export default async function PostPage({ params, searchParams }: Props) {
           linkComments={false}
           returnTo={`/groups/${post.group.id}`}
         />
-        <section id="comments" aria-labelledby="comments-heading" className="flex flex-col gap-4">
+        <section
+          id="comments"
+          aria-labelledby="comments-heading"
+          className="flex flex-col gap-5 rounded-xl bg-surface p-4 sm:p-5"
+        >
           <h2 id="comments-heading" tabIndex={-1} className="text-base font-medium">
             Comments{total > 0 ? <span className="text-ink-muted tabular"> {total}</span> : null}
           </h2>
@@ -82,9 +86,7 @@ export default async function PostPage({ params, searchParams }: Props) {
               Later comments
             </Link>
           ) : null}
-          <div className="rounded-xl bg-surface p-4">
-            <CommentForm postId={post.id} label="Add a comment" submitLabel="Comment" />
-          </div>
+          <CommentForm postId={post.id} label="Add a comment" submitLabel="Comment" />
         </section>
       </div>
     </div>

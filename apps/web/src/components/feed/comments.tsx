@@ -6,7 +6,12 @@ import { CommentForm } from "./comment-form";
 import { Markdown } from "./markdown";
 import { EditableBody } from "./post-actions";
 
-/** Top-level comments, each with its replies and a folded "Reply" form at the end. */
+/**
+ * The conversation under a post: top-level comments in order, each with its replies hanging off a
+ * thread line beneath the commenter's avatar, and a folded "Reply" form at the end of the thread.
+ * Rendered inside the post page's single comments surface, so it reads as one thread rather than
+ * a stack of cards.
+ */
 export function CommentList({
   postId,
   threads,
@@ -19,39 +24,42 @@ export function CommentList({
   timeZone: string;
 }) {
   return (
-    <ol aria-label="Comments" className="flex flex-col gap-3">
+    <ol aria-label="Comments" className="flex flex-col gap-5">
       {threads.map((thread) => (
-        <li key={thread.id} className="flex flex-col gap-3 rounded-xl bg-surface p-4">
+        <li key={thread.id} className="flex flex-col gap-3">
           <Comment comment={thread} now={now} timeZone={timeZone} />
-          {thread.replies.length > 0 ? (
-            <ol
-              aria-label={`Replies to ${thread.author?.name ?? "a deleted comment"}`}
-              className="ml-3 flex flex-col gap-3 border-l-2 border-line pl-4"
-            >
-              {thread.replies.map((reply) => (
-                <li key={reply.id}>
-                  <Comment comment={reply} now={now} timeZone={timeZone} />
-                </li>
-              ))}
-            </ol>
-          ) : null}
-          <details className="group ml-3 pl-4">
-            <summary className="inline-flex min-h-8 cursor-pointer list-none items-center gap-1 rounded-full font-medium text-ink-muted hover:text-ink pointer-coarse:min-h-11 [&::-webkit-details-marker]:hidden">
-              <ChevronRight
-                aria-hidden
-                className="size-4 transition-[rotate] duration-(--duration-fast) group-open:rotate-90"
-              />
-              Reply
-            </summary>
-            <div className="pt-2">
-              <CommentForm
-                postId={postId}
-                parentId={thread.id}
-                label={`Reply to ${thread.author?.name ?? "this thread"}`}
-                submitLabel="Reply"
-              />
-            </div>
-          </details>
+          {/* The line sits under the avatar's centre; the text column starts past the avatar. */}
+          <div className="ml-[0.6875rem] flex flex-col gap-3 border-l-2 border-line pl-[1.1875rem]">
+            {thread.replies.length > 0 ? (
+              <ol
+                aria-label={`Replies to ${thread.author?.name ?? "a deleted comment"}`}
+                className="flex flex-col gap-3"
+              >
+                {thread.replies.map((reply) => (
+                  <li key={reply.id}>
+                    <Comment comment={reply} now={now} timeZone={timeZone} />
+                  </li>
+                ))}
+              </ol>
+            ) : null}
+            <details className="group">
+              <summary className="inline-flex min-h-8 cursor-pointer list-none items-center gap-1 rounded-full text-xs font-medium text-ink-muted hover:text-ink pointer-coarse:min-h-11 [&::-webkit-details-marker]:hidden">
+                <ChevronRight
+                  aria-hidden
+                  className="size-4 transition-[rotate] duration-(--duration-fast) group-open:rotate-90"
+                />
+                Reply
+              </summary>
+              <div className="pt-2">
+                <CommentForm
+                  postId={postId}
+                  parentId={thread.id}
+                  label={`Reply to ${thread.author?.name ?? "this thread"}`}
+                  submitLabel="Reply"
+                />
+              </div>
+            </details>
+          </div>
         </li>
       ))}
     </ol>
@@ -69,7 +77,7 @@ function Comment({
 }) {
   if (comment.deleted || !comment.author) {
     return (
-      <article aria-label="Deleted comment">
+      <article aria-label="Deleted comment" className="flex min-h-6 items-center">
         <p className="text-ink-muted italic">Comment deleted.</p>
       </article>
     );

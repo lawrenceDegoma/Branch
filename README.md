@@ -32,8 +32,8 @@ not affiliated with LeetCode or NeetCode.
   this week across your groups, next week for working ahead, and your backlog. The group page
   shows who solved this week's problems and a branch graph of everyone's progress.
 
-Image uploads are deferred. There is no browser extension, review queue, or chat yet; those are
-later phases (see the PRD).
+Posts are text and code only (no image uploads, by choice). There is no review queue, browser
+extension, or chat yet; those are later phases (see the PRD).
 
 ## Try it locally
 
@@ -148,5 +148,5 @@ are created only when their phases begin.
 
 ## Status
 
-Phase 1 (Foundation) and Phase 2 (the social feed, without images) are complete; Phase 3 starts
-only after the owner's review. See [docs/DECISIONS.md](docs/DECISIONS.md) for the milestone log and known limitations.
+Phase 1 (Foundation) and Phase 2 (the social feed) are complete. Phase 3 is review and analysis
+(moved ahead of the browser extension, now Phase 4) and starts once its plan is approved. See [docs/DECISIONS.md](docs/DECISIONS.md) for the milestone log and known limitations.

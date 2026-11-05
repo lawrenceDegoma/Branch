@@ -31,12 +31,14 @@ Users need to: (a) see what friends are studying, (b) know what to solve this we
 | Phase | User-visible deliverable | Exit criterion |
 |---|---|---|
 | 1 — Foundation | Sign-in, profile, group creation/invites, roadmap selection/customization, calendar-based weekly assignments, manual completion, responsive shell | Two users can join a group, see the same weekly plan, and independently track progress |
-| 2 — Social | Unified feed, auto-generated milestone/completion posts for recorded completions, manual posts, code blocks, images, reactions, threaded comments, group filters | Group members can discuss a problem and see activity across groups with correct privacy |
-| 3 — LeetCode integration | Opt-in WXT extension, accepted-submission capture where technically feasible, deduplication, fallback manual entry | A supported accepted submission syncs once and updates progress; failures are recoverable |
-| 4 — Personalized review | Spaced review, weakness-based new practice, asynchronous code-analysis pipeline, explainable recommendations | User gets private review suggestions; uncertain analysis does not masquerade as fact |
+| 2 — Social | Unified feed, auto-generated milestone/completion posts for recorded completions, manual posts, code blocks, reactions, threaded comments, group filters | Group members can discuss a problem and see activity across groups with correct privacy |
+| 3 — Personalized review | Spaced review, weakness-based new practice, asynchronous code-analysis pipeline, explainable recommendations | User gets private review suggestions; uncertain analysis does not masquerade as fact |
+| 4 — LeetCode integration | Opt-in WXT extension, accepted-submission capture where technically feasible, deduplication, fallback manual entry | A supported accepted submission syncs once and updates progress; failures are recoverable |
 | 5 — Collaboration/polish | Group chat, accessibility/performance refinements, deployment hardening | Chat works with appropriate access control and the app is ready for broader rollout |
 
 **MVP definition:** Phases 1–2 create the first social, usable release. The complete product vision includes phases 3–5. Do not block the MVP on LeetCode integration or AI analysis.
+
+**Owner changes (2026-11-04):** personalized review moved ahead of the extension (now phases 3 and 4); image uploads dropped from posts; reporting and blocking deferred to a later phase.
 
 **Explicitly out of v1:** push/email/in-app notification center, public group discovery, monetization, full in-browser coding judge, compulsory leaderboards, automatic publishing of source code, elaborate XP economy.
 
@@ -68,20 +70,20 @@ Users need to: (a) see what friends are studying, (b) know what to solve this we
 - Desktop layout: left navigation; center activity feed; right 'Your Week' summary with assignments/progress/reviews. Mobile: single-column feed, compact weekly summary, bottom navigation.
 - Navigation: Home, Roadmaps, Groups, Review, Profile. Chat is accessed within a group.
 - Auto-generated posts for newly accepted problems and meaningful milestones, **subject to user opt-in and per-post visibility control**. Do not publish duplicates for re-submissions.
-- Manual posts support help requests, tips, reflections, Markdown-style text, syntax-highlighted code blocks, and images with validated type/size limits and lazy loading.
+- Manual posts support help requests, tips, reflections, Markdown-style text, and syntax-highlighted code blocks. No image uploads (owner decision, 2026-11-04).
 - Posts support reactions and threaded comments (initial UI depth cap: two reply levels; maintain a clear data model for parent relationships).
 - Posts and comments should support spoiler marking/collapsing, especially for solutions.
 - Privacy: private group scope; never automatically expose source code, weakness metrics, or detailed analysis. A post should have a clear group destination; no cross-group forwarding by default.
 - No notifications in version one.
 
-### Personalized review (phase 4)
+### Personalized review (phase 3)
 - **Spaced repetition:** revisit previously solved problems based on review performance/history.
 - **Targeted new practice:** suggest new, often easier problems for concepts the user struggles with.
 - Inputs may include problem pattern/difficulty, completion/review history, and estimated time/space complexity of submitted code.
 - Complexity estimation is uncertain and language-/approach-dependent. Represent confidence, rationale, and legitimate tradeoffs; never equate a single asymptotic result with solution quality.
 - Recommendations and proficiency estimates are private to the user. Do not reveal an optimal solution as part of passive analysis.
 
-### Browser extension (phase 3)
+### Browser extension (phase 4)
 - WXT + TypeScript extension, permissioned and opt-in, intended to detect accepted LeetCode submissions and capture metadata/source when technically feasible.
 - Website behavior and access to submission code may change; prototype feasibility before committing to automation guarantees. Do not imply an official supported LeetCode integration.
 - Minimize host permissions; clear user consent and disclosure of what is sent; secure extension-to-app authentication; idempotent ingestion; explicit disconnect/revoke.
@@ -121,7 +123,7 @@ Users need to: (a) see what friends are studying, (b) know what to solve this we
 
 ## 6. Data and event semantics
 
-Suggested entities: `User`, `Session/Account`, `Group`, `GroupMembership`, `GroupInvite`, `Problem`, `Roadmap`, `RoadmapVersion`, `RoadmapSection`, `RoadmapItem`, `GroupRoadmapPlan`, `WeeklyAssignment`, `ProblemCompletion`, `Submission`, `Activity`, `Post`, `Comment`, `Reaction`, `MediaAsset`, `ReviewAttempt`, `ReviewSchedule`, `ConceptProficiency`, `AnalysisJob`, `AnalysisResult`, `GroupMessage`.
+Suggested entities: `User`, `Session/Account`, `Group`, `GroupMembership`, `GroupInvite`, `Problem`, `Roadmap`, `RoadmapVersion`, `RoadmapSection`, `RoadmapItem`, `GroupRoadmapPlan`, `WeeklyAssignment`, `ProblemCompletion`, `Submission`, `Activity`, `Post`, `Comment`, `Reaction`, `ReviewAttempt`, `ReviewSchedule`, `ConceptProficiency`, `AnalysisJob`, `AnalysisResult`, `GroupMessage`.
 
 Design decisions:
 - Keep source submissions separate from the single canonical completion record.
@@ -154,7 +156,7 @@ Design decisions:
 1. Two friends join one invite-only group and see the same current-week problems.
 2. A member misses last week's assignment; it remains incomplete while the group advances.
 3. A member completes a problem appearing in two roadmaps; both progress views update, with one canonical completion.
-4. A member creates a help post with code and an image, marks the code as a spoiler, and receives threaded replies.
+4. A member creates a help post with code, marks the code as a spoiler, and receives threaded replies.
 5. A nonmember cannot access private group activity through the feed, direct URLs, or APIs.
 6. A user disables auto-sharing; their completion still updates progress but does not create a visible post.
 7. Re-submitting an accepted solution does not generate another completion celebration.
@@ -171,4 +173,4 @@ Design decisions:
 - Manual completion verification policy (trust-based initially, label source internally).
 - Storage/realtime/queue provider selection after free-tier and terms review.
 - LeetCode extension feasibility, privacy UX, and code-analysis accuracy evaluation.
-- Moderation/reporting scope before opening groups beyond invite-only.
+- Moderation/reporting scope before opening groups beyond invite-only (reporting and blocking deferred by the owner, 2026-11-04).

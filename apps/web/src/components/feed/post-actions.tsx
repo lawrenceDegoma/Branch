@@ -8,6 +8,7 @@ import { SubmitButton } from "@/components/forms/submit-button";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/input";
 import { initialFormState } from "@/lib/form";
+import { cn } from "@/lib/utils";
 import {
   deleteCommentAction,
   deletePostAction,
@@ -147,9 +148,16 @@ export function EditableBody({
     <>
       {children}
       {footer || canEdit || canDelete ? (
-        <div className="-mb-1 flex flex-wrap items-center gap-1">
+        // A comment's actions sit right under its text, so a thread stays compact; a post's sit
+        // at the end of the card's footer.
+        <div
+          className={cn(
+            "-mb-1 flex flex-wrap items-center gap-1",
+            target === "comment" && "-mt-1 -ml-3",
+          )}
+        >
           {footer}
-          <div className="ml-auto flex gap-1">
+          <div className={cn("flex gap-1", target === "post" && "ml-auto")}>
             {canEdit ? (
               <Button ref={editButton} variant="ghost" size="sm" onClick={() => setEditing(true)}>
                 Edit
