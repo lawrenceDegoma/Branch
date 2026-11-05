@@ -17,6 +17,13 @@ const serverEnvSchema = z
     GITHUB_CLIENT_SECRET: optionalSecret,
     GOOGLE_CLIENT_ID: optionalSecret,
     GOOGLE_CLIENT_SECRET: optionalSecret,
+    /** Vercel sends it to the daily job; without it the job refuses every request. */
+    CRON_SECRET: z
+      .string()
+      .trim()
+      .transform((value) => value || undefined)
+      .pipe(z.string().min(16, "must be at least 16 characters").optional())
+      .optional(),
   })
   .refine((env) => !env.GITHUB_CLIENT_ID === !env.GITHUB_CLIENT_SECRET, {
     message: "set both or neither",

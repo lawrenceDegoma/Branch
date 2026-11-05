@@ -19,7 +19,14 @@ const publicRoutes = [
   "/reset-password?token=example",
   "/missing-page",
 ];
-const appRoutes = ["/home", "/roadmaps", "/groups", "/profile", "/settings"];
+const appRoutes = [
+  "/home",
+  "/roadmaps",
+  "/groups",
+  "/profile",
+  "/settings",
+  "/settings/submissions",
+];
 
 async function expectNoViolations(page: Page) {
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
@@ -255,6 +262,27 @@ for (const colorScheme of ["dark", "light"] as const) {
       await expect(page.getByText("let x")).toBeVisible();
       await expectNoViolations(page);
       await member.context.close();
+    });
+
+    test("synced submissions have no detectable WCAG A/AA violations", async ({ page, viewer }) => {
+      const twoSum = await prisma.problem.findUniqueOrThrow({ where: { leetcodeSlug: "two-sum" } });
+      const base = {
+        userId: viewer.id,
+        source: "EXTENSION" as const,
+        language: "python3",
+        code: "class Solution:\n    def twoSum(self, nums, target):\n        return []",
+        submittedAt: new Date(),
+      };
+      await prisma.submission.createMany({
+        data: [
+          { ...base, externalId: "1", problemSlug: "two-sum", problemId: twoSum.id },
+          { ...base, externalId: "2", problemSlug: "not-in-branch" },
+        ],
+      });
+      await page.goto("/settings/submissions");
+      await page.getByText("Show code").first().click();
+      await expect(page.getByRole("main").locator("pre").first()).toBeVisible();
+      await expectNoViolations(page);
     });
 
     test("invite and shared-link pages have no detectable WCAG A/AA violations", async ({

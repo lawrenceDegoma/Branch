@@ -31,6 +31,12 @@ describe("parseServerEnv", () => {
     );
   });
 
+  it("treats a blank CRON_SECRET as absent and rejects a short one", () => {
+    expect(parseServerEnv({ ...valid, CRON_SECRET: " " }).CRON_SECRET).toBeUndefined();
+    expect(parseServerEnv({ ...valid, CRON_SECRET: "x".repeat(16) }).CRON_SECRET).toHaveLength(16);
+    expect(() => parseServerEnv({ ...valid, CRON_SECRET: "short" })).toThrow(/CRON_SECRET/);
+  });
+
   it("treats blank GitHub credentials as absent", () => {
     const env = parseServerEnv({ ...valid, GITHUB_CLIENT_ID: " ", GITHUB_CLIENT_SECRET: "" });
     expect(env.GITHUB_CLIENT_ID).toBeUndefined();

@@ -18,22 +18,22 @@ datasource db {
 // ---------------------------------------------------------------------------------------------
 
 model User {
-  id               String              @id
+  id               String                @id
   name             String
   email            String
-  emailVerified    Boolean             @default(false)
+  emailVerified    Boolean               @default(false)
   image            String?
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
   sessions         Session[]
   accounts         Account[]
   // Branch relations (back-references only; no domain columns on this table).
   profile          Profile?
   memberships      GroupMembership[]
-  groupsCreated    Group[]             @relation("GroupCreatedBy")
+  groupsCreated    Group[]               @relation("GroupCreatedBy")
   invitesCreated   GroupInvite[]
-  auditEventsActed GroupAuditEvent[]   @relation("AuditActor")
-  auditEventsAbout GroupAuditEvent[]   @relation("AuditSubject")
+  auditEventsActed GroupAuditEvent[]     @relation("AuditActor")
+  auditEventsAbout GroupAuditEvent[]     @relation("AuditSubject")
   problemsAdded    Problem[]
   roadmapsOwned    Roadmap[]
   plansCreated     GroupRoadmapPlan[]
@@ -41,6 +41,8 @@ model User {
   posts            Post[]
   reactions        Reaction[]
   comments         Comment[]
+  extensionLinks   ExtensionConnection[]
+  submissions      Submission[]
 
   @@unique([email])
   @@map("user")
@@ -268,6 +270,7 @@ model Problem {
   roadmapItems       RoadmapItem[]
   completions        ProblemCompletion[]
   posts              Post[]
+  submissions        Submission[]
 
   @@map("problem")
 }
@@ -558,4 +561,56 @@ model Comment {
   @@index([parentId, id])
   @@index([authorId, createdAt])
   @@map("comment")
+}
+
+// ---------------------------------------------------------------------------------------------
+// LeetCode extension (Phase 3)
+// ---------------------------------------------------------------------------------------------
+
+/// A browser extension the user connected. The token is shown once; only its SHA-256 is kept.
+model ExtensionConnection {
+  id         String    @id @default(uuid(7)) @db.Uuid
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Hex SHA-256 of the bearer token (64 characters; CHECK).
+  tokenHash  String    @unique
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  /// Set when the user disconnects it; the token stops working at once.
+  revokedAt  DateTime?
+
+  @@index([userId])
+  @@map("extension_connection")
+}
+
+enum SubmissionSource {
+  EXTENSION
+}
+
+/// An accepted LeetCode submission the extension synced. Private to its author: never shown to
+/// groups. Counts as a completion once its problem is in the catalog; until then `problemId` is
+/// null, and an unmatched submission is deleted 30 days after it arrived.
+model Submission {
+  id          String           @id @default(uuid(7)) @db.Uuid
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  source      SubmissionSource
+  /// LeetCode's submission ID (digits; CHECK). Unique per user and source, so retries are no-ops.
+  externalId  String
+  /// LeetCode problem slug, as on Problem (CHECK).
+  problemSlug String
+  problemId   String?          @db.Uuid
+  problem     Problem?         @relation(fields: [problemId], references: [id], onDelete: SetNull)
+  /// LeetCode's language slug, e.g. python3 (1-40 characters; CHECK).
+  language    String
+  /// The solution, 1-100000 characters (CHECK). Kept until the user deletes the submission.
+  code        String
+  /// When LeetCode judged it.
+  submittedAt DateTime
+  receivedAt  DateTime         @default(now())
+
+  @@unique([userId, source, externalId])
+  @@index([userId, receivedAt])
+  @@index([problemSlug])
+  @@map("submission")
 }

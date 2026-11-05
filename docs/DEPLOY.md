@@ -52,6 +52,7 @@ an old schema.
    | `DATABASE_URL`       | Neon's **pooled** string                                                 |
    | `BETTER_AUTH_SECRET` | A new secret from `openssl rand -base64 32`. Don't reuse your local one. |
    | `BETTER_AUTH_URL`    | The production URL, for example `https://branch-xyz.vercel.app`          |
+   | `CRON_SECRET`        | A new secret from `openssl rand -base64 32` (for the daily job, below)   |
 
    Leave `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` unset unless you want GitHub sign-in (see
    below).
@@ -60,6 +61,13 @@ an old schema.
    gives you, set `BETTER_AUTH_URL` to it, and **redeploy** so the new value takes effect. Sign-in
    fails with an origin error until `BETTER_AUTH_URL` matches the address in the browser exactly.
 5. From then on, every push to `main` deploys automatically.
+
+**Daily job:** `apps/web/vercel.json` schedules `/api/cron/daily` once a day (free on Hobby,
+which allows daily jobs, timed to within the hour). Vercel sends `CRON_SECRET` with the request;
+without the variable the job refuses to run. It counts synced extension submissions whose
+problem has since been added, and deletes ones still waiting after 30 days. A missed run is
+harmless: the next one catches up, and the app already hides anything past 30 days. Check it under
+**Settings → Cron Jobs**; **View Logs** shows each run's counts.
 
 **Preview deployments:** Vercel also builds a preview for each pull request. Previews have no
 environment variables, so they fail to start. That's intended: it keeps them away from production

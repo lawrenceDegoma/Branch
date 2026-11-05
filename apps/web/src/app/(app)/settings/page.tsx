@@ -1,3 +1,4 @@
+import { ExtensionPanel } from "@/components/integrations/extension-panel";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { PageHeader } from "@/components/shell/page-header";
 import { ThemeSelect } from "@/components/theme/theme-select";
@@ -5,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { hasPasswordAccount } from "@/modules/auth/accounts";
 import { signOutAction } from "@/modules/auth/actions";
 import { requireViewer } from "@/modules/auth/session";
+import { listConnections } from "@/modules/integrations/connections";
 import { listTimeZones } from "@/modules/profile/timezone";
 import { PasswordForm } from "./password-form";
 import { ProfileForm } from "./profile-form";
@@ -20,6 +22,7 @@ export default async function SettingsPage({
   const { user, profile } = await requireViewer();
   const passwordUpdated = (await searchParams).password === "updated";
   const canChangePassword = await hasPasswordAccount(user.id);
+  const connections = await listConnections(user.id);
 
   return (
     <div className="max-w-4xl">
@@ -45,6 +48,13 @@ export default async function SettingsPage({
         description="Solving a problem never posts anything unless you turn this on."
       >
         <SharingForm shareSolves={profile.shareSolves} />
+      </SettingsSection>
+      <SettingsSection
+        id="extension"
+        title="LeetCode extension"
+        description="Syncs accepted submissions you make on leetcode.com while a browser is connected. Your code is private to you; groups only see a solve if sharing is on."
+      >
+        <ExtensionPanel connections={connections} now={new Date()} timeZone={profile.timezone} />
       </SettingsSection>
       <SettingsSection
         id="appearance"

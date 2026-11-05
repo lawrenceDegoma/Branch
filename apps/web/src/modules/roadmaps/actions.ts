@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { DomainError } from "@/lib/errors";
 import { fieldErrorsFrom, formStateFromError, formValues, type FormState } from "@/lib/form";
 import { requireViewer } from "@/modules/auth/session";
+import { matchWaitingSubmissions } from "@/modules/integrations/submissions";
 import {
   draftContentSchema,
   newProblemSchema,
@@ -201,7 +202,16 @@ export async function lookupLeetCodeAction(
     parsedDetails = parsed.data;
   }
   try {
-    return await findOrAddLeetCodeProblem(user.id, String(input).slice(0, 500), parsedDetails);
+    const result = await findOrAddLeetCodeProblem(
+      user.id,
+      String(input).slice(0, 500),
+      parsedDetails,
+    );
+    // A newly added problem counts anyone's synced submissions that were waiting for it.
+    if (parsedDetails && result.status === "found") {
+      await matchWaitingSubmissions({ slug: result.problem.leetcodeSlug });
+    }
+    return result;
   } catch (error) {
     if (error instanceof DomainError)
       return { status: "error", message: error.message, field: error.field };

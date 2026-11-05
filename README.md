@@ -28,6 +28,9 @@ not affiliated with LeetCode or NeetCode.
   unmarking takes the post down, and you can hide any single one.
 - **Reactions and comments:** react to posts with kudos, impressive, helpful, or same here, and
   discuss it in a comment thread that opens inside the post (spoilers work there too).
+- **LeetCode extension (in progress):** connect a browser in Settings, and accepted LeetCode
+  submissions sync as completions. Your code stays private on a Synced submissions page you can
+  clear at any time.
 - **Progress:** mark problems solved once and it counts in every group and roadmap. Home shows
   this week across your groups, next week for working ahead, and your backlog. The group page
   shows who solved this week's problems and a branch graph of everyone's progress.

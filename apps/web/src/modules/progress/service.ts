@@ -22,13 +22,16 @@ const problemNotFound = () => new NotFoundError("We couldn't find that problem."
  * Marks a problem solved or unsolved for the user. Idempotent: repeating a request (or racing it
  * from two tabs) leaves exactly one completion, and `changed` is true only for the request that
  * actually changed something. Only that request updates the user's automatic posts, in the same
- * transaction, so a repeated solve never posts again.
+ * transaction, so a repeated solve never posts again. `origin` records how a new completion was
+ * made (the extension passes its source and the submission's language); an existing completion
+ * keeps its own.
  */
 export async function setCompletion(
   userId: string,
   problemId: string,
   solved: boolean,
   now = new Date(),
+  origin: { source: "MANUAL" | "EXTENSION"; language?: string } = { source: "MANUAL" },
 ): Promise<{ changed: boolean }> {
   if (!problemIdSchema.safeParse(problemId).success) throw problemNotFound();
   if (!solved) {
@@ -47,7 +50,15 @@ export async function setCompletion(
     return await prisma.$transaction(async (tx) => {
       // ON CONFLICT DO NOTHING on (userId, problemId).
       const { count } = await tx.problemCompletion.createMany({
-        data: [{ userId, problemId, source: "MANUAL", completedAt: now }],
+        data: [
+          {
+            userId,
+            problemId,
+            source: origin.source,
+            language: origin.language,
+            completedAt: now,
+          },
+        ],
         skipDuplicates: true,
       });
       if (count > 0) await syncAutomaticPosts(tx, userId, problemId, true, now);

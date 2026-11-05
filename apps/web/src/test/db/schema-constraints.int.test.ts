@@ -488,3 +488,74 @@ describe("reactions and comments", () => {
     ).rejects.toThrow(/has replies/);
   });
 });
+
+describe("extension submissions", () => {
+  const base = async () => {
+    const user = await createTestUser();
+    return {
+      userId: user.id,
+      source: "EXTENSION" as const,
+      externalId: "123",
+      problemSlug: "two-sum",
+      language: "python3",
+      code: "print(1)",
+      submittedAt: new Date(),
+    };
+  };
+
+  it("checks every field's format, including NULLs", async () => {
+    const data = await base();
+    for (const bad of [
+      { externalId: "runcode_1" },
+      { problemSlug: "Two Sum" },
+      { language: "" },
+      { language: "python 3" },
+      { code: "" },
+      { code: "x".repeat(100_001) },
+    ]) {
+      await expect(prisma.submission.create({ data: { ...data, ...bad } })).rejects.toThrow();
+    }
+    await expect(
+      prisma.$executeRaw`INSERT INTO "submission" ("id", "userId", "source", "externalId", "problemSlug", "language", "code", "submittedAt") VALUES (gen_random_uuid(), ${data.userId}, 'EXTENSION', '1', 'two-sum', 'python3', NULL, now())`,
+    ).rejects.toThrow();
+    await prisma.submission.create({ data });
+    // Unique per user, source, and LeetCode ID.
+    await expect(prisma.submission.create({ data })).rejects.toThrow();
+  });
+
+  it("only matches a submission to the problem with its slug", async () => {
+    const data = await base();
+    const [twoSum, other] = await Promise.all([
+      prisma.problem.create({
+        data: { leetcodeSlug: "two-sum", title: "Two Sum", difficulty: "EASY", source: "SEED" },
+      }),
+      prisma.problem.create({
+        data: {
+          leetcodeSlug: "valid-anagram",
+          title: "Valid Anagram",
+          difficulty: "EASY",
+          source: "SEED",
+        },
+      }),
+    ]);
+    await expect(
+      prisma.submission.create({ data: { ...data, problemId: other.id } }),
+    ).rejects.toThrow(/match its slug/);
+    const row = await prisma.submission.create({ data: { ...data, problemId: twoSum.id } });
+    await expect(
+      prisma.submission.update({ where: { id: row.id }, data: { problemId: other.id } }),
+    ).rejects.toThrow(/match its slug/);
+  });
+
+  it("stores only a 64-character hex token hash", async () => {
+    const user = await createTestUser();
+    for (const tokenHash of ["brx_secret", "A".repeat(64), "a".repeat(63)]) {
+      await expect(
+        prisma.extensionConnection.create({ data: { userId: user.id, tokenHash } }),
+      ).rejects.toThrow();
+    }
+    await prisma.extensionConnection.create({
+      data: { userId: user.id, tokenHash: "a".repeat(64) },
+    });
+  });
+});

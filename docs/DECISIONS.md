@@ -656,6 +656,38 @@ ID; the verdict arrives in the page's own `submissionDetails` GraphQL polls (`st
 Accepted); resubmits get new IDs; LeetCode rate-limits rapid submits. A submission counts only
 when the extension saw the Submit in that tab and then an accepted verdict for that ID.
 
+### M16 — Extension server side (complete)
+
+- **Connections:** Settings → LeetCode extension → "Connect a browser" creates a random bearer
+  token (`brx_` + 32 random bytes), shown once in a copy field; only its SHA-256 is stored
+  (CHECK: 64 hex characters). Up to 5 per person; Disconnect (or the extension's own disconnect,
+  `DELETE /api/extension/connection`) revokes it at once. M17 hands the token to the extension
+  directly; pasting it is the fallback.
+- **Ingestion:** `POST /api/extension/submissions` (bearer token, JSON, at most 256 KB, strict
+  Zod contract with `verdict: "ACCEPTED"`). Stored once per (user, source, LeetCode submission
+  ID); repeats and retries return `duplicate`. If the slug is in the catalog the problem is marked
+  solved through `setCompletion` (source `EXTENSION`, the submission's language), so automatic
+  posts behave exactly as for manual solves and an earlier manual completion keeps its source.
+  20 a minute per person; timestamps more than 5 minutes in the future are refused.
+- **Waiting submissions** (owner decision): a submission for a problem not in Branch is kept with
+  no problem, counted as soon as the problem is added (adding by URL matches at once; the
+  submissions page and the daily job catch catalog imports), and deleted 30 days after it
+  arrived. A trigger keeps a matched submission on the problem with its own slug.
+- **Daily job:** Vercel Cron (Hobby: once a day, free) calls `/api/cron/daily` with
+  `CRON_SECRET`; it matches and purges, both idempotent. Missed runs are harmless; reads hide
+  expired waiting submissions regardless.
+- **Privacy:** `/settings/submissions` lists only the viewer's own submissions with their code
+  (folded, highlighted, fenced so code can't break out of the block), with Delete and Delete all.
+  Deleting a submission never un-solves the problem. Account deletion cascades.
+- **Migration** `extension_submissions` (additive): `extension_connection`, `submission`,
+  `SubmissionSource`, CHECKs on every field (NULL handled), a partial index for the purge, and
+  the slug trigger.
+- **Tests:** integration (connections, ingestion, duplicates, other people's data, waiting →
+  matched → purged, deletion, route handlers including malformed and oversized bodies and revoked
+  tokens, the cron secret, every constraint); E2E `e2e/extension.spec.ts` (connect, sync through
+  the API, waiting notice, code, delete, disconnect), plus axe scans and 320px reflow of the new
+  page.
+
 ## Phase 2 summary
 
 Done when "members can post questions with code/images, react/reply, and see only authorized
