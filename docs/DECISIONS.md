@@ -640,6 +640,22 @@ production build; taste-skill lint 0 FAIL on the shipped files.
 Verified: 24 shared, 94 unit, 135 integration tests; 230 E2E passed (4 skipped by design:
 desktop-only keyboard journeys); production build; taste-skill lint 0 FAIL.
 
+## LeetCode extension (Phase 3)
+
+Owner decisions (2026-11-05): the extension **stores solution code** (private to its author,
+deletable, never shown to groups; it feeds Phase 4 analysis); it is a **Chrome** extension (the
+owner already has a Chrome Web Store developer account); it is **passive only** (observes the
+person's own submissions in the open tab, never requests anything from LeetCode, no background
+activity), following LeetCode's published terms.
+
+### M15 — Feasibility spike (complete)
+
+Feasible, passively. Findings, evidence, and design consequences are in
+[LEETCODE-SPIKE.md](LEETCODE-SPIKE.md): the submit request carries code, language, and question
+ID; the verdict arrives in the page's own `submissionDetails` GraphQL polls (`statusCode` 10 =
+Accepted); resubmits get new IDs; LeetCode rate-limits rapid submits. A submission counts only
+when the extension saw the Submit in that tab and then an accepted verdict for that ID.
+
 ## Phase 2 summary
 
 Done when "members can post questions with code/images, react/reply, and see only authorized

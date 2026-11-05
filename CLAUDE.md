@@ -4,7 +4,7 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 
 ## Current status (updated 2026-11-03)
 
-**Phase 1 complete and soft-launched (Neon + Vercel). Phase 2 (social feed) complete. Next: Phase 3, the LeetCode extension (plan awaiting the owner's approval).** Owner changes on 2026-11-04: image uploads dropped (M13 cancelled); reporting and blocking deferred to a later phase. A swap of Phases 3 and 4 was considered and reverted: the extension stays first because it is how solution code reaches the Phase 4 analyzer. Phase 2 decisions are in `docs/DECISIONS.md` (Social feed). The Phase 1 plan was approved on 2026-11-03; decisions, dependency pins, and the per-milestone log live in `docs/DECISIONS.md`. Setup and commands are in `README.md`.
+**Phase 1 complete and soft-launched (Neon + Vercel). Phase 2 (social feed) complete. Phase 3 (LeetCode extension) in progress: M15 feasibility spike done (`docs/LEETCODE-SPIKE.md`); the build plan awaits the owner's approval.** Extension decisions (2026-11-05): stores solution code privately, Chrome only, passive only (never calls LeetCode). Owner changes on 2026-11-04: image uploads dropped (M13 cancelled); reporting and blocking deferred to a later phase. A swap of Phases 3 and 4 was considered and reverted: the extension stays first because it is how solution code reaches the Phase 4 analyzer. Phase 2 decisions are in `docs/DECISIONS.md` (Social feed). The Phase 1 plan was approved on 2026-11-03; decisions, dependency pins, and the per-milestone log live in `docs/DECISIONS.md`. Setup and commands are in `README.md`.
 
 | Milestone | Status |
 |---|---|
