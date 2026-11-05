@@ -14,7 +14,7 @@ conventions in [CLAUDE.md](../CLAUDE.md). This file records how those were appli
 | Admin model               | Exactly one admin per group, enforced by a partial unique index; transfer is a single transaction.                                                                                                                                                                                  |
 | Invites                   | Link-based (no email). Tokens are stored hashed, with expiry, optional use limit, and revocation.                                                                                                                                                                                   |
 | Calendar                  | Weeks are computed from the plan's start date and IANA timezone at request time; no scheduler. Week starts Monday by default.                                                                                                                                                       |
-| Navigation                | The Review tab stays hidden until the review phase (Phase 3 since 2026-11-04); Phase 1 Home shows this week, backlog, and progress (the feed arrives in Phase 2).                                                                                                                   |
+| Navigation                | The Review tab stays hidden until Phase 4; Phase 1 Home shows this week, backlog, and progress (the feed arrives in Phase 2).                                                                                                                                                       |
 | 21st.dev                  | No API key or MCP. Used only as visual reference; components are built on shadcn/ui and Branch tokens.                                                                                                                                                                              |
 | Repository                | Docs live at the root. Commit at the end of each milestone and push `main` to GitHub.                                                                                                                                                                                               |
 
@@ -118,8 +118,8 @@ graphic. Re-check after changing any token.
 - **Weekly assignments** carry the plan's version ID and reference both the plan and the roadmap
   item by composite foreign keys, so a plan can only schedule items from its own version.
 - **Completions:** one row per user and problem (unique), shared by every group and roadmap. The
-  external submission ID belongs to the `Submission` table that arrives with the extension (Phase 4
-  since 2026-11-04).
+  external submission ID belongs to the `Submission` table that arrives with the extension in
+  Phase 3.
 - **Deletion:** removing a user cascades their memberships, profile, and completions, and nulls
   authorship fields; a roadmap version used by any plan cannot be deleted.
 
@@ -655,8 +655,9 @@ group activity", met except images, which the owner deferred (M13):
 - Four migrations (`posts`, `post_spoiler`, `automatic_posts`, `reactions_comments`), each
   additive and applied to production before its code was pushed.
 - Owner decisions (2026-11-04): image uploads are dropped (M13 cancelled; posts stay text and
-  code); reporting and blocking are deferred to a later phase; review and analysis move ahead of
-  the LeetCode extension, so Phase 3 is review and analysis and Phase 4 is the extension.
+  code); reporting and blocking are deferred to a later phase. Moving review and analysis ahead of
+  the extension was considered and reverted the same day: the extension is how solution code
+  reaches the analyzer, so Phase 3 stays the extension and Phase 4 review and analysis.
 
 ### After Phase 2: threaded comments (2026-11-04)
 

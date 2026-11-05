@@ -4,7 +4,7 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 
 ## Current status (updated 2026-11-03)
 
-**Phase 1 complete and soft-launched (Neon + Vercel). Phase 2 (social feed) complete. Next: Phase 3, review and analysis (plan awaiting the owner's approval).** Owner changes on 2026-11-04: review and analysis moved ahead of the extension (now Phase 3; the extension is Phase 4); image uploads dropped (M13 cancelled); reporting and blocking deferred to a later phase. Phase 2 decisions are in `docs/DECISIONS.md` (Social feed). The Phase 1 plan was approved on 2026-11-03; decisions, dependency pins, and the per-milestone log live in `docs/DECISIONS.md`. Setup and commands are in `README.md`.
+**Phase 1 complete and soft-launched (Neon + Vercel). Phase 2 (social feed) complete. Next: Phase 3, the LeetCode extension (plan awaiting the owner's approval).** Owner changes on 2026-11-04: image uploads dropped (M13 cancelled); reporting and blocking deferred to a later phase. A swap of Phases 3 and 4 was considered and reverted: the extension stays first because it is how solution code reaches the Phase 4 analyzer. Phase 2 decisions are in `docs/DECISIONS.md` (Social feed). The Phase 1 plan was approved on 2026-11-03; decisions, dependency pins, and the per-milestone log live in `docs/DECISIONS.md`. Setup and commands are in `README.md`.
 
 | Milestone | Status |
 |---|---|
@@ -25,7 +25,7 @@ You are implementing **Branch**, the product defined in `PRD.md`. Treat that PRD
 | M13 Images | Dropped (owner, 2026-11-04) |
 | M14 Privacy journeys, accessibility, docs | Done |
 
-**Approved Phase 1 decisions** (details in `docs/DECISIONS.md`): verified seed catalog plus a JSON importer; curated lists Patterns 150 and Essentials 75 (approved 2026-11-03, see below; Grind 75 skipped: no openly licensed source); email/password plus optional GitHub and Google OAuth (each enabled by its env vars) with no email delivery; group members see each other's status on assigned problems only; users may add problems by LeetCode URL (`source: USER`); exactly one admin per group; link-based hashed invites; weeks computed from the plan's start date and IANA timezone (Monday default); Review nav hidden until Phase 3 (review); commit at the end of each milestone and push `main`.
+**Approved Phase 1 decisions** (details in `docs/DECISIONS.md`): verified seed catalog plus a JSON importer; curated lists Patterns 150 and Essentials 75 (approved 2026-11-03, see below; Grind 75 skipped: no openly licensed source); email/password plus optional GitHub and Google OAuth (each enabled by its env vars) with no email delivery; group members see each other's status on assigned problems only; users may add problems by LeetCode URL (`source: USER`); exactly one admin per group; link-based hashed invites; weeks computed from the plan's start date and IANA timezone (Monday default); Review nav hidden until Phase 4; commit at the end of each milestone and push `main`.
 
 ### Working in this repository
 
@@ -74,8 +74,8 @@ Build **Branch**, a polished **Strava-for-LeetCode** social accountability web a
 | UI | Tailwind CSS, shadcn/ui, accessible primitives | Centralized theme tokens; use 21st.dev selectively and review adopted code |
 | Database | PostgreSQL + Prisma | Neon is a candidate; validate free-tier terms/limits before deploying |
 | Auth | Better Auth | Email/OAuth as configured; secure sessions and server-side authorization |
-| Extension (phase 4) | WXT + TypeScript | Opt-in permissions, secure ingestion, site-change resilience |
-| Analyzer (phase 3) | Python + FastAPI | Async jobs, static-first, provider-independent optional LLM analysis |
+| Extension (phase 3) | WXT + TypeScript | Opt-in permissions, secure ingestion, site-change resilience |
+| Analyzer (phase 4) | Python + FastAPI | Async jobs, static-first, provider-independent optional LLM analysis |
 | Workspace | pnpm monorepo | Shared validation/types; Docker Compose for local dependencies |
 | Realtime (phase 5) | Adapter; choose later | Avoid a paid dependency before needed |
 
@@ -86,9 +86,9 @@ Prefer a **modular monolith** for the web/API. The analyzer is an independently 
 ```text
 apps/
   web/                 # Next.js UI, server actions/route handlers, modules
-  extension/           # WXT extension (phase 4)
+  extension/           # WXT extension (phase 3)
 services/
-  analyzer/            # FastAPI and worker (phase 3)
+  analyzer/            # FastAPI and worker (phase 4)
 packages/
   database/            # Prisma schema, migrations, seeders
   shared/              # Zod schemas, domain contracts, types
@@ -190,17 +190,7 @@ Use foreign keys, compound uniqueness constraints, membership indexes, and time-
 
 **Done when:** Members can post questions with code, react/reply, and see only authorized group activity.
 
-### Phase 3 — Review and analysis
-
-1. Build spaced-repetition scheduling with explicit review outcomes.
-2. Add concept-level proficiency model and targeted new-problem suggestions; explain recommendation reasons.
-3. Introduce queue abstraction and Python FastAPI analysis worker; static-first parsing/heuristics, optional model-provider adapter.
-4. Store confidence, analyzer version, and tradeoffs for complexity estimates; no automatic tutoring/optimal-answer reveal.
-5. Add caching, cost ceilings, rate limits, retries, privacy/retention settings, evaluation cases.
-
-**Done when:** A user receives useful private review suggestions; analysis is asynchronous, bounded, and uncertainty-aware.
-
-### Phase 4 — LeetCode extension
+### Phase 3 — LeetCode extension
 
 1. **Feasibility spike first:** verify current LeetCode DOM/network behavior, accepted-result detection, and whether code is accessible with user consent. Document limitations.
 2. Build WXT extension with minimal host permissions, explicit connect/disconnect, clear disclosure.
@@ -209,6 +199,16 @@ Use foreign keys, compound uniqueness constraints, membership indexes, and time-
 5. Test duplicate events, extension reconnect, malformed payloads, unauthorized requests.
 
 **Done when:** Supported accepted submissions sync once without exposing source to groups; failures do not corrupt progress.
+
+### Phase 4 — Review and analysis
+
+1. Build spaced-repetition scheduling with explicit review outcomes.
+2. Add concept-level proficiency model and targeted new-problem suggestions; explain recommendation reasons.
+3. Introduce queue abstraction and Python FastAPI analysis worker; static-first parsing/heuristics, optional model-provider adapter.
+4. Store confidence, analyzer version, and tradeoffs for complexity estimates; no automatic tutoring/optimal-answer reveal.
+5. Add caching, cost ceilings, rate limits, retries, privacy/retention settings, evaluation cases.
+
+**Done when:** A user receives useful private review suggestions; analysis is asynchronous, bounded, and uncertainty-aware.
 
 ### Phase 5 — Chat and production hardening
 
@@ -234,4 +234,4 @@ Prefer secure, simple code over speculative abstraction. Keep dependencies lean.
 
 ## Next task
 
-Phase 2 is complete. Phase 3 is now review and analysis: propose its plan (PRD "Personalized review") and **get the owner's approval before implementing**. Phase 4 (the extension, feasibility spike first) and reporting/blocking come later and need their own approval. Any milestone with a migration must be applied to production (`DATABASE_URL=<direct> pnpm db:deploy`, by the owner) before it is pushed. Do not start extension, analyzer, or chat work without approval of its plan.
+Phase 2 is complete. Phase 3 is the LeetCode extension: propose its plan (PRD "Browser extension"), starting with the feasibility spike, and **get the owner's approval before implementing**. Phase 4 (review and analysis) and reporting/blocking come later and need their own approval. Any milestone with a migration must be applied to production (`DATABASE_URL=<direct> pnpm db:deploy`, by the owner) before it is pushed. Do not start extension, analyzer, or chat work without approval of its plan.

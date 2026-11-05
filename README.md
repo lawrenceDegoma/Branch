@@ -148,5 +148,5 @@ are created only when their phases begin.
 
 ## Status
 
-Phase 1 (Foundation) and Phase 2 (the social feed) are complete. Phase 3 is review and analysis
-(moved ahead of the browser extension, now Phase 4) and starts once its plan is approved. See [docs/DECISIONS.md](docs/DECISIONS.md) for the milestone log and known limitations.
+Phase 1 (Foundation) and Phase 2 (the social feed) are complete. Phase 3 (the browser extension)
+starts once its plan is approved. See [docs/DECISIONS.md](docs/DECISIONS.md) for the milestone log and known limitations.

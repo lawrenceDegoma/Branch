@@ -32,13 +32,13 @@ Users need to: (a) see what friends are studying, (b) know what to solve this we
 |---|---|---|
 | 1 — Foundation | Sign-in, profile, group creation/invites, roadmap selection/customization, calendar-based weekly assignments, manual completion, responsive shell | Two users can join a group, see the same weekly plan, and independently track progress |
 | 2 — Social | Unified feed, auto-generated milestone/completion posts for recorded completions, manual posts, code blocks, reactions, threaded comments, group filters | Group members can discuss a problem and see activity across groups with correct privacy |
-| 3 — Personalized review | Spaced review, weakness-based new practice, asynchronous code-analysis pipeline, explainable recommendations | User gets private review suggestions; uncertain analysis does not masquerade as fact |
-| 4 — LeetCode integration | Opt-in WXT extension, accepted-submission capture where technically feasible, deduplication, fallback manual entry | A supported accepted submission syncs once and updates progress; failures are recoverable |
+| 3 — LeetCode integration | Opt-in WXT extension, accepted-submission capture where technically feasible, deduplication, fallback manual entry | A supported accepted submission syncs once and updates progress; failures are recoverable |
+| 4 — Personalized review | Spaced review, weakness-based new practice, asynchronous code-analysis pipeline, explainable recommendations | User gets private review suggestions; uncertain analysis does not masquerade as fact |
 | 5 — Collaboration/polish | Group chat, accessibility/performance refinements, deployment hardening | Chat works with appropriate access control and the app is ready for broader rollout |
 
 **MVP definition:** Phases 1–2 create the first social, usable release. The complete product vision includes phases 3–5. Do not block the MVP on LeetCode integration or AI analysis.
 
-**Owner changes (2026-11-04):** personalized review moved ahead of the extension (now phases 3 and 4); image uploads dropped from posts; reporting and blocking deferred to a later phase.
+**Owner changes (2026-11-04):** image uploads dropped from posts; reporting and blocking deferred to a later phase. The phase order is unchanged: the extension (phase 3) comes before review, because it is how solution code reaches the analyzer.
 
 **Explicitly out of v1:** push/email/in-app notification center, public group discovery, monetization, full in-browser coding judge, compulsory leaderboards, automatic publishing of source code, elaborate XP economy.
 
@@ -76,14 +76,14 @@ Users need to: (a) see what friends are studying, (b) know what to solve this we
 - Privacy: private group scope; never automatically expose source code, weakness metrics, or detailed analysis. A post should have a clear group destination; no cross-group forwarding by default.
 - No notifications in version one.
 
-### Personalized review (phase 3)
+### Personalized review (phase 4)
 - **Spaced repetition:** revisit previously solved problems based on review performance/history.
 - **Targeted new practice:** suggest new, often easier problems for concepts the user struggles with.
 - Inputs may include problem pattern/difficulty, completion/review history, and estimated time/space complexity of submitted code.
 - Complexity estimation is uncertain and language-/approach-dependent. Represent confidence, rationale, and legitimate tradeoffs; never equate a single asymptotic result with solution quality.
 - Recommendations and proficiency estimates are private to the user. Do not reveal an optimal solution as part of passive analysis.
 
-### Browser extension (phase 4)
+### Browser extension (phase 3)
 - WXT + TypeScript extension, permissioned and opt-in, intended to detect accepted LeetCode submissions and capture metadata/source when technically feasible.
 - Website behavior and access to submission code may change; prototype feasibility before committing to automation guarantees. Do not imply an official supported LeetCode integration.
 - Minimize host permissions; clear user consent and disclosure of what is sent; secure extension-to-app authentication; idempotent ingestion; explicit disconnect/revoke.
