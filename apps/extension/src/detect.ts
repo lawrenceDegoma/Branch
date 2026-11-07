@@ -37,6 +37,8 @@ export type DetectorState = { pending: Map<string, Pending>; sent: Set<string> }
 export type Outcome =
   | { type: "submitted"; slug: string }
   | { type: "not-accepted"; slug: string }
+  /** neetcode.io only: accepted, but which LeetCode problem it is couldn't be told. */
+  | { type: "unidentified"; slug: string }
   | { type: "accepted"; payload: SubmissionPayload };
 
 export const createDetector = (): DetectorState => ({ pending: new Map(), sent: new Set() });

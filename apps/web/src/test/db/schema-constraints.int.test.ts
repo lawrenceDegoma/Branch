@@ -494,7 +494,7 @@ describe("extension submissions", () => {
     const user = await createTestUser();
     return {
       userId: user.id,
-      source: "EXTENSION" as const,
+      source: "LEETCODE" as const,
       externalId: "123",
       problemSlug: "two-sum",
       language: "python3",
@@ -516,7 +516,7 @@ describe("extension submissions", () => {
       await expect(prisma.submission.create({ data: { ...data, ...bad } })).rejects.toThrow();
     }
     await expect(
-      prisma.$executeRaw`INSERT INTO "submission" ("id", "userId", "source", "externalId", "problemSlug", "language", "code", "submittedAt") VALUES (gen_random_uuid(), ${data.userId}, 'EXTENSION', '1', 'two-sum', 'python3', NULL, now())`,
+      prisma.$executeRaw`INSERT INTO "submission" ("id", "userId", "source", "externalId", "problemSlug", "language", "code", "submittedAt") VALUES (gen_random_uuid(), ${data.userId}, 'LEETCODE', '1', 'two-sum', 'python3', NULL, now())`,
     ).rejects.toThrow();
     await prisma.submission.create({ data });
     // Unique per user, source, and LeetCode ID.

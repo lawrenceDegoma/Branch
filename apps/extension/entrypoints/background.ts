@@ -2,9 +2,9 @@ import type { SubmissionPayload } from "@branch/shared/extension";
 import { browser, type Browser } from "wxt/browser";
 import { defineBackground } from "wxt/utils/define-background";
 import { fetchConnection, revokeConnection, sendSubmission } from "@/src/api";
-import { BRANCH_ORIGIN, LEETCODE_ORIGIN } from "@/src/config";
+import { BRANCH_ORIGIN, SITE_BY_ORIGIN } from "@/src/config";
 import type { Activity, ConnectResult, ExtensionMessage, Status } from "@/src/messages";
-import { enqueue, retryDelayMinutes, type QueueItem } from "@/src/queue";
+import { enqueue, retryDelayMinutes, sameSubmission, type QueueItem } from "@/src/queue";
 
 // Holds the connection and a queue of accepted submissions, and sends them to Branch. The
 // service worker can stop at any time, so everything lives in storage.local and retries are
@@ -50,12 +50,17 @@ async function add(payload: SubmissionPayload) {
   if (!connection) return;
   await write({
     queue: enqueue(queue, payload, Date.now()),
-    lastSeen: { stage: "accepted", slug: payload.problemSlug, at: Date.now() },
+    lastSeen: {
+      site: payload.source,
+      stage: "accepted",
+      slug: payload.problemSlug,
+      at: Date.now(),
+    },
   });
   await flush();
 }
 
-/** Notes what was last seen on LeetCode, for the popup. Nothing while disconnected. */
+/** Notes what was last seen on LeetCode or neetcode.io, for the popup. Nothing while disconnected. */
 async function seen(activity: Activity) {
   const { connection } = await read();
   if (connection) await write({ lastSeen: { ...activity, at: Date.now() } });
@@ -72,9 +77,7 @@ function flush(): Promise<void> {
         const item = queue[0];
         if (!connection || !item) return;
         const outcome = await sendSubmission(connection.token, item.payload);
-        const remaining = (await read()).queue.filter(
-          (queued) => queued.payload.submissionId !== item.payload.submissionId,
-        );
+        const remaining = (await read()).queue.filter((queued) => !sameSubmission(queued, item));
         if (outcome.kind === "ok") {
           await write({
             queue: remaining,
@@ -142,15 +145,20 @@ async function disconnect() {
   if (connection) await revokeConnection(connection.token);
 }
 
-/** Who may send what: submissions only from leetcode.com, connecting from Branch or the popup. */
+/**
+ * Who may send what: submissions and activity only from a tab on the site they name (leetcode.com
+ * or neetcode.io), connecting only from Branch or the popup.
+ */
 function allowed(message: ExtensionMessage, sender: Browser.runtime.MessageSender) {
   if (sender.id !== browser.runtime.id) return false;
   const from = sender.url ? new URL(sender.url).origin : "";
   const popup = sender.url?.startsWith(browser.runtime.getURL("/")) ?? false;
+  const site = SITE_BY_ORIGIN[from as keyof typeof SITE_BY_ORIGIN];
   switch (message.type) {
     case "submission":
+      return site === message.payload.source && sender.tab !== undefined;
     case "activity":
-      return from === LEETCODE_ORIGIN && sender.tab !== undefined;
+      return site === message.activity.site && sender.tab !== undefined;
     case "connect":
       return popup || (from === BRANCH_ORIGIN && sender.tab !== undefined);
     default:

@@ -3,7 +3,11 @@ import { describe, expect, it } from "vitest";
 import { fetchConnection, sendSubmission } from "./api";
 import { enqueue, QUEUE_LIMIT, retryDelayMinutes } from "./queue";
 
-const payload = (id = "1"): SubmissionPayload => ({
+const payload = (
+  id = "1",
+  source: SubmissionPayload["source"] = "LEETCODE",
+): SubmissionPayload => ({
+  source,
   verdict: "ACCEPTED",
   submissionId: id,
   problemSlug: "two-sum",
@@ -75,6 +79,17 @@ describe("the queue", () => {
     for (let i = 2; i <= QUEUE_LIMIT + 5; i++) queue = enqueue(queue, payload(String(i)), i);
     expect(queue).toHaveLength(QUEUE_LIMIT);
     expect(queue[0]!.payload.submissionId).toBe("6");
+  });
+
+  it("tells sites apart, and treats items queued before 1.1.0 (no source) as LeetCode", () => {
+    let queue = enqueue([], payload("1", "LEETCODE"), 0);
+    queue = enqueue(queue, payload("1", "NEETCODE"), 1);
+    expect(queue).toHaveLength(2);
+    const legacy: Partial<SubmissionPayload> = payload("2");
+    delete legacy.source;
+    queue = [...queue, { payload: legacy as SubmissionPayload, attempts: 0, queuedAt: 2 }];
+    expect(enqueue(queue, payload("2", "LEETCODE"), 3)).toHaveLength(3);
+    expect(enqueue(queue, payload("2", "NEETCODE"), 3)).toHaveLength(4);
   });
 
   it("backs off up to an hour", () => {

@@ -25,8 +25,8 @@ export const waitingExpiresAt = (receivedAt: Date) =>
 export type IngestResult = { stored: "new" | "duplicate"; counted: boolean };
 
 /**
- * Stores an accepted submission once (keyed by LeetCode's submission ID, so retries and repeats
- * are no-ops) and, when its problem is in the catalog, marks the problem solved. Marking solved is
+ * Stores an accepted submission once (keyed by its site and the site's ID for it, so retries and
+ * repeats are no-ops) and, when its problem is in the catalog, marks the problem solved. Marking solved is
  * idempotent too, and runs for duplicates as well, so a retry repairs a half-finished first try.
  */
 export async function ingestSubmission(
@@ -52,7 +52,7 @@ export async function ingestSubmission(
     data: [
       {
         userId,
-        source: "EXTENSION",
+        source: payload.source,
         externalId: payload.submissionId,
         problemSlug: payload.problemSlug,
         problemId: problem?.id ?? null,
@@ -140,6 +140,7 @@ export async function listSubmissions(
     take: limit + 1,
     select: {
       id: true,
+      source: true,
       problemSlug: true,
       language: true,
       code: true,

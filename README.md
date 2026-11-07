@@ -29,7 +29,7 @@ not affiliated with LeetCode or NeetCode.
 - **Reactions and comments:** react to posts with kudos, impressive, helpful, or same here, and
   discuss it in a comment thread that opens inside the post (spoilers work there too).
 - **LeetCode extension:** install it from the Chrome Web Store, connect it in Settings, and
-  accepted LeetCode submissions sync as completions. Your code stays private on a Synced
+  submissions accepted on leetcode.com or neetcode.io sync as completions. Your code stays private on a Synced
   submissions page you can clear at any time.
 - **Review:** problems you've solved come back on a spaced schedule. Rate each review (couldn't
   solve, struggled, solved, easy) and it sets when the problem returns. Topics you keep
@@ -140,7 +140,7 @@ client; Prisma 7 no longer does this automatically).
 
 ```text
 apps/web/            Next.js App Router app (UI, server actions, route handlers, domain modules)
-apps/extension/      Chrome extension (WXT): syncs accepted LeetCode submissions to Branch
+apps/extension/      Chrome extension (WXT): syncs accepted LeetCode/neetcode.io submissions to Branch
 packages/database/   Prisma schema, migrations, seed data, catalog importer, Prisma client
 packages/shared/     Contracts and pure logic shared across apps (catalog, calendar weeks, schedules)
 infra/docker/        Docker Compose for local PostgreSQL (dev + test databases)
@@ -152,9 +152,10 @@ The analysis service (`services/analyzer`) is created only when Phase 4 begins.
 ## The Chrome extension
 
 `apps/extension` is a Manifest V3 extension built with WXT. It watches only the traffic the
-LeetCode page already makes, never calls LeetCode itself, and sends accepted submissions to the
-Branch origin it was built for (production by default). How it detects a submission is in
-[docs/LEETCODE-SPIKE.md](docs/LEETCODE-SPIKE.md).
+LeetCode and neetcode.io pages already make, never calls either site itself, and sends accepted
+submissions to the Branch origin it was built for (production by default). How it detects a
+submission is in [docs/LEETCODE-SPIKE.md](docs/LEETCODE-SPIKE.md) and
+[docs/NEETCODE-SPIKE.md](docs/NEETCODE-SPIKE.md).
 
 - **Try it against local Branch:** `WXT_BRANCH_URL=http://localhost:3000 pnpm --filter @branch/extension build`,
   then in Chrome open `chrome://extensions`, turn on Developer mode, choose **Load unpacked**, and

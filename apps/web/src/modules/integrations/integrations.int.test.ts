@@ -29,6 +29,7 @@ const problem = (slug = "contains-duplicate", title = "Contains Duplicate") =>
   });
 
 const payload = (overrides: Partial<SubmissionPayload> = {}): SubmissionPayload => ({
+  source: "LEETCODE",
   verdict: "ACCEPTED",
   submissionId: "2189874571",
   problemSlug: "contains-duplicate",
@@ -92,6 +93,31 @@ describe("ingesting submissions", () => {
     await ingestSubmission(ada.id, payload({ submissionId: "2189874999" }), NOW);
     expect(await prisma.submission.count()).toBe(2);
     expect(await prisma.problemCompletion.count()).toBe(1);
+  });
+
+  it("counts a neetcode.io submission toward the same problem, kept apart from LeetCode's", async () => {
+    const ada = await createTestUser();
+    const known = await problem();
+    await ingestSubmission(ada.id, payload(), NOW);
+    // neetcode.io's ID is its judging time; the same digits from LeetCode are another record.
+    const fromNeetcode = payload({ source: "NEETCODE", submissionId: "2189874571" });
+    expect(await ingestSubmission(ada.id, fromNeetcode, NOW)).toEqual({
+      stored: "new",
+      counted: true,
+    });
+    expect(await ingestSubmission(ada.id, fromNeetcode, NOW)).toMatchObject({
+      stored: "duplicate",
+    });
+    const rows = await prisma.submission.findMany({ orderBy: { source: "asc" } });
+    expect(rows.map((r) => [r.source, r.problemId])).toEqual([
+      ["LEETCODE", known.id],
+      ["NEETCODE", known.id],
+    ]);
+    expect(await prisma.problemCompletion.count()).toBe(1);
+    expect((await listSubmissions(ada.id, {}, NOW)).items.map((s) => s.source).sort()).toEqual([
+      "LEETCODE",
+      "NEETCODE",
+    ]);
   });
 
   it("keeps an earlier manual completion as it was", async () => {

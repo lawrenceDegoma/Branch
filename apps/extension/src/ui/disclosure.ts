@@ -4,7 +4,7 @@ import { EXTENSION_DISCLOSURE as DISCLOSURE } from "@branch/shared/extension-tex
 // welcome page, the popup, and Branch's Settings say the same thing.
 
 export const RELOAD_HINT =
-  "Only LeetCode tabs opened or reloaded since the extension was installed or updated are watched. If a submission doesn't show up, reload the tab and submit again.";
+  "Only LeetCode and neetcode.io tabs opened or reloaded since the extension was installed or updated are watched. If a submission doesn't show up, reload the tab and submit again.";
 
 /** Fills every element marked data-text="disclosure" or "reload-hint". */
 export function fillText(root: ParentNode = document) {

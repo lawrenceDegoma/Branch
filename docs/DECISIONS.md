@@ -761,6 +761,29 @@ extension, which it learns by pinging the extension's content script on the page
 the page hydrates). Only a `https://chromewebstore.google.com` link is accepted. A direct zip
 download was not offered: installing unpacked needs Developer mode and gets no updates.
 
+### After Phase 3: neetcode.io in the extension (2026-11-07)
+
+Owner request, approved after a spike ([NEETCODE-SPIKE.md](NEETCODE-SPIKE.md)): the extension
+also syncs accepted submissions made on neetcode.io. The owner read neetcode.io's terms (nothing
+about extensions or automated access; the extension sends none of neetcode.io's material) and
+agreed to the listing, disclosure, and `/privacy` naming neetcode.io.
+
+- **Detection:** neetcode.io's Submit request (`executeCodeFunctionHttp`) and its reply carry the
+  code, language, and verdict; accepted is status 3 with every test passed. Runs use a different
+  request and never count. Passive only, like LeetCode: the extension never calls neetcode.io.
+- **Which problem:** neetcode.io uses its own IDs (`duplicate-integer`), but a problem's details
+  name it with LeetCode's title, and every catalog problem's slug is its title made into a slug.
+  Only `id` and `name` are kept from that reply (never descriptions, NeetCode's solutions, or past
+  submissions). If the title wasn't seen, nothing is sent and the popup says so.
+- **Data:** migration `submission_sites` renames `SubmissionSource.EXTENSION` to `LEETCODE` (in
+  place) and adds `NEETCODE`. The contract gains `source` (default `LEETCODE`, so 1.0.0 keeps
+  working); neetcode.io's ID is its judging time in milliseconds. The background only accepts a
+  submission from a tab on the site it names. Synced submissions show the site.
+- **Extension 1.1.0:** shared traffic watcher (`src/traffic.ts`), `src/neetcode.ts` detector,
+  `neetcode-observer` content script, `site-relay` (was `leetcode-relay`) for both sites. New host
+  match, so Chrome asks existing users to approve it. Disclosure, welcome page, popup, `/privacy`,
+  and `docs/CHROME-WEB-STORE.md` (step 8) updated together.
+
 ## Review and analysis (Phase 4)
 
 The extension was published to the Chrome Web Store (public) on 2026-11-06 and

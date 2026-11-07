@@ -8,9 +8,9 @@ import { chromium, type BrowserContext, type Page, type Route } from "@playwrigh
 import { expect, newAccountDetails, signUpViaApi, test } from "./support/fixtures";
 
 // The built extension (apps/extension, `pnpm --filter @branch/extension build:e2e`) loaded into
-// Chromium, against a fake LeetCode served by Playwright. The fake replays the traffic recorded
+// Chromium, against a fake LeetCode (and, below, a fake neetcode.io) served by Playwright. The fake replays the traffic recorded
 // in docs/LEETCODE-SPIKE.md: submit, then GraphQL `submissionDetails` read as a blob, judging
-// first and accepted second. Nothing here touches the real leetcode.com.
+// first and accepted second. Nothing here touches the real leetcode.com or neetcode.io.
 
 const extensionPath = path.resolve(import.meta.dirname, "../../extension/.output/chrome-mv3-e2e");
 const CODE = "class Solution:\n    def twoSum(self, nums, target):\n        return [0, 1]";
@@ -45,6 +45,76 @@ const leetcodePage = `<!doctype html><html><body>
     document.getElementById("state").textContent = "opened";
   };
 </script></body></html>`;
+
+// neetcode.io, as recorded in docs/NEETCODE-SPIKE.md: opening a problem loads its details
+// (including official solutions and the person's past submissions, which must never be sent);
+// Run and Submit are different requests, and Submit's reply is the verdict.
+const NEETCODE_CODE =
+  "class Solution:\n    def hasDuplicate(self, nums):\n        return len(set(nums)) < len(nums)";
+const NEETCODE_DATE = "2026-11-07T19:11:02.313Z";
+const neetcodePage = `<!doctype html><html><body>
+<button id="run">Run</button><button id="submit">Submit</button>
+<p id="state"></p>
+<script>
+  const call = (path, data) => new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", path);
+    xhr.setRequestHeader("content-type", "application/json");
+    xhr.onload = () => resolve();
+    xhr.send(JSON.stringify({ data }));
+  });
+  const code = ${JSON.stringify(NEETCODE_CODE)};
+  call("/api/getProblemMetadataFunctionHttp", { problemId: "duplicate-integer" }).then(() => {
+    document.getElementById("state").textContent = "loaded";
+  });
+  document.getElementById("run").onclick = async () => {
+    await call("/api/runCodeFunctionHttp", { lang: "python", problemId: "duplicate-integer", rawCode: code, testCases: ["nums=[1,2,3,3]"] });
+    document.getElementById("state").textContent = "ran";
+  };
+  document.getElementById("submit").onclick = async () => {
+    await call("/api/executeCodeFunctionHttp", { lang: "python", problemId: "duplicate-integer", rawCode: code });
+    document.getElementById("state").textContent = "judged";
+  };
+</script></body></html>`;
+
+function fakeNeetcode(context: BrowserContext) {
+  const accepted = { status: { id: 3, description: "Accepted" }, stderr: "", stdout: "" };
+  return context.route("https://neetcode.io/**", async (route: Route) => {
+    const { pathname } = new URL(route.request().url());
+    if (pathname === "/api/getProblemMetadataFunctionHttp") {
+      return route.fulfill({
+        json: {
+          data: {
+            id: "duplicate-integer",
+            name: "Contains Duplicate",
+            difficulty: "Easy",
+            solutions: { python: "an official solution" },
+            submissionHistory: [{ code: "an old submission", statusDescription: "Accepted" }],
+          },
+        },
+      });
+    }
+    if (pathname === "/api/runCodeFunctionHttp") {
+      return route.fulfill({
+        json: { data: [{ ...accepted, correct_test_case_count: 1, test_case_count: 1 }] },
+      });
+    }
+    if (pathname === "/api/executeCodeFunctionHttp") {
+      return route.fulfill({
+        json: {
+          data: {
+            ...accepted,
+            correct_test_case_count: 34,
+            test_case_count: 34,
+            date: NEETCODE_DATE,
+            token: "a-judge-token",
+          },
+        },
+      });
+    }
+    return route.fulfill({ contentType: "text/html", body: neetcodePage });
+  });
+}
 
 async function expectAccessible(page: Page) {
   const results = await new AxeBuilder({ page })
@@ -91,7 +161,9 @@ test.describe("the Chrome extension", () => {
     "Build it first: pnpm --filter @branch/extension build:e2e",
   );
 
-  test("connects from Settings and syncs an accepted submission once", async ({ baseURL }) => {
+  test("connects from Settings and syncs accepted submissions from LeetCode and neetcode.io once", async ({
+    baseURL,
+  }) => {
     const profile = await mkdtemp(path.join(os.tmpdir(), "branch-extension-"));
     const context = await chromium.launchPersistentContext(profile, {
       channel: "chromium",
@@ -147,15 +219,52 @@ test.describe("the Chrome extension", () => {
         .toMatchObject({ source: "EXTENSION", language: "python3" });
       const submissions = await prisma.submission.findMany({ where: { userId: account.id } });
       expect(submissions).toMatchObject([
-        { externalId: String(SUBMISSION_ID), problemSlug: "two-sum", code: CODE },
+        {
+          source: "LEETCODE",
+          externalId: String(SUBMISSION_ID),
+          problemSlug: "two-sum",
+          code: CODE,
+        },
       ]);
+
+      // neetcode.io: a Run never syncs; an accepted Submit counts as the LeetCode problem its
+      // title names, with only the code that was submitted.
+      await fakeNeetcode(context);
+      await page.goto("https://neetcode.io/problems/duplicate-integer/question");
+      await expect(page.locator("#state")).toHaveText("loaded");
+      await page.getByRole("button", { name: "Run" }).click();
+      await expect(page.locator("#state")).toHaveText("ran");
+      await page.getByRole("button", { name: "Submit" }).click();
+      await expect(page.locator("#state")).toHaveText("judged");
+      await expect
+        .poll(
+          () =>
+            prisma.submission.findMany({
+              where: { userId: account.id, source: "NEETCODE" },
+              include: { problem: { select: { leetcodeSlug: true } } },
+            }),
+          { timeout: 10_000 },
+        )
+        .toMatchObject([
+          {
+            externalId: String(Date.parse(NEETCODE_DATE)),
+            problemSlug: "contains-duplicate",
+            problem: { leetcodeSlug: "contains-duplicate" },
+            language: "python3",
+            code: NEETCODE_CODE,
+          },
+        ]);
+      expect(await prisma.submission.count({ where: { userId: account.id } })).toBe(2);
+      expect(await prisma.problemCompletion.count({ where: { userId: account.id } })).toBe(2);
 
       // The popup says what happened; disconnecting there revokes the key in Branch.
       const popup = await context.newPage();
       await popup.goto(`chrome-extension://${extensionId}/popup.html`);
       await expect(popup.getByText(`Syncing to ${account.name}`)).toBeVisible();
-      await expect(popup.locator("#last-sync")).toContainText("two-sum, counted");
-      await expect(popup.locator("#last-seen")).toContainText("two-sum, accepted");
+      await expect(popup.locator("#last-sync")).toContainText("contains-duplicate, counted");
+      await expect(popup.locator("#last-seen")).toContainText(
+        "contains-duplicate on neetcode.io, accepted",
+      );
       await expectAccessible(popup);
       if (process.env.SHOT_DIR)
         await popup.screenshot({ path: `${process.env.SHOT_DIR}/popup-connected.png` });

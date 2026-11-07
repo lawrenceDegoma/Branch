@@ -20,6 +20,8 @@ import {
 
 export const metadata = { title: "Synced submissions" };
 
+const SITE_LABEL = { LEETCODE: "LeetCode", NEETCODE: "neetcode.io" } as const;
+
 const querySchema = z.object({ before: submissionIdSchema.optional().catch(undefined) });
 
 /** The viewer's own synced submissions and their code. Nobody else can see this page's data. */
@@ -40,9 +42,9 @@ export default async function SubmissionsPage({
         title="Synced submissions"
         description={
           <>
-            Accepted LeetCode submissions the extension synced. Only you can see them. A submission
-            for a problem that isn&apos;t in Branch counts once someone adds it, and is deleted
-            after {WAITING_DAYS} days otherwise.{" "}
+            Accepted submissions the extension synced from LeetCode and neetcode.io. Only you can
+            see them. A submission for a problem that isn&apos;t in Branch counts once someone adds
+            it, and is deleted after {WAITING_DAYS} days otherwise.{" "}
             <Link href="/settings#extension" className="text-ink underline underline-offset-4">
               Extension settings
             </Link>
@@ -91,7 +93,7 @@ export default async function SubmissionsPage({
             description={
               before
                 ? "You've reached the first one."
-                : "Connect the extension in Settings, then submit on LeetCode. Accepted submissions appear here."
+                : "Connect the extension in Settings, then submit on LeetCode or neetcode.io. Accepted submissions appear here."
             }
           />
         )}
@@ -127,7 +129,7 @@ function SubmissionCard({ item, timeZone }: { item: SubmissionItem; timeZone: st
             {item.problem ? <DifficultyPill difficulty={item.problem.difficulty} /> : null}
           </h3>
           <p className="text-xs text-ink-muted">
-            {languageLabel(item.language)} ·{" "}
+            {SITE_LABEL[item.source]} · {languageLabel(item.language)} ·{" "}
             <time
               dateTime={item.submittedAt.toISOString()}
               title={formatDateTime(item.submittedAt, timeZone)}

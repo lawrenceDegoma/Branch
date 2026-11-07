@@ -26,8 +26,13 @@ function say(text: string, error = false) {
 const STAGES = {
   submitted: "submitted, waiting for the verdict",
   "not-accepted": "not accepted, so nothing was sent",
+  unidentified:
+    "accepted, but Branch couldn't tell which LeetCode problem it is, so nothing was sent",
   accepted: "accepted",
 } as const;
+
+// Activity recorded before 1.1.0 has no site: it was always LeetCode.
+const SITES = { LEETCODE: "LeetCode", NEETCODE: "neetcode.io" } as const;
 
 function render(status: Status) {
   $("connected").hidden = !status.connection;
@@ -37,7 +42,7 @@ function render(status: Status) {
     const { name, username } = status.connection;
     $("account").textContent = `Syncing to ${name}${username ? ` (@${username})` : ""}.`;
     $("last-seen").textContent = status.lastSeen
-      ? `${status.lastSeen.slug}, ${STAGES[status.lastSeen.stage]}, ${ago(status.lastSeen.at)}`
+      ? `${status.lastSeen.slug} on ${SITES[status.lastSeen.site ?? "LEETCODE"]}, ${STAGES[status.lastSeen.stage]}, ${ago(status.lastSeen.at)}`
       : "Nothing yet";
     $("last-sync").textContent = status.lastSync
       ? `${status.lastSync.problemSlug}, ${status.lastSync.counted ? "counted" : "waiting for the problem to be added"}, ${ago(status.lastSync.at)}`

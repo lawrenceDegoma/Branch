@@ -8,10 +8,16 @@ export type QueueItem = { payload: SubmissionPayload; attempts: number; queuedAt
 /** At most this many wait; the oldest are dropped first. */
 export const QUEUE_LIMIT = 50;
 
-/** Adds a payload unless the same LeetCode submission is already waiting. */
+/** The same submission: IDs are unique per site. Items queued before 1.1.0 have no source. */
+export const sameSubmission = (a: QueueItem, b: QueueItem) =>
+  a.payload.submissionId === b.payload.submissionId &&
+  (a.payload.source ?? "LEETCODE") === (b.payload.source ?? "LEETCODE");
+
+/** Adds a payload unless the same submission is already waiting. */
 export function enqueue(queue: QueueItem[], payload: SubmissionPayload, now: number): QueueItem[] {
-  if (queue.some((item) => item.payload.submissionId === payload.submissionId)) return queue;
-  return [...queue, { payload, attempts: 0, queuedAt: now }].slice(-QUEUE_LIMIT);
+  const item = { payload, attempts: 0, queuedAt: now };
+  if (queue.some((queued) => sameSubmission(queued, item))) return queue;
+  return [...queue, item].slice(-QUEUE_LIMIT);
 }
 
 /** Minutes before the next try: 1, 2, 4, … up to an hour. */

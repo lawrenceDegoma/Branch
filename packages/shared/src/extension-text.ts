@@ -20,4 +20,4 @@ export const PAGE_MESSAGE = {
  * consent by an explicit action (connecting).
  */
 export const EXTENSION_DISCLOSURE =
-  "Once you connect, the extension watches the results of submissions you make on leetcode.com in that browser. For each one LeetCode accepts, it sends Branch the problem, the language, your code, and the time. Your code is visible only to you in Branch. Nothing else on LeetCode is read or sent, and the extension never makes requests to LeetCode.";
+  "Once you connect, the extension watches the results of submissions you make on leetcode.com and neetcode.io in that browser. For each accepted one, it sends Branch the problem, the language, your code, and the time. Your code is visible only to you in Branch. Nothing else on either site is read or sent, and the extension never makes requests to them.";

@@ -271,7 +271,7 @@ for (const colorScheme of ["dark", "light"] as const) {
       const twoSum = await prisma.problem.findUniqueOrThrow({ where: { leetcodeSlug: "two-sum" } });
       const base = {
         userId: viewer.id,
-        source: "EXTENSION" as const,
+        source: "LEETCODE" as const,
         language: "python3",
         code: "class Solution:\n    def twoSum(self, nums, target):\n        return []",
         submittedAt: new Date(),

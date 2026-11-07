@@ -8,7 +8,7 @@ export const metadata = {
   description: "What Branch and the Branch for LeetCode extension collect, and why.",
 };
 
-const EFFECTIVE = "November 6, 2026";
+const EFFECTIVE = "November 7, 2026";
 
 /** Public: linked from the Chrome Web Store listing, the extension, and Branch's own pages. */
 export default function PrivacyPage() {
@@ -61,13 +61,20 @@ export default function PrivacyPage() {
         <p>{EXTENSION_DISCLOSURE}</p>
         <ul>
           <li>
-            <strong>Sent to Branch</strong> for each accepted submission: LeetCode&apos;s submission
-            ID, the problem, the language, your code, and when it was judged.
+            <strong>Sent to Branch</strong> for each accepted submission: which site it was made on
+            (leetcode.com or neetcode.io), the site&apos;s ID for it (LeetCode&apos;s submission ID,
+            or the time neetcode.io judged it), the problem, the language, your code, and when it
+            was judged.
           </li>
           <li>
-            <strong>Not read or sent:</strong> your LeetCode username or profile, other pages you
-            visit, your browsing history, your LeetCode cookies or password, and submissions
-            LeetCode doesn&apos;t accept.
+            <strong>Read on neetcode.io to tell which problem it is:</strong> the name of the
+            problem you open. Nothing else from the problem&apos;s page is read or sent: not its
+            description, NeetCode&apos;s solutions, or your past neetcode.io submissions.
+          </li>
+          <li>
+            <strong>Not read or sent:</strong> your username or profile on either site, other pages
+            you visit, your browsing history, your cookies or passwords, and submissions that
+            aren&apos;t accepted.
           </li>
           <li>
             <strong>Stored in your browser only:</strong> the key that connects the extension to

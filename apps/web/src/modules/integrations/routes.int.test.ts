@@ -59,6 +59,17 @@ describe("POST /api/extension/submissions", () => {
     });
   });
 
+  it("takes neetcode.io submissions, and treats ones without a source (before 1.1.0) as LeetCode", async () => {
+    const { user, token } = await connected();
+    expect((await send(token, body())).status).toBe(200);
+    expect(
+      (await send(token, body({ source: "NEETCODE", submissionId: "1793898662313" }))).status,
+    ).toBe(200);
+    expect((await send(token, body({ source: "HACKERRANK" }))).status).toBe(400);
+    const rows = await prisma.submission.findMany({ where: { userId: user.id } });
+    expect(rows.map((r) => r.source).sort()).toEqual(["LEETCODE", "NEETCODE"]);
+  });
+
   it("refuses requests without a working token", async () => {
     const { token } = await connected();
     for (const t of [null, "brx_wrong", `${token.slice(0, -1)}A`]) {

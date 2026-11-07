@@ -158,7 +158,7 @@ test.describe("reflow at 320px", () => {
     await prisma.submission.create({
       data: {
         userId: viewer.id,
-        source: "EXTENSION",
+        source: "LEETCODE",
         externalId: "1",
         problemSlug: "a-problem-branch-has-never-heard-of-with-a-long-slug",
         language: "python3",

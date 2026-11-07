@@ -65,6 +65,7 @@ describe("detecting accepted submissions", () => {
     expect(observe(state, submit(2189874571), T0)).toBeNull();
     expect(observe(state, judging(2189874571), T0 + 200)).toBeNull();
     expect(observe(state, accepted(2189874571), T0 + 2500)).toEqual({
+      source: "LEETCODE",
       verdict: "ACCEPTED",
       submissionId: "2189874571",
       problemSlug: "contains-duplicate",
@@ -82,7 +83,15 @@ describe("detecting accepted submissions", () => {
     observe(state, submit(1), T0);
     const payload = observe(state, accepted(1), T0);
     expect(Object.keys(payload!).sort()).toEqual(
-      ["code", "language", "problemSlug", "submissionId", "submittedAt", "verdict"].sort(),
+      [
+        "code",
+        "language",
+        "problemSlug",
+        "source",
+        "submissionId",
+        "submittedAt",
+        "verdict",
+      ].sort(),
     );
   });
 

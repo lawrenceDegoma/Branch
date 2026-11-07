@@ -315,7 +315,7 @@ test.describe("Chrome Web Store images", () => {
         canvas,
         "screenshot-1-popup.png",
         "Solve on LeetCode.<br>It counts in <span class=accent>Branch</span>.",
-        "When LeetCode accepts your solution, the problem is marked solved in every group and roadmap that includes it. No copying, no ticking boxes.",
+        "When your solution is accepted on leetcode.com or neetcode.io, the problem is marked solved in every group and roadmap that includes it. No copying, no ticking boxes.",
         popupShot,
         "side",
       );

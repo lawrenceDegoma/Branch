@@ -636,11 +636,13 @@ model ExtensionConnection {
   @@map("extension_connection")
 }
 
+/// The site a synced submission was made on.
 enum SubmissionSource {
-  EXTENSION
+  LEETCODE
+  NEETCODE
 }
 
-/// An accepted LeetCode submission the extension synced. Private to its author: never shown to
+/// An accepted submission the extension synced, made on LeetCode or neetcode.io. Private to its author: never shown to
 /// groups. Counts as a completion once its problem is in the catalog; until then `problemId` is
 /// null, and an unmatched submission is deleted 30 days after it arrived.
 model Submission {
@@ -648,9 +650,10 @@ model Submission {
   userId      String
   user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   source      SubmissionSource
-  /// LeetCode's submission ID (digits; CHECK). Unique per user and source, so retries are no-ops.
+  /// The site's ID for it (digits; CHECK): LeetCode's submission ID, or neetcode.io's judging
+  /// time in Unix milliseconds. Unique per user and source, so retries are no-ops.
   externalId  String
-  /// LeetCode problem slug, as on Problem (CHECK).
+  /// The LeetCode problem's slug, as on Problem (CHECK), whichever site it was solved on.
   problemSlug String
   problemId   String?          @db.Uuid
   problem     Problem?         @relation(fields: [problemId], references: [id], onDelete: SetNull)
@@ -658,7 +661,7 @@ model Submission {
   language    String
   /// The solution, 1-100000 characters (CHECK). Kept until the user deletes the submission.
   code        String
-  /// When LeetCode judged it.
+  /// When the site judged it.
   submittedAt DateTime
   receivedAt  DateTime         @default(now())
 

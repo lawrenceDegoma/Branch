@@ -1,7 +1,7 @@
 # Publishing Branch for LeetCode to the Chrome Web Store
 
 Everything the Chrome Web Store developer dashboard asks for, ready to paste, and the order to do
-it in. Checked against Google's documentation on 2026-11-05; if a field has moved or been renamed,
+it in. Checked against Google's documentation on 2026-11-05 (neetcode.io added 2026-11-07); if a field has moved or been renamed,
 the content still applies.
 
 ## Before you start
@@ -27,8 +27,8 @@ the content still applies.
    pnpm --filter @branch/extension zip
    ```
 
-   The upload file is `apps/extension/.output/branch-for-leetcode-1.0.0-chrome.zip`. It points at
-   production (`https://branch-omega-vert.vercel.app`).
+   The upload file is `apps/extension/.output/branch-for-leetcode-<version>-chrome.zip` (1.1.0 adds
+   neetcode.io). It points at production (`https://branch-omega-vert.vercel.app`).
 
 6. **Images** are in `apps/extension/store/` (regenerate with the command at the top of
    `apps/web/e2e/store-assets.spec.ts`).
@@ -39,36 +39,39 @@ the content still applies.
 
 1. Open the [Chrome Web Store developer dashboard](https://chrome.google.com/webstore/devconsole)
    and sign in with your developer account.
-2. Click **Add new item**, choose `branch-for-leetcode-1.0.0-chrome.zip`, and upload.
+2. Click **Add new item**, choose `branch-for-leetcode-1.0.0-chrome.zip`, and upload. (For an
+   update, see step 8.)
 
 ### 2. Store listing tab
 
 - **Description:**
 
-  > Solve on LeetCode, and it counts in Branch.
+  > Solve on LeetCode or neetcode.io, and it counts in Branch.
   >
   > Branch is a place to work through a coding-interview roadmap with friends: your group shares
   > one plan, a few problems a week, and everyone progresses at their own pace. This extension
-  > connects LeetCode to it. When LeetCode accepts a solution you submit, the problem is marked
-  > solved in Branch, in every group and roadmap that includes it. No copying links, no ticking
-  > boxes.
+  > connects LeetCode and neetcode.io to it. When a solution you submit is accepted, the problem
+  > is marked solved in Branch, in every group and roadmap that includes it. No copying links, no
+  > ticking boxes.
   >
   > How it works
   > • Connect it from Branch's Settings with one click.
-  > • Submit on leetcode.com as usual. When your submission is accepted, Branch records the
-  > problem as solved within a few seconds.
+  > • Submit on leetcode.com or neetcode.io as usual. When your submission is accepted, Branch
+  > records the problem as solved within a few seconds.
   > • The popup shows what it last saw and synced, and anything waiting to send.
   >
   > Private by design
   > • Nothing is collected until you connect, and nothing after you disconnect.
   > • For each accepted submission, it sends Branch the problem, the language, your code, and the
-  > time. Nothing else on LeetCode is read or sent.
+  > time. On neetcode.io it also reads the name of the problem you open, to tell which LeetCode
+  > problem it is. Nothing else on either site is read or sent.
   > • Your code is visible only to you in Branch, and you can delete it at any time.
   > • Your groups see a solve only if you turn on "Share my solves".
-  > • The extension never makes requests to LeetCode; it only reads the results of submissions
-  > you make.
+  > • The extension never makes requests to LeetCode or neetcode.io; it only reads the results of
+  > submissions you make.
   >
-  > You need a Branch account to use it. Branch is independent and not affiliated with LeetCode.
+  > You need a Branch account to use it. Branch is independent and not affiliated with LeetCode or
+  > NeetCode.
 
 - **Category:** Productivity (Education also fits; pick one).
 - **Language:** English.
@@ -84,9 +87,9 @@ the content still applies.
 
 - **Single purpose:**
 
-  > Records the LeetCode problems you solve in Branch: when LeetCode accepts a submission you
-  > make, the extension sends it to your Branch account so the problem counts as solved in your
-  > groups and roadmaps.
+  > Records the LeetCode problems you solve in Branch: when a submission you make on leetcode.com
+  > or neetcode.io is accepted, the extension sends it to your Branch account so the problem counts
+  > as solved in your groups and roadmaps.
 
 - **Permission justifications:**
   - **storage:** "Keeps the key that connects the extension to the user's Branch account, a short
@@ -95,15 +98,16 @@ the content still applies.
   - **alarms:** "Retries sending a submission later when Branch is unreachable or rate-limits the
     request, so accepted submissions aren't lost while offline."
   - **Host permissions** (this covers `https://branch-omega-vert.vercel.app/*` and the content
-    scripts on `https://leetcode.com/*`): "leetcode.com: a content script observes the results of
-    submissions the user makes, to detect when one is accepted; it never makes requests to
-    LeetCode. branch-omega-vert.vercel.app: the extension sends accepted submissions to the user's
-    Branch account there, and a content script on Branch's Settings page receives the connection
-    key when the user chooses Connect."
+    scripts on `https://leetcode.com/*` and `https://neetcode.io/*`): "leetcode.com and
+    neetcode.io: content scripts observe the results of submissions the user makes, to detect when
+    one is accepted (on neetcode.io also the name of the problem opened, to identify it); they
+    never make requests to either site. branch-omega-vert.vercel.app: the extension sends accepted
+    submissions to the user's Branch account there, and a content script on Branch's Settings page
+    receives the connection key when the user chooses Connect."
 - **Remote code:** "No, I am not using remote code."
 - **Data usage**, what the extension collects (tick these):
   - **Website content and resources:** the problem and verdict of an accepted submission on
-    LeetCode.
+    LeetCode or neetcode.io.
   - **User-generated content:** the solution code the user wrote.
   - **Authentication information:** the Branch connection key the extension stores and sends
     with each request.
@@ -162,3 +166,19 @@ for changes, tell me what they said and I'll make them.
   extension is coming soon.
 - Every update: bump `version` in `apps/extension/package.json`, run the zip command, and upload
   the new zip on the item's **Package** tab, then submit for review again.
+
+### 8. Updating to 1.1.0 (neetcode.io)
+
+1. Production first: apply the `submission_sites` migration
+   (`DATABASE_URL="$PROD_DIRECT_URL" pnpm db:deploy`), then push, so Branch accepts neetcode.io
+   submissions before any extension sends them. 1.0.0 keeps working throughout.
+2. `pnpm --filter @branch/extension zip` makes `branch-for-leetcode-1.1.0-chrome.zip`.
+3. On the item's **Package** tab, upload it.
+4. **Store listing:** paste the updated description above.
+5. **Privacy:** paste the updated single purpose and host-permission justification above; under
+   data usage, nothing new to tick.
+6. **Test instructions:** add: "neetcode.io works the same way: open
+   https://neetcode.io/problems/duplicate-integer/question, submit a correct solution, and Contains
+   Duplicate shows as solved in Branch."
+7. Submit for review. Because neetcode.io is a new site, Chrome turns the extension off for
+   existing users until they accept the new permission (a prompt on the extensions menu).
