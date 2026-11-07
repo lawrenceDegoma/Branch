@@ -800,6 +800,24 @@ suggestions, M21 code analysis, M22 journeys and docs):
   are due. Rating removes the card, announces when it comes back, and moves focus to the "Due
   today" heading. Reviews never change completion, never post, and only their owner sees them.
 
+### M20 — Weak topics and suggestions (complete)
+
+- **Topics** are the catalog's tags (each curated problem has one of 18). How a topic is going is
+  derived on every read from the user's completions and reviews, never stored, so there is no
+  migration and no `ConceptProficiency` table.
+- **The rule** (`modules/review/topics.ts`, pure): only a topic's latest 5 reviews count, so
+  improvement shows. A topic needs practice when the user struggled (Couldn't solve or Struggled)
+  on at least half of them, or on two. Each topic needing practice says why, e.g. "You struggled on
+  2 of your last 3 Sliding Window reviews." Topics are listed as needing practice, going well, or
+  not reviewed yet, with how many of their problems the user has solved. No scores, no ranking.
+- **Suggestions** (`modules/review/practice.ts`): for up to 3 topics needing practice (most
+  struggled first), 2 problems the user hasn't solved, free ones only, easiest first. Solving one
+  works like any solve (the same completion toggle). A suggestion solved after the topic's latest
+  struggle stays in place, checked, for a day so it doesn't vanish when clicked; anything solved
+  before the struggle is never suggested.
+- **UI:** Practice and Topics sections on the Review page. Complexity estimates (M21) don't feed
+  any of this.
+
 ## Phase 3 summary
 
 Done when "supported accepted submissions sync once without exposing source to groups; failures

@@ -293,11 +293,13 @@ for (const colorScheme of ["dark", "light"] as const) {
       await solveInDb(viewer.id, ["contains-duplicate"], 3);
       await page.goto("/review");
       await page.waitForFunction(() => document.readyState === "complete");
+      // Couldn't solve: the page then suggests practice too.
       await page
-        .getByRole("button", { name: /^Solved/ })
+        .getByRole("button", { name: /^Couldn't solve/ })
         .first()
         .click();
       await expect(page.getByRole("main").getByRole("status")).toContainText("comes back");
+      await expect(page.getByRole("list", { name: "Topics to practice" })).toBeVisible();
       await expectNoViolations(page);
     });
 

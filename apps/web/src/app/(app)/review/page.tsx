@@ -2,12 +2,14 @@ import { formatCalendarDate } from "@branch/shared/calendar";
 import Link from "next/link";
 import { z } from "zod";
 import { DifficultyPill } from "@/components/roadmaps/difficulty-pill";
+import { PracticeSection, TopicsSection } from "@/components/review/practice";
 import { ReviewQueue, type ReviewCardData } from "@/components/review/review-queue";
 import { PageHeader } from "@/components/shell/page-header";
 import { EmptyState } from "@/components/states/empty-state";
 import { buttonVariants } from "@/components/ui/button";
 import { formatDate, pluralize } from "@/lib/format";
 import { requireViewer } from "@/modules/auth/session";
+import { getPractice } from "@/modules/review/practice";
 import { describeGap, OUTCOME_LABEL } from "@/modules/review/schedule";
 import { reviewAttemptIdSchema } from "@/modules/review/schemas";
 import {
@@ -30,9 +32,10 @@ export default async function ReviewPage({
   const { user, profile } = await requireViewer();
   const { before } = querySchema.parse(await searchParams);
   const timeZone = profile.timezone;
-  const [queue, history] = await Promise.all([
+  const [queue, history, practice] = await Promise.all([
     getReviewQueue(user.id, timeZone),
     listReviewHistory(user.id, { before }),
+    getPractice(user.id),
   ]);
 
   const cards: ReviewCardData[] = queue.due.map((item: DueReview) => ({
@@ -53,7 +56,7 @@ export default async function ReviewPage({
     <div className="max-w-3xl">
       <PageHeader
         title="Review"
-        description="Problems you've solved come back here on a schedule. Try each one again on LeetCode, then say how it went: the harder it was, the sooner it returns. Only you see your reviews."
+        description="Problems you've solved come back here on a schedule. Try each one again on LeetCode, then say how it went: the harder it was, the sooner it returns. Your reviews also point to topics worth more practice. Only you see any of this."
       />
       <div className="flex flex-col gap-8">
         <section aria-labelledby="due-heading" className="flex flex-col gap-3">
@@ -81,6 +84,8 @@ export default async function ReviewPage({
           ) : null}
         </section>
 
+        <PracticeSection practice={practice.practice} reviewed={practice.reviewed} />
+
         {queue.upcoming.length > 0 ? (
           <section aria-labelledby="upcoming-heading" className="flex flex-col gap-3">
             <h2 id="upcoming-heading" className="text-base font-medium">
@@ -102,6 +107,8 @@ export default async function ReviewPage({
           </section>
         ) : null}
 
+        <TopicsSection standings={practice.standings} />
+
         <section aria-labelledby="history-heading" className="flex flex-col gap-3">
           <h2 id="history-heading" className="text-base font-medium">
             {before ? "Older reviews" : "History"}
@@ -121,7 +128,7 @@ export default async function ReviewPage({
                   key={item.id}
                   className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line py-3 last:border-b-0"
                 >
-                  <span className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                  <span className="flex min-w-48 flex-1 flex-wrap items-center gap-2">
                     <span className="font-medium">{item.problem.title}</span>
                     <DifficultyPill difficulty={item.problem.difficulty} />
                   </span>

@@ -21,6 +21,7 @@ test.describe("review", () => {
     const twoSum = page.getByRole("button", { name: "Solved: Two Sum", exact: true });
     await twoSum.click();
     await expect(twoSum).toHaveAttribute("aria-pressed", "true");
+    await page.waitForLoadState("networkidle");
     await page.reload();
     await expect(twoSum).toHaveAttribute("aria-pressed", "true");
     await page
@@ -72,12 +73,47 @@ test.describe("review", () => {
     const anagram = page.getByRole("button", { name: "Solved: Valid Anagram", exact: true });
     await anagram.click();
     await expect(anagram).toHaveAttribute("aria-pressed", "false");
-    // The check flips at once; reload to know it was saved.
+    // The check flips at once; wait for the save, then reload to know it was saved.
+    await page.waitForLoadState("networkidle");
     await page.reload();
     await expect(anagram).toHaveAttribute("aria-pressed", "false");
     await page.goto("/review");
     await expect(upcoming).not.toContainText("Valid Anagram");
     await expect(page.getByRole("list", { name: "Past reviews" })).toContainText("Valid Anagram");
+  });
+
+  test("struggling in a topic suggests new problems in it", async ({ page, viewer }) => {
+    await solveInDb(viewer.id, ["contains-duplicate", "valid-anagram"]);
+    await page.goto("/review");
+    await expect(page.getByText("Suggestions come from your reviews")).toBeVisible();
+    await ready(page);
+    const status = page.getByRole("main").getByRole("status");
+    for (const title of ["Contains Duplicate", "Valid Anagram"]) {
+      await page
+        .getByRole("article", { name: new RegExp(title) })
+        .getByRole("button", { name: /^Couldn't solve/ })
+        .click();
+      await expect(status).toContainText(`${title} comes back tomorrow`);
+    }
+
+    const topic = page.getByRole("article", { name: "Arrays & Hashing" });
+    await expect(topic).toContainText(
+      "You struggled on both of your last 2 Arrays & Hashing reviews.",
+    );
+    const suggestions = topic.getByRole("list", { name: "Suggested Arrays & Hashing problems" });
+    await expect(suggestions.getByRole("listitem").first()).toContainText("Two Sum");
+    await expect(page.getByRole("list", { name: "Your topics" })).toContainText(
+      "Arrays & HashingNeeds practice",
+    );
+
+    // Solving a suggestion counts like any solve, and it stays in place, checked, for now.
+    const toggle = suggestions.getByRole("button", { name: "Solved: Two Sum", exact: true });
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-pressed", "true");
+    await page.waitForLoadState("networkidle");
+    await page.reload();
+    await expect(toggle).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("region", { name: "Coming up" })).toContainText("Two Sum");
   });
 
   test("reviews are private", async ({ page, viewer, browser, baseURL }) => {
