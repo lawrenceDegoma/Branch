@@ -46,8 +46,8 @@ test.describe("LeetCode extension", () => {
     expect(completion).toMatchObject({ source: "EXTENSION", problem: { leetcodeSlug: "two-sum" } });
 
     // The private list: one counted, one waiting with its deletion date; code on request.
-    await section.getByRole("link", { name: "Synced submissions" }).click();
-    const list = page.getByRole("list", { name: "Synced submissions" });
+    await section.getByRole("link", { name: "Your solutions" }).click();
+    const list = page.getByRole("list", { name: "Your solutions" });
     await expect(list.getByRole("article")).toHaveCount(2);
     const waiting = list.getByRole("article").filter({ hasText: "not-in-branch-yet" });
     await expect(waiting).toContainText("Not counted yet");
@@ -56,12 +56,12 @@ test.describe("LeetCode extension", () => {
     await counted.getByText("Show code").click();
     await expect(counted.locator("pre")).toContainText("class Solution");
 
-    // Deleting a submission keeps the problem solved, and focus lands on the heading.
+    // Deleting a solution keeps the problem solved, and focus lands on the heading.
     await page.waitForFunction(() => document.readyState === "complete");
     await waiting.getByRole("button", { name: "Delete" }).click();
-    await page.getByRole("button", { name: "Delete submission" }).click();
+    await page.getByRole("button", { name: "Delete solution" }).click();
     await expect(list.getByRole("article")).toHaveCount(1);
-    await expect(page.getByRole("heading", { name: "Submissions", exact: true })).toBeFocused();
+    await expect(page.getByRole("heading", { name: "Solutions", exact: true })).toBeFocused();
 
     // Disconnecting stops the key working at once.
     await page.goto("/settings");

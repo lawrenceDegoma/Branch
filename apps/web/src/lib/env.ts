@@ -38,6 +38,32 @@ const serverEnvSchema = z
       .transform((value) => value || undefined)
       .pipe(z.string().min(16, "must be at least 16 characters").optional())
       .optional(),
+    /** Branch's analyzer service (services/analyzer); without it, code isn't analyzed. */
+    ANALYZER_URL: z
+      .string()
+      .trim()
+      .transform((value) => value || undefined)
+      .pipe(
+        z
+          .url({ protocol: /^https?$/ })
+          .refine((url) => {
+            const { protocol, hostname } = new URL(url);
+            return protocol === "https:" || hostname === "localhost" || hostname === "127.0.0.1";
+          }, "must use https (http only for localhost)")
+          .optional(),
+      )
+      .optional(),
+    /** Shared with the analyzer, which refuses every request without it. */
+    ANALYZER_SECRET: z
+      .string()
+      .trim()
+      .transform((value) => value || undefined)
+      .pipe(z.string().min(32, "must be at least 32 characters").optional())
+      .optional(),
+  })
+  .refine((env) => !env.ANALYZER_URL === !env.ANALYZER_SECRET, {
+    message: "set both or neither",
+    path: ["ANALYZER_URL"],
   })
   .refine((env) => !env.GITHUB_CLIENT_ID === !env.GITHUB_CLIENT_SECRET, {
     message: "set both or neither",

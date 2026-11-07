@@ -55,6 +55,8 @@ an old schema.
    | `CRON_SECRET`           | A new secret from `openssl rand -base64 32` (for the daily job, below)       |
    | `PRIVACY_CONTACT_EMAIL` | The address shown on `/privacy` for data questions and deletion requests     |
    | `EXTENSION_STORE_URL`   | The extension's Chrome Web Store page, once published (Settings links to it) |
+   | `ANALYZER_URL`          | The analyzer's address, once deployed (see "Code analyzer" below)            |
+   | `ANALYZER_SECRET`       | The same secret as the analyzer project's `ANALYZER_SECRET`                  |
 
    Leave `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` unset unless you want GitHub sign-in (see
    below).
@@ -67,9 +69,29 @@ an old schema.
 **Daily job:** `apps/web/vercel.json` schedules `/api/cron/daily` once a day (free on Hobby,
 which allows daily jobs, timed to within the hour). Vercel sends `CRON_SECRET` with the request;
 without the variable the job refuses to run. It counts synced extension submissions whose
-problem has since been added, and deletes ones still waiting after 30 days. A missed run is
+problem has since been added, deletes ones still waiting after 30 days, analyzes any solutions
+not yet analyzed (and retries failures), and deletes estimates whose solutions were deleted. A missed run is
 harmless: the next one catches up, and the app already hides anything past 30 days. Check it under
 **Settings → Cron Jobs**; **View Logs** shows each run's counts.
+
+**Code analyzer (optional, a second Vercel project):** solutions are analyzed by
+`services/analyzer`, a small Python service deployed separately. Without it Branch works the same,
+just without complexity estimates.
+
+1. In Vercel, **Add New → Project** and import the same repository again. Name it something like
+   `branch-analyzer`, set **Root Directory** to `services/analyzer`, and leave the framework that
+   Vercel detects (FastAPI) as it is.
+2. Under **Environment Variables** (Production), add `ANALYZER_SECRET`: a new secret from
+   `openssl rand -base64 32`. Deploy.
+3. Check it: `curl -i https://<analyzer-domain>/version` answers `401` without the secret. If it
+   answers with a Vercel sign-in page instead, turn off **Vercel Authentication** for production
+   under the analyzer project's **Settings → Deployment Protection**.
+4. In the **app's** project, add `ANALYZER_URL` (`https://<analyzer-domain>`) and the same
+   `ANALYZER_SECRET`, and redeploy. Solutions are analyzed right after they arrive; ones from
+   before are analyzed when their owner opens Your solutions, or by the next daily job.
+
+It runs on the Hobby plan's free allowance (Python is supported, and an analysis takes
+milliseconds). Each push to `main` deploys both projects.
 
 **Preview deployments:** Vercel also builds a preview for each pull request. Previews have no
 environment variables, so they fail to start. That's intended: it keeps them away from production

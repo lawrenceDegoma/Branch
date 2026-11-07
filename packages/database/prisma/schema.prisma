@@ -44,6 +44,7 @@ model User {
   extensionLinks   ExtensionConnection[]
   submissions      Submission[]
   reviewAttempts   ReviewAttempt[]
+  analysisJobs     AnalysisJob[]
 
   @@unique([email])
   @@map("user")
@@ -636,10 +637,11 @@ model ExtensionConnection {
   @@map("extension_connection")
 }
 
-/// The site a synced submission was made on.
+/// Where a solution came from: synced from a site by the extension, or pasted into Branch.
 enum SubmissionSource {
   LEETCODE
   NEETCODE
+  PASTED
 }
 
 /// An accepted submission the extension synced, made on LeetCode or neetcode.io. Private to its author: never shown to
@@ -651,8 +653,9 @@ model Submission {
   user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   source      SubmissionSource
   /// The site's ID for it (digits; CHECK): LeetCode's submission ID, or neetcode.io's judging
-  /// time in Unix milliseconds. Unique per user and source, so retries are no-ops.
-  externalId  String
+  /// time in Unix milliseconds. Unique per user and source, so retries are no-ops. Null exactly
+  /// for pasted solutions (CHECK).
+  externalId  String?
   /// The LeetCode problem's slug, as on Problem (CHECK), whichever site it was solved on.
   problemSlug String
   problemId   String?          @db.Uuid
@@ -664,9 +667,86 @@ model Submission {
   /// When the site judged it.
   submittedAt DateTime
   receivedAt  DateTime         @default(now())
+  analysis    AnalysisJob?
 
   @@unique([userId, source, externalId])
+  @@unique([id, userId])
   @@index([userId, receivedAt])
   @@index([problemSlug])
   @@map("submission")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Code analysis. A job per solution, run in the background by Branch's server, which asks the
+// analyzer service (services/analyzer) and caches its answer by code, language, problem, and
+// analyzer version. Private to the solution's author, like the code.
+// ---------------------------------------------------------------------------------------------
+
+enum AnalysisStatus {
+  QUEUED
+  RUNNING
+  DONE
+  FAILED
+}
+
+enum AnalysisOutcome {
+  OK
+  UNPARSEABLE
+  UNSUPPORTED
+}
+
+enum AnalysisConfidence {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+/// An analyzer answer, shared by identical code. Holds no code: only the key's hash.
+model AnalysisResult {
+  id              String              @id @default(uuid(7)) @db.Uuid
+  /// SHA-256 (hex) of the code with line endings and trailing spaces normalized (CHECK).
+  codeHash        String
+  language        String
+  problemSlug     String
+  analyzerVersion String
+  outcome         AnalysisOutcome
+  /// Set exactly when the outcome is OK (CHECK), e.g. "O(n log n)".
+  time            String?
+  space           String?
+  confidence      AnalysisConfidence?
+  reasons         String[]
+  limitations     String[]
+  /// Why there's no estimate, for the other outcomes.
+  message         String?
+  createdAt       DateTime            @default(now())
+  jobs            AnalysisJob[]
+
+  @@unique([codeHash, language, problemSlug, analyzerVersion])
+  @@map("analysis_result")
+}
+
+/// One solution's analysis. DONE exactly when it has a result (CHECK); FAILED after 3 attempts.
+model AnalysisJob {
+  id           String          @id @default(uuid(7)) @db.Uuid
+  submissionId String          @unique @db.Uuid
+  /// The composite key keeps a job's owner the solution's owner.
+  submission   Submission      @relation(fields: [submissionId, userId], references: [id, userId], onDelete: Cascade)
+  userId       String
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status       AnalysisStatus  @default(QUEUED)
+  /// 0-3 (CHECK).
+  attempts     Int             @default(0)
+  lockedAt     DateTime?
+  /// What went wrong last time; never contains code.
+  lastError    String?
+  resultId     String?         @db.Uuid
+  result       AnalysisResult? @relation(fields: [resultId], references: [id], onDelete: Restrict)
+  createdAt    DateTime        @default(now())
+  finishedAt   DateTime?
+
+  @@unique([submissionId, userId])
+  @@index([status, createdAt])
+  @@index([userId, finishedAt])
+  @@index([resultId])
+  @@map("analysis_job")
 }

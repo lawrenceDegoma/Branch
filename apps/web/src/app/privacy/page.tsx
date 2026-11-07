@@ -53,7 +53,8 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>What you do in Branch:</strong> groups and invites, roadmaps, the problems you
-            mark solved, your reviews and how they went, and posts, comments, and reactions.
+            mark solved, your reviews and how they went, solutions you paste, and posts, comments,
+            and reactions.
           </li>
         </ul>
 
@@ -109,6 +110,12 @@ export default function PrivacyPage() {
           </li>
           <li>Your reviews and how they went are visible only to you.</li>
           <li>
+            <strong>Code analysis:</strong> Branch estimates each solution&apos;s complexity with
+            its own analysis service, which runs on Vercel like the rest of Branch. It reads the
+            code without running it and keeps nothing; the estimate is stored with your solution and
+            shown only to you. No AI provider or other company sees your code.
+          </li>
+          <li>
             Members of your groups see your name, username, and, for problems their group&apos;s
             plan assigns, whether you&apos;ve solved them. A post about a solve appears only if you
             turn on &quot;Share my solves&quot;.
@@ -128,8 +135,8 @@ export default function PrivacyPage() {
         <ul>
           <li>Your account and what you create stay until you delete them or your account.</li>
           <li>
-            Synced submissions and their code stay until you delete them (Settings → Synced
-            submissions).
+            Your solutions (synced or pasted), their code, and their estimates stay until you delete
+            them (Settings → Your solutions). An estimate goes within a day of its solution.
           </li>
           <li>
             A synced submission for a problem that isn&apos;t in Branch is deleted after 30 days
@@ -144,7 +151,7 @@ export default function PrivacyPage() {
         <h2>Your choices</h2>
         <ul>
           <li>Disconnect the extension from its popup or from Settings at any time.</li>
-          <li>Delete any synced submission, or all of them, from Settings → Synced submissions.</li>
+          <li>Delete any solution, or all of them, from Settings → Your solutions.</li>
           <li>Turn sharing on or off, and delete your posts and comments, whenever you like.</li>
           <li>
             To delete your account and everything in it, or for any question about your data,{" "}

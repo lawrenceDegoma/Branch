@@ -2,7 +2,7 @@ import "server-only";
 import { prisma } from "@branch/database";
 import { DomainError, NotFoundError } from "@/lib/errors";
 import { setCompletion } from "@/modules/progress/service";
-import { submissionIdSchema, type SubmissionPayload } from "./schemas";
+import { pastedSolutionSchema, submissionIdSchema, type SubmissionPayload } from "./schemas";
 
 // Submissions the extension synced. Private to their author. A submission counts as a completion
 // once its problem is in Branch's catalog; until then it waits, and a waiting submission is
@@ -147,6 +147,22 @@ export async function listSubmissions(
       submittedAt: true,
       receivedAt: true,
       problem: { select: { title: true, difficulty: true } },
+      analysis: {
+        select: {
+          status: true,
+          result: {
+            select: {
+              outcome: true,
+              time: true,
+              space: true,
+              confidence: true,
+              reasons: true,
+              limitations: true,
+              message: true,
+            },
+          },
+        },
+      },
     },
   });
   const page = rows.slice(0, limit);
@@ -159,6 +175,56 @@ export async function listSubmissions(
   };
 }
 export type SubmissionItem = Awaited<ReturnType<typeof listSubmissions>>["items"][number];
+
+/**
+ * Saves a solution the person pastes for a problem they've solved, so it can be analyzed. It
+ * doesn't change whether the problem counts as solved. Shares the extension's rate limit.
+ */
+export async function pasteSolution(userId: string, input: unknown, now = new Date()) {
+  const parsed = pastedSolutionSchema.safeParse(input);
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0]!;
+    throw new DomainError("INVALID", issue.message, String(issue.path[0] ?? "code"));
+  }
+  const { problemId, language, code } = parsed.data;
+  const completion = await prisma.problemCompletion.findUnique({
+    where: { userId_problemId: { userId, problemId } },
+    select: { problem: { select: { leetcodeSlug: true } } },
+  });
+  if (!completion) {
+    throw new DomainError("NOT_SOLVED", "Choose a problem you've solved.", "problemId");
+  }
+  const recent = await prisma.submission.count({
+    where: { userId, receivedAt: { gt: new Date(now.getTime() - 60_000) } },
+  });
+  if (recent >= SUBMISSIONS_PER_MINUTE) {
+    throw new DomainError("RATE_LIMITED", "Too many solutions at once. Try again in a minute.");
+  }
+  return prisma.submission.create({
+    data: {
+      userId,
+      source: "PASTED",
+      externalId: null,
+      problemSlug: completion.problem.leetcodeSlug,
+      problemId,
+      language,
+      code,
+      submittedAt: now,
+      receivedAt: now,
+    },
+    select: { id: true },
+  });
+}
+
+/** Problems the person has solved, for choosing which one a pasted solution is for. */
+export async function listSolvedProblems(userId: string) {
+  const rows = await prisma.problemCompletion.findMany({
+    where: { userId },
+    select: { problem: { select: { id: true, title: true } } },
+    orderBy: { problem: { title: "asc" } },
+  });
+  return rows.map((row) => row.problem);
+}
 
 /** Deletes one of the viewer's submissions and its code. The completion, if any, stays. */
 export async function deleteSubmission(userId: string, submissionId: string) {

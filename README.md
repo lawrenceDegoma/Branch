@@ -39,8 +39,11 @@ not affiliated with LeetCode or NeetCode.
   this week across your groups, next week for working ahead, and your backlog. The group page
   shows who solved this week's problems and a branch graph of everyone's progress.
 
-Posts are text and code only (no image uploads, by choice). Code analysis and chat are still to
-come (see the PRD).
+- **Code analysis:** each solution (synced, or pasted on Your solutions) gets an estimate of its
+  time and space complexity, with a confidence level and the reasons. Python only for now; read
+  by Branch's own analyzer, never run, and private to you.
+
+Posts are text and code only (no image uploads, by choice). Chat is still to come (see the PRD).
 
 ## Try it locally
 
@@ -147,7 +150,9 @@ infra/docker/        Docker Compose for local PostgreSQL (dev + test databases)
 docs/                Architecture decisions and milestone log
 ```
 
-The analysis service (`services/analyzer`) is created only when Phase 4 begins.
+`services/analyzer` is the code analyzer (Python, FastAPI): `pnpm test:analyzer` runs its tests and
+evaluation cases, and `pnpm analyzer:dev` serves it at http://localhost:8787 (set `ANALYZER_URL`
+and `ANALYZER_SECRET` in `.env` to use it locally). It needs [uv](https://docs.astral.sh/uv/).
 
 ## The Chrome extension
 
@@ -177,4 +182,5 @@ submission is in [docs/LEETCODE-SPIKE.md](docs/LEETCODE-SPIKE.md) and
 ## Status
 
 Phases 1 (Foundation), 2 (the social feed), and 3 (the LeetCode extension, published on the Chrome
-Web Store) are complete. Phase 4 (review and analysis) is in progress: the review queue and practice suggestions are done. See [docs/DECISIONS.md](docs/DECISIONS.md) for the milestone log and known limitations.
+Web Store) are complete. Phase 4 (review and analysis) is in progress: the review queue, practice suggestions, and code
+analysis are done. See [docs/DECISIONS.md](docs/DECISIONS.md) for the milestone log and known limitations.

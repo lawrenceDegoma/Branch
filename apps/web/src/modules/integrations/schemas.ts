@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { SUBMISSION_CODE_MAX } from "@branch/shared/extension";
+import { PASTE_LANGUAGES } from "./languages";
 
 export {
   SUBMISSION_BODY_MAX_BYTES,
@@ -9,3 +11,19 @@ export {
 
 export const connectionIdSchema = z.uuid();
 export const submissionIdSchema = z.uuid();
+
+/** A solution pasted into Branch for a problem the person has solved. */
+export const pastedSolutionSchema = z.object({
+  problemId: z.uuid("Choose a problem you've solved."),
+  language: z.enum(
+    PASTE_LANGUAGES.map((l) => l.slug) as [string, ...string[]],
+    "Choose a language.",
+  ),
+  code: z
+    .string()
+    .max(
+      SUBMISSION_CODE_MAX,
+      `Code can be at most ${SUBMISSION_CODE_MAX.toLocaleString("en")} characters.`,
+    )
+    .refine((code) => code.trim().length > 0, "Paste your solution."),
+});

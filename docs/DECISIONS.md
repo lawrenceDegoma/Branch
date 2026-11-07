@@ -778,7 +778,7 @@ agreed to the listing, disclosure, and `/privacy` naming neetcode.io.
 - **Data:** migration `submission_sites` renames `SubmissionSource.EXTENSION` to `LEETCODE` (in
   place) and adds `NEETCODE`. The contract gains `source` (default `LEETCODE`, so 1.0.0 keeps
   working); neetcode.io's ID is its judging time in milliseconds. The background only accepts a
-  submission from a tab on the site it names. Synced submissions show the site.
+  submission from a tab on the site it names. Synced submissions (now Your solutions) show the site.
 - **Extension 1.1.0:** shared traffic watcher (`src/traffic.ts`), `src/neetcode.ts` detector,
   `neetcode-observer` content script, `site-relay` (was `leetcode-relay`) for both sites. New host
   match, so Chrome asks existing users to approve it. Disclosure, welcome page, popup, `/privacy`,
@@ -840,6 +840,43 @@ suggestions, M21 code analysis, M22 journeys and docs):
   before the struggle is never suggested.
 - **UI:** Practice and Topics sections on the Review page. Complexity estimates (M21) don't feed
   any of this.
+
+### M21 — Code analysis (complete)
+
+- **Analyzer** (`services/analyzer`, Python 3.13, FastAPI, locked with `uv` to packages at least
+  two weeks old): stateless, reads Python with `ast` and never runs it, keeps and logs nothing.
+  `POST /analyze` and `GET /version`, both requiring `Authorization: Bearer ANALYZER_SECRET`; no
+  public docs. Deployed as a second Vercel project (Hobby: Python is generally available, 300 s
+  functions, 1M invocations and 4 CPU-hours a month; personal non-commercial use, like the app).
+  Confirmed against Vercel's documentation on 2026-11-07.
+- **Rules** (`branch_analyzer/complexity.py`): loops over the input multiply, sorting is n log n,
+  heap operations log n, `in` on a list or slicing is n, binary search halving is log n;
+  amortized patterns (a pointer that never resets, a stack popped inside a loop, a queue drained
+  level by level) count once overall; recursion is classified as memoized (n per argument),
+  visited-marking (each item once), tree (each node once), halving, linear, or branching (2ⁿ).
+  Each estimate has a confidence (high, medium, low), the reasons that produced it, and its
+  limits; amortized patterns, `while` loops, inputs of unknown type, and recursion lower the
+  confidence. 30 evaluation cases in `tests/test_complexity.py` record what a careful reviewer
+  would say. Other languages answer "unsupported". The version (`2026.11.1`) changes with the
+  rules.
+- **Pipeline** (`apps/web/src/modules/analysis`): the analyzer is behind an interface
+  (`Analyzer`; `httpAnalyzer` in production, fakes in tests). `analysis_job` per solution, claimed
+  with `FOR UPDATE SKIP LOCKED`; 3 attempts, abandoned runs retried after 10 minutes; 100 analyses
+  per person per day. `analysis_result` is cached by (normalized code hash, language, problem,
+  analyzer version) and holds no code. Runs after a sync or paste (`after()`), when someone opens
+  Your solutions with analyses waiting (the page then refreshes itself a few times), and from the
+  daily job (up to 200), which also deletes estimates whose solutions are gone. Without
+  `ANALYZER_URL` nothing runs and nothing is shown.
+- **Paste your solution** (owner decision): on the renamed **Your solutions** page (was Synced
+  submissions; same address), for problems the person has marked solved; it doesn't change
+  completion. Submissions gain source `PASTED` (no external ID; CHECK). 15 languages offered;
+  only Python is analyzed for now.
+- **UI:** "Probably O(n) time and O(1) space. High confidence, from reading the code." with the
+  reasons and limits behind a disclosure. Never a verdict and never an optimal solution; the
+  estimate doesn't feed review or suggestions.
+- **Migrations:** `pasted_solutions_source` (enum value, on its own so the next can use it) and
+  `code_analysis` (tables, a composite foreign key keeping a job's owner the solution's owner, and
+  CHECKs). `/privacy` describes the analysis service.
 
 ## Phase 3 summary
 

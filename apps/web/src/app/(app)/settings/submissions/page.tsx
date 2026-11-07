@@ -2,29 +2,43 @@ import Link from "next/link";
 import { z } from "zod";
 import { Markdown } from "@/components/feed/markdown";
 import { ConfirmAction } from "@/components/forms/confirm-action";
+import { PasteSolutionForm } from "@/components/integrations/paste-solution-form";
+import { RefreshWhileAnalyzing } from "@/components/integrations/refresh-while-analyzing";
+import { SolutionAnalysis } from "@/components/integrations/solution-analysis";
 import { DifficultyPill } from "@/components/roadmaps/difficulty-pill";
 import { PageHeader } from "@/components/shell/page-header";
 import { EmptyState } from "@/components/states/empty-state";
 import { buttonVariants } from "@/components/ui/button";
+import { serverEnv } from "@/lib/env";
 import { formatDate, formatDateTime } from "@/lib/format";
+import { analyzeAfterResponse } from "@/modules/analysis/trigger";
 import { requireViewer } from "@/modules/auth/session";
 import { deleteAllSubmissionsAction, deleteSubmissionAction } from "@/modules/integrations/actions";
-import { codeFence, languageLabel } from "@/modules/integrations/languages";
-import { submissionIdSchema } from "@/modules/integrations/schemas";
 import {
+  ANALYZED_LANGUAGES,
+  codeFence,
+  languageLabel,
+  PASTE_LANGUAGES,
+} from "@/modules/integrations/languages";
+import { SUBMISSION_CODE_MAX, submissionIdSchema } from "@/modules/integrations/schemas";
+import {
+  listSolvedProblems,
   listSubmissions,
   matchWaitingSubmissions,
   WAITING_DAYS,
   type SubmissionItem,
 } from "@/modules/integrations/submissions";
 
-export const metadata = { title: "Synced submissions" };
+export const metadata = { title: "Your solutions" };
 
-const SITE_LABEL = { LEETCODE: "LeetCode", NEETCODE: "neetcode.io" } as const;
+const SOURCE_LABEL = { LEETCODE: "LeetCode", NEETCODE: "neetcode.io", PASTED: "Pasted" } as const;
 
 const querySchema = z.object({ before: submissionIdSchema.optional().catch(undefined) });
 
-/** The viewer's own synced submissions and their code. Nobody else can see this page's data. */
+/**
+ * The viewer's own solutions (synced by the extension, or pasted), their code, and their analysis.
+ * Nobody else can see this page's data.
+ */
 export default async function SubmissionsPage({
   searchParams,
 }: {
@@ -34,27 +48,63 @@ export default async function SubmissionsPage({
   const { before } = querySchema.parse(await searchParams);
   // Anything waiting whose problem has been added since counts now, not at the next daily run.
   await matchWaitingSubmissions({ userId: user.id });
-  const { items, nextCursor } = await listSubmissions(user.id, { before });
+  const [{ items, nextCursor }, solved] = await Promise.all([
+    listSubmissions(user.id, { before }),
+    listSolvedProblems(user.id),
+  ]);
+  const analysisOn = Boolean(serverEnv().ANALYZER_URL);
+  const analyzing =
+    analysisOn &&
+    items.some(
+      (item) =>
+        ANALYZED_LANGUAGES.has(item.language) &&
+        (!item.analysis || item.analysis.status === "QUEUED" || item.analysis.status === "RUNNING"),
+    );
+  // Solutions still waiting (say, synced before analysis was set up) start now, not at the daily
+  // run; the page then looks again by itself.
+  if (analyzing) analyzeAfterResponse(user.id);
 
   return (
     <div className="max-w-3xl">
+      {analyzing ? <RefreshWhileAnalyzing /> : null}
       <PageHeader
-        title="Synced submissions"
+        title="Your solutions"
         description={
           <>
-            Accepted submissions the extension synced from LeetCode and neetcode.io. Only you can
-            see them. A submission for a problem that isn&apos;t in Branch counts once someone adds
-            it, and is deleted after {WAITING_DAYS} days otherwise.{" "}
+            Solutions the extension synced from LeetCode and neetcode.io, and ones you pasted, with
+            an estimate of each one&apos;s complexity. Only you can see them. A synced submission
+            for a problem that isn&apos;t in Branch counts once someone adds it, and is deleted
+            after {WAITING_DAYS} days otherwise.{" "}
             <Link href="/settings#extension" className="text-ink underline underline-offset-4">
               Extension settings
             </Link>
           </>
         }
       />
+      <details className="group mb-8 rounded-xl bg-surface">
+        <summary className="flex min-h-12 cursor-pointer items-center rounded-xl px-4 font-medium">
+          Paste a solution
+        </summary>
+        <div className="flex flex-col gap-3 px-4 pb-4">
+          <p className="text-ink-muted">
+            For a problem you solved without the extension. It&apos;s analyzed like a synced one,
+            and doesn&apos;t change whether the problem counts as solved.
+          </p>
+          {solved.length > 0 ? (
+            <PasteSolutionForm
+              problems={solved}
+              languages={PASTE_LANGUAGES}
+              codeMax={SUBMISSION_CODE_MAX}
+            />
+          ) : (
+            <p>Mark a problem solved first, then paste your solution for it here.</p>
+          )}
+        </div>
+      </details>
       <section aria-labelledby="submissions-heading" className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 id="submissions-heading" tabIndex={-1} className="text-base font-medium">
-            {before ? "Older submissions" : "Submissions"}
+            {before ? "Older solutions" : "Solutions"}
           </h2>
           {items.length > 0 ? (
             <ConfirmAction
@@ -63,8 +113,8 @@ export default async function SubmissionsPage({
               focusAfterRemoval="submissions-heading"
               trigger="Delete all"
               triggerVariant="outline"
-              title="Delete every synced submission?"
-              description="Their code is deleted for good. Problems they marked solved stay solved."
+              title="Delete every solution?"
+              description="Their code and analysis are deleted for good. Problems they marked solved stay solved."
               confirmLabel="Delete all"
               pendingLabel="Deleting…"
               destructive
@@ -80,20 +130,20 @@ export default async function SubmissionsPage({
           </Link>
         ) : null}
         {items.length > 0 ? (
-          <ol aria-label="Synced submissions" className="flex flex-col gap-3">
+          <ol aria-label="Your solutions" className="flex flex-col gap-3">
             {items.map((item) => (
               <li key={item.id}>
-                <SubmissionCard item={item} timeZone={profile.timezone} />
+                <SubmissionCard item={item} timeZone={profile.timezone} analysisOn={analysisOn} />
               </li>
             ))}
           </ol>
         ) : (
           <EmptyState
-            title={before ? "No older submissions" : "Nothing synced yet"}
+            title={before ? "No older solutions" : "No solutions yet"}
             description={
               before
                 ? "You've reached the first one."
-                : "Connect the extension in Settings, then submit on LeetCode or neetcode.io. Accepted submissions appear here."
+                : "Connect the extension in Settings and submit on LeetCode or neetcode.io, or paste a solution above. They appear here."
             }
           />
         )}
@@ -102,7 +152,7 @@ export default async function SubmissionsPage({
             href={`/settings/submissions?before=${nextCursor}`}
             className={buttonVariants({ variant: "outline", className: "self-center" })}
           >
-            Older submissions
+            Older solutions
           </Link>
         ) : null}
       </section>
@@ -110,7 +160,15 @@ export default async function SubmissionsPage({
   );
 }
 
-function SubmissionCard({ item, timeZone }: { item: SubmissionItem; timeZone: string }) {
+function SubmissionCard({
+  item,
+  timeZone,
+  analysisOn,
+}: {
+  item: SubmissionItem;
+  timeZone: string;
+  analysisOn: boolean;
+}) {
   const headingId = `submission-${item.id}`;
   return (
     <article aria-labelledby={headingId} className="flex flex-col gap-3 rounded-xl bg-surface p-4">
@@ -129,7 +187,7 @@ function SubmissionCard({ item, timeZone }: { item: SubmissionItem; timeZone: st
             {item.problem ? <DifficultyPill difficulty={item.problem.difficulty} /> : null}
           </h3>
           <p className="text-xs text-ink-muted">
-            {SITE_LABEL[item.source]} · {languageLabel(item.language)} ·{" "}
+            {SOURCE_LABEL[item.source]} · {languageLabel(item.language)} ·{" "}
             <time
               dateTime={item.submittedAt.toISOString()}
               title={formatDateTime(item.submittedAt, timeZone)}
@@ -143,9 +201,9 @@ function SubmissionCard({ item, timeZone }: { item: SubmissionItem; timeZone: st
           fields={{ submissionId: item.id }}
           focusAfterRemoval="submissions-heading"
           trigger="Delete"
-          title="Delete this submission?"
-          description="Its code is deleted for good. If it marked the problem solved, the problem stays solved."
-          confirmLabel="Delete submission"
+          title="Delete this solution?"
+          description="Its code and analysis are deleted for good. If it marked the problem solved, the problem stays solved."
+          confirmLabel="Delete solution"
           pendingLabel="Deleting…"
           destructive
         />
@@ -156,6 +214,7 @@ function SubmissionCard({ item, timeZone }: { item: SubmissionItem; timeZone: st
           roadmap, and is deleted on {formatDate(item.waitingUntil, timeZone, true)} otherwise.
         </p>
       ) : null}
+      {analysisOn ? <SolutionAnalysis analysis={item.analysis} language={item.language} /> : null}
       <details className="group">
         <summary className="inline-flex min-h-8 cursor-pointer items-center rounded-full font-medium text-ink-muted hover:text-ink pointer-coarse:min-h-11">
           <span className="group-open:hidden">Show code</span>

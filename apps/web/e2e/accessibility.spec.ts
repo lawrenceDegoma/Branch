@@ -283,8 +283,13 @@ for (const colorScheme of ["dark", "light"] as const) {
         ],
       });
       await page.goto("/settings/submissions");
+      // Opening the page starts their analysis; the estimate appears without a reload.
+      const counted = page.getByRole("article", { name: /Two Sum/ });
+      await expect(counted).toContainText("Probably O(1) time", { timeout: 15_000 });
+      await counted.getByText("Why, and what it can't tell").click();
       await page.getByText("Show code").first().click();
       await expect(page.getByRole("main").locator("pre").first()).toBeVisible();
+      await page.locator("summary", { hasText: "Paste a solution" }).click();
       await expectNoViolations(page);
     });
 

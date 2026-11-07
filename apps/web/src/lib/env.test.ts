@@ -55,6 +55,32 @@ describe("parseServerEnv", () => {
     }
   });
 
+  it("takes the analyzer's address and secret as a pair, https except on localhost", () => {
+    const secret = "s".repeat(32);
+    const env = parseServerEnv({
+      ...valid,
+      ANALYZER_URL: "https://branch-analyzer.vercel.app",
+      ANALYZER_SECRET: secret,
+    });
+    expect(env.ANALYZER_URL).toBe("https://branch-analyzer.vercel.app");
+    expect(
+      parseServerEnv({ ...valid, ANALYZER_URL: "http://localhost:8000", ANALYZER_SECRET: secret })
+        .ANALYZER_URL,
+    ).toBe("http://localhost:8000");
+    expect(parseServerEnv({ ...valid, ANALYZER_URL: "", ANALYZER_SECRET: "" }).ANALYZER_URL).toBe(
+      undefined,
+    );
+    expect(() =>
+      parseServerEnv({ ...valid, ANALYZER_URL: "http://example.com", ANALYZER_SECRET: secret }),
+    ).toThrow(/ANALYZER_URL/);
+    expect(() => parseServerEnv({ ...valid, ANALYZER_URL: "https://a.example" })).toThrow(
+      /ANALYZER_URL/,
+    );
+    expect(() =>
+      parseServerEnv({ ...valid, ANALYZER_URL: "https://a.example", ANALYZER_SECRET: "short" }),
+    ).toThrow(/ANALYZER_SECRET/);
+  });
+
   it("treats blank GitHub credentials as absent", () => {
     const env = parseServerEnv({ ...valid, GITHUB_CLIENT_ID: " ", GITHUB_CLIENT_SECRET: "" });
     expect(env.GITHUB_CLIENT_ID).toBeUndefined();

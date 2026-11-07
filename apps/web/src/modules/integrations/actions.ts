@@ -1,11 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { formStateFromError, type FormState } from "@/lib/form";
+import { formStateFromError, formValues, type FormState } from "@/lib/form";
 import { requireViewer } from "@/modules/auth/session";
 import { createConnection, revokeConnection } from "./connections";
 import { connectionIdSchema, submissionIdSchema } from "./schemas";
-import { deleteAllSubmissions, deleteSubmission } from "./submissions";
+import { analyzeAfterResponse } from "@/modules/analysis/trigger";
+import { deleteAllSubmissions, deleteSubmission, pasteSolution } from "./submissions";
 
 function refresh() {
   revalidatePath("/settings");
@@ -53,12 +54,29 @@ export async function deleteSubmissionAction(
     return formStateFromError(error);
   }
   refresh();
-  return { status: "success", message: "Submission deleted." };
+  return { status: "success", message: "Solution deleted." };
 }
 
 export async function deleteAllSubmissionsAction(_prev: FormState): Promise<FormState> {
   const { user } = await requireViewer();
   await deleteAllSubmissions(user.id);
   refresh();
-  return { status: "success", message: "All synced submissions deleted." };
+  return { status: "success", message: "All solutions deleted." };
+}
+
+/** Saves a pasted solution; it's analyzed in the background right after. */
+export async function pasteSolutionAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const { user } = await requireViewer();
+  const values = formValues(formData, ["problemId", "language", "code"]);
+  try {
+    await pasteSolution(user.id, values);
+  } catch (error) {
+    return formStateFromError(error, values);
+  }
+  analyzeAfterResponse(user.id);
+  refresh();
+  return { status: "success", message: "Solution saved. Refresh in a moment to see its analysis." };
 }

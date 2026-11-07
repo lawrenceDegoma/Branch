@@ -28,6 +28,15 @@ const languages: Record<string, { label: string; highlight?: string }> = {
   postgresql: { label: "PostgreSQL", highlight: "sql" },
 };
 
+/** Languages offered when pasting a solution, most common first. */
+export const PASTE_LANGUAGES = [
+  "python3", "java", "cpp", "javascript", "typescript", "csharp", "golang", "kotlin", "swift",
+  "rust", "c", "ruby", "scala", "php", "dart",
+].map((slug) => ({ slug, label: languages[slug]!.label })); // prettier-ignore
+
+/** Languages the analyzer reads; others get "not analyzed yet". */
+export const ANALYZED_LANGUAGES = new Set(["python3", "python"]);
+
 export function languageLabel(slug: string): string {
   return languages[slug]?.label ?? slug;
 }

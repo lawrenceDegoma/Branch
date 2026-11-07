@@ -82,7 +82,7 @@ export function ExtensionPanel({
           href="/settings/submissions"
           className={buttonVariants({ variant: "ghost", className: "-ml-3" })}
         >
-          Synced submissions
+          Your solutions
         </Link>
       </div>
     </div>

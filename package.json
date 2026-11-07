@@ -14,7 +14,7 @@
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
     "test:e2e": "pnpm --filter @branch/extension build:e2e && pnpm --filter @branch/web test:e2e",
-    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm test:integration",
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm test:analyzer && pnpm test:integration",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "db:up": "docker compose -f infra/docker/compose.yml up -d --wait",
@@ -29,7 +29,9 @@
     "db:import-curated": "pnpm --filter @branch/database import-curated",
     "auth:reset-link": "pnpm --filter @branch/database reset-link",
     "db:load-curated": "pnpm db:import-curated -- --catalog prisma/data/catalog.json prisma/data/roadmaps/patterns-150.json prisma/data/roadmaps/essentials-75.json",
-    "build:extension": "pnpm --filter @branch/extension build"
+    "build:extension": "pnpm --filter @branch/extension build",
+    "test:analyzer": "uv run --directory services/analyzer pytest -q",
+    "analyzer:dev": "uv run --directory services/analyzer --env-file ../../.env uvicorn app:app --port 8787 --reload"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

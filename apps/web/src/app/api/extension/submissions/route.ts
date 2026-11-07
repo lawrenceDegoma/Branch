@@ -1,11 +1,12 @@
 import { DomainError } from "@/lib/errors";
 import { errorContext, logger } from "@/lib/logger";
+import { analyzeAfterResponse } from "@/modules/analysis/trigger";
 import { authenticateExtension } from "@/modules/integrations/connections";
 import { apiError, json, unauthorized } from "@/modules/integrations/http";
 import { SUBMISSION_BODY_MAX_BYTES, submissionPayloadSchema } from "@/modules/integrations/schemas";
 import { ingestSubmission } from "@/modules/integrations/submissions";
 
-/** The extension reports one accepted submission. Idempotent per LeetCode submission ID. */
+/** The extension reports one accepted submission. Idempotent per site and submission ID. */
 export async function POST(request: Request) {
   const auth = await authenticateExtension(request.headers.get("authorization"));
   if (!auth) return unauthorized();
@@ -28,6 +29,8 @@ export async function POST(request: Request) {
 
   try {
     const result = await ingestSubmission(auth.userId, parsed.data);
+    // Analysis never holds up syncing: it runs after the response is sent.
+    if (result.stored === "new") analyzeAfterResponse(auth.userId);
     return json(result);
   } catch (error) {
     if (error instanceof DomainError) {

@@ -11,3 +11,7 @@ playwright-report/
 test-results/
 **/.output/
 **/.wxt/
+
+# Python (services/analyzer)
+**/.venv/
+**/.pytest_cache/

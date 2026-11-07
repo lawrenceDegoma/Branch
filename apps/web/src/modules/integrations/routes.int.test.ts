@@ -72,7 +72,9 @@ describe("POST /api/extension/submissions", () => {
 
   it("refuses requests without a working token", async () => {
     const { token } = await connected();
-    for (const t of [null, "brx_wrong", `${token.slice(0, -1)}A`]) {
+    // A token one character off (always a different character, so never the real one).
+    const altered = token.slice(0, -1) + (token.endsWith("A") ? "B" : "A");
+    for (const t of [null, "brx_wrong", altered]) {
       const response = await send(t, body());
       expect(response.status).toBe(401);
       expect((await response.json()).error.code).toBe("UNAUTHORIZED");
@@ -129,6 +131,12 @@ describe("GET /api/cron/daily", () => {
     expect((await run("Bearer wrong")).status).toBe(401);
     const response = await run(`Bearer ${CRON_SECRET}`);
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ matched: 0, purged: 0 });
+    // No analyzer is configured in tests, so analysis reports null.
+    expect(await response.json()).toEqual({
+      matched: 0,
+      purged: 0,
+      unusedResults: 0,
+      analysis: null,
+    });
   });
 });
