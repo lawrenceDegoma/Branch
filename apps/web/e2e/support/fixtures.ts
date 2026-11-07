@@ -127,6 +127,23 @@ export async function createPlanInDb(groupId: string, adminId: string, startDate
   return plan;
 }
 
+/**
+ * Marks problems solved for a user directly in the database, with reviews due `dueInDays` from
+ * today (0: due now). Test accounts use UTC.
+ */
+export async function solveInDb(userId: string, slugs: string[], dueInDays = 0) {
+  const problems = await prisma.problem.findMany({ where: { leetcodeSlug: { in: slugs } } });
+  const dueOn = toDbDate(addDays(dateInTimeZone(new Date(), "UTC"), dueInDays));
+  for (const problem of problems) {
+    await prisma.problemCompletion.create({
+      data: { userId, problemId: problem.id, source: "MANUAL", completedAt: new Date() },
+    });
+    await prisma.reviewSchedule.create({
+      data: { userId, problemId: problem.id, dueOn, intervalDays: 3, ease: 250 },
+    });
+  }
+}
+
 /** A second signed-in person in their own browser context. */
 export async function anotherUser(browser: Browser, baseURL: string, prefix = "friend") {
   const context = await browser.newContext({ baseURL });

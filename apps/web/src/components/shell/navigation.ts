@@ -1,12 +1,13 @@
-import { CircleUser, House, Map as MapIcon, Users, type LucideIcon } from "lucide-react";
+import { CircleUser, History, House, Map as MapIcon, Users, type LucideIcon } from "lucide-react";
 
 export type NavItem = { href: string; label: string; icon: LucideIcon };
 
-// PRD §4: Home, Roadmaps, Groups, Review, Profile. Review is hidden until Phase 4 ships it.
+// PRD §4: Home, Roadmaps, Groups, Review, Profile.
 export const primaryNav: NavItem[] = [
   { href: "/home", label: "Home", icon: House },
   { href: "/roadmaps", label: "Roadmaps", icon: MapIcon },
   { href: "/groups", label: "Groups", icon: Users },
+  { href: "/review", label: "Review", icon: History },
   { href: "/profile", label: "Profile", icon: CircleUser },
 ];
 

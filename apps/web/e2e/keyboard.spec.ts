@@ -1,5 +1,12 @@
 import { prisma } from "@branch/database";
-import { createGroupInDb, createPlanInDb, expect, mondayWeeksAgo, test } from "./support/fixtures";
+import {
+  createGroupInDb,
+  createPlanInDb,
+  expect,
+  mondayWeeksAgo,
+  solveInDb,
+  test,
+} from "./support/fixtures";
 
 const ready = (page: import("@playwright/test").Page) =>
   page.waitForFunction(() => document.readyState === "complete");
@@ -159,6 +166,7 @@ test.describe("reflow at 320px", () => {
         submittedAt: new Date(),
       },
     });
+    await solveInDb(viewer.id, ["best-time-to-buy-and-sell-stock"]);
     await page.goto("/roadmaps");
     await page.getByRole("link", { name: /^Patterns 150/ }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Patterns 150" })).toBeVisible();
@@ -175,6 +183,7 @@ test.describe("reflow at 320px", () => {
       "/settings/submissions",
       "/privacy",
       "/profile",
+      "/review",
     ];
     for (const path of paths) {
       await page.goto(path);

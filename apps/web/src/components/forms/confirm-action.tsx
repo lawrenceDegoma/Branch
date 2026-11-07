@@ -20,7 +20,7 @@ import { initialFormState, type FormState } from "@/lib/form";
  * dialog's focus return) with it. Once the trigger is gone, focus moves to `id` instead of
  * falling to the page body.
  */
-function focusWhenRemoved(trigger: HTMLElement | null, id: string) {
+export function focusWhenRemoved(trigger: HTMLElement | null, id: string) {
   let frames = 0;
   const check = () => {
     if (trigger && !trigger.isConnected) document.getElementById(id)?.focus();

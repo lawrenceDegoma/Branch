@@ -761,6 +761,45 @@ extension, which it learns by pinging the extension's content script on the page
 the page hydrates). Only a `https://chromewebstore.google.com` link is accepted. A direct zip
 download was not offered: installing unpacked needs Developer mode and gets no updates.
 
+## Review and analysis (Phase 4)
+
+The extension was published to the Chrome Web Store (public) on 2026-11-06 and
+`EXTENSION_STORE_URL` is set in production.
+
+Owner decisions (2026-11-06), approving the Phase 4 plan (M19 review queue, M20 weak topics and
+suggestions, M21 code analysis, M22 journeys and docs):
+
+- **Four review outcomes:** Couldn't solve, Struggled, Solved, Easy.
+- **The analyzer is Python (FastAPI)**, a separate service hosted free as a second Vercel project
+  (its free-plan terms to be confirmed before relying on it, in M21). Jobs wait in a Postgres
+  table; no paid queue. Python solutions first; other languages show "not analyzed yet".
+- **No AI model** for now: analysis is rule-based and free. Adding one later needs an API key, a
+  spending cap set by the owner, and an opt-in disclosure.
+- **Paste your solution:** people without the extension can paste their own solution to a solved
+  problem (private, deletable) so it can be analyzed (M21).
+- The complexity estimate is information for the user only; it doesn't steer suggestions.
+
+### M19 — Review queue (complete)
+
+- **Schedule** (`modules/review/schedule.ts`, pure): a solved problem first comes back 3 days
+  later. Couldn't solve → tomorrow; Struggled → the gap × 1.2 (at least 2 days); Solved → the gap
+  × ease; Easy → the gap × ease × 1.3. Ease starts at 2.5, drops after Couldn't solve and
+  Struggled, rises after Easy, and stays within 1.3–3.0; gaps are capped at 180 days. Each button
+  says when the problem would come back.
+- **Data:** `review_schedule` (one row per user and solved problem, due date as a calendar date in
+  the user's timezone) and `review_attempt` (the private history). The schedule's composite
+  foreign key to `problem_completion` cascades, so a schedule exists exactly while the problem is
+  solved; `setCompletion` creates it in the completion's transaction. Unsolving deletes the
+  schedule and keeps past attempts. CHECKs bound gaps (1–365) and ease (130–300).
+- **Rating** is allowed only when due, and the update is conditional on the schedule being
+  unchanged, so a double submit or a second tab records one review.
+- **Existing solves** (migration `review_queue`) join the queue three a day per person, oldest
+  first, from the day after the migration runs; a recent solve still waits its 3 days.
+- **UI:** the Review tab (now in the navigation, between Groups and Profile) shows due reviews (10
+  at a time), the next five coming up, and a paged history. Home's weekly summary shows how many
+  are due. Rating removes the card, announces when it comes back, and moves focus to the "Due
+  today" heading. Reviews never change completion, never post, and only their owner sees them.
+
 ## Phase 3 summary
 
 Done when "supported accepted submissions sync once without exposing source to groups; failures

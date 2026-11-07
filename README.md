@@ -28,15 +28,17 @@ not affiliated with LeetCode or NeetCode.
   unmarking takes the post down, and you can hide any single one.
 - **Reactions and comments:** react to posts with kudos, impressive, helpful, or same here, and
   discuss it in a comment thread that opens inside the post (spoilers work there too).
-- **LeetCode extension (in progress):** connect a browser in Settings, and accepted LeetCode
-  submissions sync as completions. Your code stays private on a Synced submissions page you can
-  clear at any time.
+- **LeetCode extension:** install it from the Chrome Web Store, connect it in Settings, and
+  accepted LeetCode submissions sync as completions. Your code stays private on a Synced
+  submissions page you can clear at any time.
+- **Review:** problems you've solved come back on a spaced schedule. Rate each review (couldn't
+  solve, struggled, solved, easy) and it sets when the problem returns. Private to you.
 - **Progress:** mark problems solved once and it counts in every group and roadmap. Home shows
   this week across your groups, next week for working ahead, and your backlog. The group page
   shows who solved this week's problems and a branch graph of everyone's progress.
 
-Posts are text and code only (no image uploads, by choice). There is no review queue, browser
-extension, or chat yet; those are later phases (see the PRD).
+Posts are text and code only (no image uploads, by choice). Suggestions, code analysis, and chat
+are still to come (see the PRD).
 
 ## Try it locally
 
@@ -171,5 +173,5 @@ Branch origin it was built for (production by default). How it detects a submiss
 
 ## Status
 
-Phase 1 (Foundation) and Phase 2 (the social feed) are complete. Phase 3 (the browser extension)
-starts once its plan is approved. See [docs/DECISIONS.md](docs/DECISIONS.md) for the milestone log and known limitations.
+Phases 1 (Foundation), 2 (the social feed), and 3 (the LeetCode extension, published on the Chrome
+Web Store) are complete. Phase 4 (review and analysis) is in progress: the review queue is done. See [docs/DECISIONS.md](docs/DECISIONS.md) for the milestone log and known limitations.

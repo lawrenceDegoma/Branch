@@ -8,6 +8,7 @@ import {
   expect,
   mondayWeeksAgo,
   signUpViaApi,
+  solveInDb,
   test,
 } from "./support/fixtures";
 
@@ -25,6 +26,7 @@ const appRoutes = [
   "/roadmaps",
   "/groups",
   "/profile",
+  "/review",
   "/settings",
   "/settings/submissions",
 ];
@@ -283,6 +285,19 @@ for (const colorScheme of ["dark", "light"] as const) {
       await page.goto("/settings/submissions");
       await page.getByText("Show code").first().click();
       await expect(page.getByRole("main").locator("pre").first()).toBeVisible();
+      await expectNoViolations(page);
+    });
+
+    test("due reviews have no detectable WCAG A/AA violations", async ({ page, viewer }) => {
+      await solveInDb(viewer.id, ["two-sum", "valid-anagram"]);
+      await solveInDb(viewer.id, ["contains-duplicate"], 3);
+      await page.goto("/review");
+      await page.waitForFunction(() => document.readyState === "complete");
+      await page
+        .getByRole("button", { name: /^Solved/ })
+        .first()
+        .click();
+      await expect(page.getByRole("main").getByRole("status")).toContainText("comes back");
       await expectNoViolations(page);
     });
 

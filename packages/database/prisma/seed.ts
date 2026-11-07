@@ -184,6 +184,24 @@ async function main() {
       skipDuplicates: true,
     });
     console.log("Progress: Ada 3 solved (1 in backlog), Grace 7 solved (1 ahead)");
+
+    // Every solved problem has a review schedule (the app creates it with the completion). Ada's
+    // are due today, so the Review page has something to show; Grace's come up over the next days.
+    await prisma.reviewSchedule.createMany({
+      data: devUsers.flatMap((user) =>
+        (solved[user.id] ?? []).map((problemId, index) => ({
+          userId: user.id,
+          problemId,
+          dueOn: toDbDate(
+            addDays(dateInTimeZone(new Date(), user.timezone), user.id === ada.id ? 0 : index + 1),
+          ),
+          intervalDays: 3,
+          ease: 250,
+        })),
+      ),
+      skipDuplicates: true,
+    });
+    console.log("Reviews: Ada 3 due today, Grace 1 a day from tomorrow");
   } finally {
     await prisma.$disconnect();
   }

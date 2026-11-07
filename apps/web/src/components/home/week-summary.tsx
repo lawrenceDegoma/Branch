@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { ProgressBar } from "@/components/progress/progress-bar";
+import { buttonVariants } from "@/components/ui/button";
 import type { HomeView } from "@/modules/progress/service";
 
 /** "Your week": the right rail on wide screens, a compact card above the feed on narrow ones. */
@@ -39,6 +41,15 @@ export function WeekSummary({
           </div>
         ))}
       </dl>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+        <div>
+          <p className="text-xs text-ink-muted">Reviews due</p>
+          <p className="text-base font-medium tabular">{summary.reviewsDue}</p>
+        </div>
+        <Link href="/review" className={buttonVariants({ variant: "outline", size: "sm" })}>
+          See reviews
+        </Link>
+      </div>
       {weekLink ? (
         <a
           href="#this-week"

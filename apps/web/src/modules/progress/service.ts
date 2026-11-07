@@ -5,6 +5,7 @@ import { isForeignKeyViolation } from "@/lib/db-errors";
 import { NotFoundError } from "@/lib/errors";
 import { syncAutomaticPosts } from "@/modules/feed/automatic";
 import { getGroupPlan, listViewerPlans, type PlanLayout } from "@/modules/plans/service";
+import { countDueReviews, startReviews } from "@/modules/review/service";
 import { problemIdSchema } from "./schemas";
 import { standingOn } from "./standing";
 
@@ -61,7 +62,10 @@ export async function setCompletion(
         ],
         skipDuplicates: true,
       });
-      if (count > 0) await syncAutomaticPosts(tx, userId, problemId, true, now);
+      if (count > 0) {
+        await syncAutomaticPosts(tx, userId, problemId, true, now);
+        await startReviews(tx, userId, problemId, now);
+      }
       return { changed: count > 0 };
     });
   } catch (error) {
@@ -197,12 +201,13 @@ export async function getHome(userId: string, timeZone: string, now = new Date()
   // "Solved this week" uses the viewer's own calendar week (Monday start, their timezone).
   const today = dateInTimeZone(now, timeZone);
   const monday = addDays(today, -(isoWeekday(today) - 1));
-  const [recent, totalSolved] = await Promise.all([
+  const [recent, totalSolved, reviewsDue] = await Promise.all([
     prisma.problemCompletion.findMany({
       where: { userId, completedAt: { gte: new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000) } },
       select: { completedAt: true },
     }),
     prisma.problemCompletion.count({ where: { userId } }),
+    countDueReviews(userId, timeZone, now),
   ]);
 
   return {
@@ -214,6 +219,7 @@ export async function getHome(userId: string, timeZone: string, now = new Date()
       solvedThisWeek: recent.filter((c) => dateInTimeZone(c.completedAt, timeZone) >= monday)
         .length,
       totalSolved,
+      reviewsDue,
     },
   };
 }

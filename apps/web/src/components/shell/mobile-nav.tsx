@@ -15,7 +15,7 @@ export function MobileNav({ className }: { className?: string }) {
         className,
       )}
     >
-      <ul className="grid grid-cols-4">
+      <ul className="grid grid-cols-5">
         {primaryNav.map((item) => {
           const active = isActivePath(pathname, item.href);
           const Icon = item.icon;

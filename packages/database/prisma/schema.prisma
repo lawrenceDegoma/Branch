@@ -43,6 +43,7 @@ model User {
   comments         Comment[]
   extensionLinks   ExtensionConnection[]
   submissions      Submission[]
+  reviewAttempts   ReviewAttempt[]
 
   @@unique([email])
   @@map("user")
@@ -271,6 +272,7 @@ model Problem {
   completions        ProblemCompletion[]
   posts              Post[]
   submissions        Submission[]
+  reviewAttempts     ReviewAttempt[]
 
   @@map("problem")
 }
@@ -459,10 +461,61 @@ model ProblemCompletion {
   /// Optional language the user solved it in (free text, at most 40 characters; CHECK).
   language    String?
   createdAt   DateTime         @default(now())
+  review      ReviewSchedule?
 
   @@unique([userId, problemId])
   @@index([problemId])
   @@map("problem_completion")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Review. Private to the user, and separate from completion: a review never un-solves anything.
+// ---------------------------------------------------------------------------------------------
+
+/// Couldn't solve, struggled, solved, easy.
+enum ReviewOutcome {
+  AGAIN
+  HARD
+  GOOD
+  EASY
+}
+
+/// When a solved problem next comes up for review. Exists exactly while the problem is solved:
+/// it is created with the completion and the composite foreign key deletes it with the completion.
+model ReviewSchedule {
+  userId         String
+  problemId      String            @db.Uuid
+  completion     ProblemCompletion @relation(fields: [userId, problemId], references: [userId, problemId], onDelete: Cascade)
+  /// The calendar date it is due, in the user's timezone.
+  dueOn          DateTime          @db.Date
+  /// The gap that led to dueOn, in days, 1-365 (CHECK).
+  intervalDays   Int
+  /// Growth factor in hundredths, 130-300 (CHECK).
+  ease           Int
+  reviewCount    Int               @default(0)
+  lastReviewedAt DateTime?
+
+  @@id([userId, problemId])
+  @@index([userId, dueOn])
+  @@map("review_schedule")
+}
+
+/// One review and how it went: the user's private history. Kept if the problem is later marked
+/// unsolved.
+model ReviewAttempt {
+  id           String        @id @default(uuid(7)) @db.Uuid
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problemId    String        @db.Uuid
+  problem      Problem       @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  outcome      ReviewOutcome
+  reviewedAt   DateTime
+  /// The gap this review set, in days, 1-365 (CHECK).
+  intervalDays Int
+
+  @@index([userId, id])
+  @@index([userId, problemId])
+  @@map("review_attempt")
 }
 
 // ---------------------------------------------------------------------------------------------

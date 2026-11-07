@@ -8,7 +8,7 @@ export const metadata = {
   description: "What Branch and the Branch for LeetCode extension collect, and why.",
 };
 
-const EFFECTIVE = "November 5, 2026";
+const EFFECTIVE = "November 6, 2026";
 
 /** Public: linked from the Chrome Web Store listing, the extension, and Branch's own pages. */
 export default function PrivacyPage() {
@@ -53,7 +53,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>What you do in Branch:</strong> groups and invites, roadmaps, the problems you
-            mark solved, and posts, comments, and reactions.
+            mark solved, your reviews and how they went, and posts, comments, and reactions.
           </li>
         </ul>
 
@@ -100,6 +100,7 @@ export default function PrivacyPage() {
             <strong>Your code is visible only to you.</strong> It never appears in groups, posts, or
             anyone else&apos;s view.
           </li>
+          <li>Your reviews and how they went are visible only to you.</li>
           <li>
             Members of your groups see your name, username, and, for problems their group&apos;s
             plan assigns, whether you&apos;ve solved them. A post about a solve appears only if you
