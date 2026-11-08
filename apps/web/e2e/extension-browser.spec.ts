@@ -255,7 +255,10 @@ test.describe("the Chrome extension", () => {
           },
         ]);
       expect(await prisma.submission.count({ where: { userId: account.id } })).toBe(2);
-      expect(await prisma.problemCompletion.count({ where: { userId: account.id } })).toBe(2);
+      // The completion is written just after the submission, so wait for it too.
+      await expect
+        .poll(() => prisma.problemCompletion.count({ where: { userId: account.id } }))
+        .toBe(2);
 
       // The popup says what happened; disconnecting there revokes the key in Branch.
       const popup = await context.newPage();

@@ -1,7 +1,6 @@
 import { EXTENSION_DISCLOSURE } from "@branch/shared/extension";
 import Link from "next/link";
 import { ConfirmAction } from "@/components/forms/confirm-action";
-import { buttonVariants } from "@/components/ui/button";
 import { formatDateTime, formatRelative } from "@/lib/format";
 import { disconnectExtensionAction } from "@/modules/integrations/actions";
 import type { listConnections } from "@/modules/integrations/connections";
@@ -77,14 +76,6 @@ export function ExtensionPanel({
         </Link>
       </p>
       <ConnectForm />
-      <div className="border-t border-line pt-4">
-        <Link
-          href="/review/solutions"
-          className={buttonVariants({ variant: "ghost", className: "-ml-3" })}
-        >
-          Your solutions
-        </Link>
-      </div>
     </div>
   );
 }

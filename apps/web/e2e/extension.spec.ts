@@ -46,7 +46,7 @@ test.describe("LeetCode extension", () => {
     expect(completion).toMatchObject({ source: "EXTENSION", problem: { leetcodeSlug: "two-sum" } });
 
     // The private list: one counted, one waiting with its deletion date; code on request.
-    await section.getByRole("link", { name: "Your solutions" }).click();
+    await page.goto("/review/solutions");
     const list = page.getByRole("list", { name: "Your solutions" });
     await expect(list.getByRole("article")).toHaveCount(2);
     const waiting = list.getByRole("article").filter({ hasText: "not-in-branch-yet" });

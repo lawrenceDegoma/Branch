@@ -30,8 +30,11 @@ async function paste(page: Page, problem: string, language: string, code: string
 test.describe("code analysis", () => {
   test("a pasted solution gets an estimate, shown as an estimate", async ({ page, viewer }) => {
     await solveInDb(viewer.id, ["two-sum", "valid-anagram"]);
-    await page.goto("/settings");
-    await page.getByRole("link", { name: "Your solutions" }).click();
+    await page.goto("/review");
+    await page
+      .getByRole("navigation", { name: "Review sections" })
+      .getByRole("link", { name: "Your solutions" })
+      .click();
     await expect(page.getByRole("heading", { level: 1, name: "Your solutions" })).toBeVisible();
     await page.waitForFunction(() => document.readyState === "complete");
 
