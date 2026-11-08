@@ -3,7 +3,7 @@
 from .complexity import Estimate, analyze_python
 
 #: Changes whenever the rules change, so Branch's cache never serves an outdated estimate.
-ANALYZER_VERSION = "2026.11.2"
+ANALYZER_VERSION = "2026.11.3"
 
 #: Language slugs (LeetCode's) the analyzer can read.
 SUPPORTED_LANGUAGES = {"python3", "python"}

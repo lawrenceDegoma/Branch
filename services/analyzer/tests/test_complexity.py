@@ -466,6 +466,51 @@ CASES = [
         "O(n)", "O(n)", "medium",
     ),
     (
+        "top k frequent, buckets built by appending (an owner's solution)",
+        """
+        class Solution:
+            def topKFrequent(self, nums: list[int], k: int) -> list[int]:
+                count = {}
+
+                for num in nums:
+                    count[num] = count.get(num, 0) + 1
+
+                freq = []
+
+                for _ in range(len(nums) + 1):
+                    freq.append([])
+
+                for num, counts in count.items():
+                    freq[counts].append(num)
+
+                res = []
+                for i in range(len(freq) - 1, 0, -1):
+                    for num in freq[i]:
+                        res.append(num)
+
+                        if len(res) == k:
+                            return res
+        """,
+        "O(n)", "O(n)", "medium",
+    ),
+    (
+        "a grid filled in nested loops is n² items, not buckets",
+        """
+        class Solution:
+            def total(self, n):
+                grid = [[] for _ in range(n)]
+                for r in range(n):
+                    for c in range(n):
+                        grid[r].append(r * c)
+                s = 0
+                for r in range(n):
+                    for v in grid[r]:
+                        s += v
+                return s
+        """,
+        "O(n²)", "O(n)", "high",
+    ),
+    (
         "constant work",
         """
         class Solution:

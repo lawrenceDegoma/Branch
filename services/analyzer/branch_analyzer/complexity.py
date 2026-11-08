@@ -116,16 +116,31 @@ def _target_names(node: ast.AST) -> set[str]:
     return {n.id for n in ast.walk(node) if isinstance(n, ast.Name)}
 
 
-def _is_buckets(value: ast.expr) -> bool:
-    """`[[] for _ in …]`, `[set() for _ in …]`, or `defaultdict(list)`: a container of lists."""
-    empty = lambda e: (isinstance(e, (ast.List, ast.Set)) and not e.elts) or (  # noqa: E731
-        isinstance(e, ast.Call) and _name(e.func) in {"list", "set", "deque"} and not e.args
-    )
-    if isinstance(value, ast.ListComp):
-        return empty(value.elt)
-    if isinstance(value, ast.Call) and _name(value.func) == "defaultdict" and value.args:
-        return _name(value.args[0]) in {"list", "set", "deque"}
-    return False
+def _filed_containers(tree: ast.AST) -> set[str]:
+    """Names used as buckets: items filed with `X[key].append(item)` (or `.add`) inside a single
+    loop, so all the lists together hold at most n items. Filing inside nested loops builds
+    something like a grid, which can hold n², so it doesn't count."""
+    names: set[str] = set()
+
+    def visit(node: ast.AST, depth: int):
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr in {"append", "add", "appendleft"}
+            and isinstance(node.func.value, ast.Subscript)
+            and depth == 1
+        ):
+            name = _name(node.func.value.value)
+            if name:
+                names.add(name)
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+                visit(child, 0)
+            else:
+                visit(child, depth + isinstance(child, (ast.For, ast.AsyncFor, ast.While)))
+
+    visit(tree, 0)
+    return names
 
 
 def _drained_queue(loop: ast.For | ast.AsyncFor) -> str | None:
@@ -181,13 +196,18 @@ class _Recursion:
 
 
 class _Analyzer:
-    def __init__(self, functions: dict[str, ast.FunctionDef], params: set[str]):
+    def __init__(
+        self,
+        functions: dict[str, ast.FunctionDef],
+        params: set[str],
+        filed: set[str] | None = None,
+    ):
         self.functions = functions
         self.params = params
         self.hash_names: set[str] = set()
         self.sequence_names: set[str] = set()
         # Containers of lists (buckets, adjacency lists): each item is filed under one key.
-        self.bucket_names: set[str] = set()
+        self.bucket_names: set[str] = set(filed or ())
         # The inputs each enclosing counted loop goes over, to spot loops over different sizes.
         self.loop_sources: list[set[str]] = []
         self.findings: list[_Finding] = []
@@ -392,8 +412,6 @@ class _Analyzer:
             return
         kind = self.kind_of(value)
         name = target.id
-        if _is_buckets(value):
-            self.bucket_names.add(name)
         if kind == "hash":
             self.hash_names.add(name)
             self.sequence_names.discard(name)
@@ -793,7 +811,7 @@ def _estimate(tree: ast.Module) -> Estimate:
     analyzers = []
     for entry in entries:
         params = {a.arg for a in entry.args.args if a.arg != "self"}
-        analyzer = _Analyzer(functions, params)
+        analyzer = _Analyzer(functions, params, _filed_containers(tree))
         analyzer._active.add(entry.name)
         cost = analyzer.recursion_cost(entry, analyzer.block(entry.body))
         time = max(time, cost)

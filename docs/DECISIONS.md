@@ -884,13 +884,17 @@ The owner found Top K Frequent Elements (bucket sort, O(n)) estimated as O(n²).
 solutions found the same mistake for BFS over adjacency lists, and Coin Change (loops over two
 inputs) reported as n² with high confidence.
 
-- **Buckets and adjacency lists:** an inner loop over `buckets[i]`, where `buckets` is
-  `[[] for …]` or `defaultdict(list)`, counts as one pass over everything in them overall
-  (medium confidence).
+- **Buckets and adjacency lists:** an inner loop over `buckets[i]` counts as one pass over
+  everything in them overall (medium confidence), when items are filed with
+  `buckets[key].append(…)` (or `.add`) inside a single loop, however the container was built (the
+  owner's version appends empty lists one by one). Filing inside nested loops builds a grid of n²
+  items, so it doesn't count; recognizing buckets by how they were built (`[[] for …]`) was tried
+  and dropped for that reason.
 - **Different inputs:** nested loops over different parameters keep n² but drop to medium
   confidence and say the cost is really the two sizes multiplied.
-- 35 evaluation cases now (Top K bucket sort, Course Schedule, Coin Change, Longest Consecutive
-  Sequence, Minimum Window Substring added). Analyzer version `2026.11.2`.
+- 37 evaluation cases now (Top K bucket sort, Course Schedule, Coin Change, Longest Consecutive
+  Sequence, Minimum Window Substring, the owner's Top K, and a grid counter-example added).
+  Analyzer version `2026.11.3`.
 - **Outdated estimates are redone:** each run asks the analyzer's version first and requeues
   finished jobs whose estimate came from another version (200 per run); the old estimates are
   then unused and deleted daily. While the analyzer is down, nothing is claimed, so no attempts
