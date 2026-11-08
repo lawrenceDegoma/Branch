@@ -28,9 +28,26 @@ export default async function HomePage({
   const home = await getHome(user.id, profile.timezone);
 
   if (home.groups.length === 0) {
+    // New accounts: the checklist starts with joining a group. Hidden, the plain prompt remains.
+    if (!profile.gettingStartedHidden) {
+      const connections = await listConnections(user.id);
+      return (
+        <div className="max-w-3xl">
+          <PageHeader title="Home" headingId="home-heading" />
+          <GettingStarted
+            inGroup={false}
+            hasPlan={false}
+            connected={connections.length > 0}
+            shareSolves={profile.shareSolves}
+            solved={home.summary.totalSolved > 0}
+            storeUrl={serverEnv().EXTENSION_STORE_URL}
+          />
+        </div>
+      );
+    }
     return (
       <div className="max-w-4xl">
-        <PageHeader title="Home" />
+        <PageHeader title="Home" headingId="home-heading" />
         <EmptyState
           title="Start with a group"
           description="Create a group for your friends, or open an invite link someone shared with you. Your weekly problems and your groups' activity show up here."
@@ -94,6 +111,8 @@ export default async function HomePage({
         <div className="flex min-w-0 flex-col gap-6 [grid-area:feed]">
           {profile.gettingStartedHidden ? null : (
             <GettingStarted
+              inGroup
+              hasPlan={planned.length > 0}
               connected={connections.length > 0}
               shareSolves={profile.shareSolves}
               solved={home.summary.totalSolved > 0}

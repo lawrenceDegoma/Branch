@@ -123,6 +123,16 @@ test.describe("progress", () => {
 
   test("Home without a group points to creating one", async ({ page, viewer: _viewer }) => {
     await page.goto("/home");
+    const card = page.getByRole("region", { name: "Get started" });
+    await expect(card).toContainText("0 of 4 done");
+    await expect(card.getByRole("link", { name: "Create group" })).toHaveAttribute(
+      "href",
+      "/groups/new",
+    );
+    // Hidden, the plain prompt is still there, and focus goes to the page's heading.
+    await page.waitForFunction(() => document.readyState === "complete");
+    await card.getByRole("button", { name: "Hide the Get started checklist" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeFocused();
     await expect(page.getByText("Start with a group")).toBeVisible();
     await expect(page.getByRole("link", { name: "Create group" })).toBeVisible();
   });

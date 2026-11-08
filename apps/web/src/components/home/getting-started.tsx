@@ -12,17 +12,33 @@ type Step = { done: boolean; title: string; description: string; actions: React.
  * once everything's done, or when they hide it.
  */
 export function GettingStarted({
+  inGroup,
+  hasPlan,
   connected,
   shareSolves,
   solved,
   storeUrl,
 }: {
+  inGroup: boolean;
+  /** One of their groups has a roadmap, so Home lists this week's problems. */
+  hasPlan: boolean;
   connected: boolean;
   shareSolves: boolean;
   solved: boolean;
   storeUrl?: string;
 }) {
   const steps: Step[] = [
+    {
+      done: inGroup,
+      title: "Join or create a group",
+      description:
+        "Open the invite link a friend sent you, or start a group and invite them. Your group shares a roadmap and a few problems a week.",
+      actions: (
+        <Link href="/groups/new" className={buttonVariants({ variant: "outline", size: "sm" })}>
+          Create group
+        </Link>
+      ),
+    },
     {
       done: connected,
       title: "Sync your LeetCode solves",
@@ -68,12 +84,17 @@ export function GettingStarted({
     {
       done: solved,
       title: "Solve your first problem",
-      description:
-        "Pick one from this week's problems and mark it solved, or let the extension do it.",
-      actions: (
+      description: hasPlan
+        ? "Pick one from this week's problems and mark it solved, or let the extension do it."
+        : "Mark one solved from any roadmap, or let the extension do it.",
+      actions: hasPlan ? (
         <a href="#this-week" className={buttonVariants({ variant: "outline", size: "sm" })}>
           This week&apos;s problems
         </a>
+      ) : (
+        <Link href="/roadmaps" className={buttonVariants({ variant: "outline", size: "sm" })}>
+          Browse roadmaps
+        </Link>
       ),
     },
   ];
@@ -95,7 +116,7 @@ export function GettingStarted({
           </p>
           <ProgressBar value={done} total={steps.length} />
         </div>
-        <HideGettingStarted />
+        <HideGettingStarted focusTarget={inGroup ? "activity-heading" : "home-heading"} />
       </div>
       <ol aria-label="Steps" className="flex flex-col">
         {steps.map((step) => (

@@ -961,8 +961,9 @@ Owner decisions:
 
 ### Onboarding: "Get started" on Home (2026-11-08)
 
-Owner request, as more friends join. Home shows a "Get started" checklist above the feed:
-sync LeetCode solves (done once the extension is connected; it links to the store and to
+Owner request, as more friends join. Home shows a "Get started" checklist above the feed (and,
+for an account in no group yet, in place of the "Start with a group" prompt): join or create a
+group, sync LeetCode solves (done once the extension is connected; it links to the store and to
 Settings), share solves with groups (sharing is off by default, so friends otherwise never see each
 other's solves), and solve a first problem. Steps are checked off from what the person has done;
 the card disappears when all are done, or for good when hidden (`profile.gettingStartedHidden`,

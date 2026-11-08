@@ -54,7 +54,7 @@ test("two friends share a weekly plan and track their own progress", async ({
   await page.goto("/");
   await page.getByRole("link", { name: "Create account" }).click();
   await signUp(page, admin);
-  await expect(page.getByText("Start with a group")).toBeVisible();
+  await expect(page.getByText("Join or create a group")).toBeVisible();
   await page.getByRole("main").getByRole("link", { name: "Create group" }).click();
   await page.getByLabel("Group name").fill("Offer season");
   await chooseTimezone(page, "Group timezone", "UTC");

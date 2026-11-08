@@ -19,7 +19,7 @@ test.describe("getting started on Home", () => {
     await createPlanInDb(group.id, viewer.id, mondayWeeksAgo(0));
     await page.goto("/home");
     const card = page.getByRole("region", { name: "Get started" });
-    await expect(card).toContainText("0 of 3 done");
+    await expect(card).toContainText("1 of 4 done");
     await expect(card.getByRole("link", { name: /Get the extension/ })).toHaveAttribute(
       "href",
       "https://chromewebstore.google.com/detail/branch-for-leetcode/e2e",
@@ -38,7 +38,7 @@ test.describe("getting started on Home", () => {
     await prisma.profile.update({ where: { userId: viewer.id }, data: { shareSolves: true } });
     await solveInDb(viewer.id, ["two-sum"]);
     await page.reload();
-    await expect(card).toContainText("2 of 3 done");
+    await expect(card).toContainText("3 of 4 done");
     await expect(
       card.getByRole("listitem").filter({ hasText: "Sync your LeetCode solves" }),
     ).toContainText("(to do)");

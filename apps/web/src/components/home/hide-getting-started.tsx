@@ -6,12 +6,15 @@ import { SubmitButton } from "@/components/forms/submit-button";
 import { initialFormState, type FormState } from "@/lib/form";
 import { hideGettingStartedAction } from "@/modules/profile/actions";
 
-/** Hides the checklist for good; focus moves to the feed's heading once it's gone. */
-export function HideGettingStarted() {
+/**
+ * Hides the checklist for good. Once it's gone, focus moves to `focusTarget`: the feed's heading,
+ * or the page's heading for someone not in a group yet.
+ */
+export function HideGettingStarted({ focusTarget }: { focusTarget: string }) {
   const form = useRef<HTMLFormElement>(null);
   const [, action] = useActionState(async (prev: FormState) => {
     const result = await hideGettingStartedAction(prev);
-    if (result.status === "success") focusWhenRemoved(form.current, "activity-heading");
+    if (result.status === "success") focusWhenRemoved(form.current, focusTarget);
     return result;
   }, initialFormState);
   return (
