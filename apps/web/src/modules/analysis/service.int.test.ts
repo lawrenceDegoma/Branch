@@ -26,6 +26,8 @@ const answer: AnalyzerAnswer = {
   confidence: "high",
   reasons: ["A loop goes over the input once."],
   limitations: ["Estimated by reading the code, without running it."],
+  notation: "Where n is the length of `nums`.",
+  bound: false,
 };
 
 /** An analyzer that counts calls and can be made to fail. */
@@ -97,6 +99,8 @@ describe("running analyses", () => {
       analyzerVersion: "test-1",
       codeHash: codeHash(CODE),
       problemSlug: "two-sum",
+      notation: "Where n is the length of `nums`.",
+      bound: false,
     });
     // Running again finds nothing to do.
     expect(await runAnalysisJobs({ analyzer, now: NOW })).toEqual({
@@ -185,6 +189,25 @@ describe("running analyses", () => {
     });
   });
 
+  it("keeps whether an estimate is a ceiling, and drops a notation that comes without one", async () => {
+    const user = await createTestUser();
+    await synced(user.id, `${CODE}\n# ceiling`);
+    await synced(user.id, `${CODE}\n# unsupported`);
+    const ceiling = fakeAnalyzer({ answer: { ...answer, bound: true, time: "O(n²)" } });
+    await runAnalysisJobs({ analyzer: ceiling.analyzer, limit: 1, now: NOW });
+    const unsupported = fakeAnalyzer({
+      answer: { ...answer, status: "unsupported", time: null, space: null, confidence: null },
+    });
+    await runAnalysisJobs({ analyzer: unsupported.analyzer, now: NOW });
+    const results = (await jobs(user.id)).map((j) => j.result);
+    expect(results).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ outcome: "OK", bound: true, time: "O(n²)" }),
+        expect.objectContaining({ outcome: "UNSUPPORTED", bound: false, notation: null }),
+      ]),
+    );
+  });
+
   it("refuses an incomplete estimate rather than storing it", async () => {
     const user = await createTestUser();
     await synced(user.id);
@@ -203,6 +226,7 @@ describe("running analyses", () => {
         status: "unsupported",
         reasons: [],
         limitations: [],
+        bound: false,
         message: "Only Python solutions are analyzed so far.",
       },
     });

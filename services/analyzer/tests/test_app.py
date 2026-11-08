@@ -25,6 +25,8 @@ def test_analyzes_python():
     assert body["time"] == "O(n log n)"
     assert body["analyzerVersion"]
     assert body["reasons"] and body["limitations"]
+    assert body["notation"] == "Where n is the length of `nums`."
+    assert body["bound"] is False
 
 
 def test_says_when_a_language_isnt_supported():

@@ -7,7 +7,7 @@ import { expect, solveInDb, test } from "./support/fixtures";
 // which playwright.config.ts starts alongside the app.
 
 const PYTHON = `class Solution:
-    def twoSum(self, nums, target):
+    def twoSum(self, nums: List[int], target: int) -> List[int]:
         index = {}
         for i, n in enumerate(nums):
             if target - n in index:
@@ -41,10 +41,9 @@ test.describe("code analysis", () => {
     // It's analyzed in the background; the page looks again by itself.
     await expect(card).toContainText("Probably O(n) time and O(n) space.", { timeout: 15_000 });
     await expect(card).toContainText("High confidence, from reading the code.");
+    await expect(card).toContainText("Where n is the length of nums.");
     await card.getByText("Why, and what it can't tell").click();
-    await expect(card.getByRole("list", { name: "Reasons" })).toContainText(
-      "A loop goes over the input once.",
-    );
+    await expect(card.getByRole("list", { name: "Reasons" })).toContainText("The loop on line 4");
     await expect(card.getByRole("list", { name: "Limits" })).toContainText(
       "Estimated by reading the code, without running it.",
     );

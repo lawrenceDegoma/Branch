@@ -4,8 +4,9 @@ import type { SubmissionItem } from "@/modules/integrations/submissions";
 const CONFIDENCE = { HIGH: "High", MEDIUM: "Medium", LOW: "Low" } as const;
 
 /**
- * A solution's estimated complexity, shown as an estimate: "probably", with its confidence, the
- * reasons, and what the method can't tell. Never a verdict on the solution.
+ * A solution's estimated complexity, shown as an estimate: "probably" (or "at most", for a
+ * ceiling the code may never reach), what its letters stand for, its confidence, the reasons,
+ * and what the method can't tell. Never a verdict on the solution.
  */
 export function SolutionAnalysis({
   analysis,
@@ -30,12 +31,18 @@ export function SolutionAnalysis({
   return (
     <div className="rounded-[10px] bg-raised px-3 py-2">
       <p>
-        Probably <strong className="font-medium">{result.time}</strong> time and{" "}
+        {result.bound ? "At most" : "Probably"}{" "}
+        <strong className="font-medium">{result.time}</strong> time and{" "}
         <strong className="font-medium">{result.space}</strong> space.{" "}
         <span className="text-ink-muted">
           {CONFIDENCE[result.confidence]} confidence, from reading the code.
         </span>
       </p>
+      {result.notation ? (
+        <p className="mt-1 text-ink-muted">
+          <WithCode text={result.notation} />
+        </p>
+      ) : null}
       <details className="group mt-1">
         <summary className="inline-flex min-h-8 cursor-pointer items-center font-medium text-ink-muted hover:text-ink pointer-coarse:min-h-11">
           <span className="group-open:hidden">Why, and what it can&apos;t tell</span>

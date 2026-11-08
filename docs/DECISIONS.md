@@ -905,6 +905,40 @@ inputs) reported as n² with high confidence.
   work, and checks again every 2 seconds while any are waiting (6 checks at most). Before this, an
   estimate from an older version only updated at the daily job.
 
+### After M21: the analyzer rebuilt (2026-11-08)
+
+The owner pointed out that fixes were landing case by case: Valid Anagram with
+`{c: s.count(c) for c in set(s)}` read as O(n²), because the rules matched code shapes ("a loop
+inside a loop") instead of reasoning about sizes. The engine was rebuilt as an abstract
+interpretation of the code (`branch_analyzer/engine.py`, `cost.py`, `values.py`, `report.py`):
+
+- **Sizes, not shapes.** Each input gets size symbols from its type hint (LeetCode's code has
+  them) or its name; values carry sizes derived from them (`set(s)` and a dict keyed by
+  characters hold at most k, the number of different characters; containers grow by how often
+  they're filled). Costs are sums of products of several symbols (O(n·m), O(V + E)), not one n.
+- **Line counts with provable loop bounds**, not patterns: a loop that takes an item out every
+  pass runs at most as often as items went in; a pointer that only moves one way, isn't reset by
+  the loops around it, and stays in a sequence bounds the total; halving gives log; iterating a
+  different bucket per pass totals the buckets' contents; an item passes a visited check or a
+  counter reaching zero once; descending a tree reaches each node once; runs of consecutive values
+  entered only at their start don't overlap.
+- **Operation costs** from Python's documented costs (`in` on a list scans it, `s.count` scans,
+  dict equality compares entries, slices copy their width, sorting is n log n, heap operations
+  log n).
+- **Recursion by structure:** per tree node; halving via the master theorem; memoized per
+  distinct argument; visited-checked once per item (with a shared visited set paid once across
+  calls); branching exponentially, with backtracking paths bounded by depth and collected results
+  counted toward space.
+- **Reporting:** sizes of the same kind that never multiply are merged (the lengths of `s` and `t`
+  become one n); k ≤ n and h ≤ n simplify sums; a "where" line explains each letter and, for
+  characters, the fixed-alphabet result; reasons cite line numbers; "at most" marks a ceiling the
+  code may never reach (a loop whose count can't be bounded, branching recursion).
+- **Evaluation:** 70 cases with the answer a careful reviewer would give, including the owner's
+  Valid Anagram and Top K; fuzzing 560 stripped and mutated variants found no crashes, and any
+  unexpected error now returns "couldn't analyze" rather than failing. Analyzer `2026.11.4`.
+- **Migration `analysis_notation`:** `notation` and `bound` on `analysis_result`, and longer limits
+  for multi-size estimates (120 characters).
+
 ## Phase 3 summary
 
 Done when "supported accepted submissions sync once without exposing source to groups; failures

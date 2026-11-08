@@ -203,6 +203,8 @@ async function storeResult(
       : null,
     reasons: answer.reasons,
     limitations: answer.limitations,
+    notation: estimate ? (answer.notation ?? null) : null,
+    bound: estimate ? answer.bound : false,
     message: answer.message ?? null,
   };
   const where = { codeHash_language_problemSlug_analyzerVersion: key };

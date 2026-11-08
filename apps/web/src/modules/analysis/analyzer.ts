@@ -11,11 +11,15 @@ const REQUEST_TIMEOUT_MS = 15_000;
 export const analyzerAnswerSchema = z.object({
   analyzerVersion: z.string().min(1).max(40),
   status: z.enum(["ok", "unparseable", "unsupported"]),
-  time: z.string().max(40).nullish(),
-  space: z.string().max(40).nullish(),
+  time: z.string().max(120).nullish(),
+  space: z.string().max(120).nullish(),
   confidence: z.enum(["low", "medium", "high"]).nullish(),
   reasons: z.array(z.string().max(500)).max(20).default([]),
   limitations: z.array(z.string().max(500)).max(20).default([]),
+  /** What the letters stand for. Analyzer versions before 2026.11.4 don't send it. */
+  notation: z.string().max(1000).nullish(),
+  /** A ceiling the code may never reach ("at most"). */
+  bound: z.boolean().default(false),
   message: z.string().max(500).nullish(),
 });
 export type AnalyzerAnswer = z.infer<typeof analyzerAnswerSchema>;

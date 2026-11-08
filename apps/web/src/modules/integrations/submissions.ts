@@ -158,6 +158,8 @@ export async function listSubmissions(
               confidence: true,
               reasons: true,
               limitations: true,
+              notation: true,
+              bound: true,
               message: true,
             },
           },

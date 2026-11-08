@@ -45,6 +45,10 @@ class AnalyzeResponse(BaseModel):
     confidence: Literal["low", "medium", "high"] | None = None
     reasons: list[str] = []
     limitations: list[str] = []
+    #: What the letters stand for ("Where n is the length of `s`, …").
+    notation: str | None = None
+    #: True when the estimate is a ceiling the code may never reach ("at most").
+    bound: bool = False
     message: str | None = None
 
 
@@ -70,5 +74,7 @@ def analyze_code(body: AnalyzeRequest) -> AnalyzeResponse:
         confidence=estimate.confidence,
         reasons=estimate.reasons,
         limitations=estimate.limitations,
+        notation=estimate.notation,
+        bound=estimate.bound,
         message=estimate.message,
     )

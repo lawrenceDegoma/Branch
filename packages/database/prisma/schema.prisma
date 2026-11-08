@@ -710,12 +710,16 @@ model AnalysisResult {
   problemSlug     String
   analyzerVersion String
   outcome         AnalysisOutcome
-  /// Set exactly when the outcome is OK (CHECK), e.g. "O(n log n)".
+  /// Set exactly when the outcome is OK (CHECK), e.g. "O(n·k)" (at most 120 characters).
   time            String?
   space           String?
   confidence      AnalysisConfidence?
   reasons         String[]
   limitations     String[]
+  /// What the letters stand for: "Where n is the length of `s`, …" (at most 1000 characters).
+  notation        String?
+  /// The estimate is a ceiling the code may never reach ("at most").
+  bound           Boolean             @default(false)
   /// Why there's no estimate, for the other outcomes.
   message         String?
   createdAt       DateTime            @default(now())
