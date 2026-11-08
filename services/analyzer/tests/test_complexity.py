@@ -364,6 +364,108 @@ CASES = [
         "O(n³)", "O(1)", "high",
     ),
     (
+        "top k frequent, bucket sort",
+        """
+        class Solution:
+            def topKFrequent(self, nums, k):
+                count = {}
+                freq = [[] for i in range(len(nums) + 1)]
+                for n in nums:
+                    count[n] = 1 + count.get(n, 0)
+                for n, c in count.items():
+                    freq[c].append(n)
+                res = []
+                for i in range(len(freq) - 1, 0, -1):
+                    for n in freq[i]:
+                        res.append(n)
+                        if len(res) == k:
+                            return res
+        """,
+        "O(n)", "O(n)", "medium",
+    ),
+    (
+        "course schedule, BFS over adjacency lists (n counts nodes and edges)",
+        """
+        class Solution:
+            def canFinish(self, numCourses, prerequisites):
+                adj = defaultdict(list)
+                indeg = [0] * numCourses
+                for a, b in prerequisites:
+                    adj[b].append(a)
+                    indeg[a] += 1
+                q = deque([i for i in range(numCourses) if indeg[i] == 0])
+                seen = 0
+                while q:
+                    node = q.popleft()
+                    seen += 1
+                    for nei in adj[node]:
+                        indeg[nei] -= 1
+                        if indeg[nei] == 0:
+                            q.append(nei)
+                return seen == numCourses
+        """,
+        "O(n)", "O(n)", "medium",
+    ),
+    (
+        "coin change: loops over two inputs, shown as n² with less confidence",
+        """
+        class Solution:
+            def coinChange(self, coins, amount):
+                dp = [amount + 1] * (amount + 1)
+                dp[0] = 0
+                for a in range(1, amount + 1):
+                    for c in coins:
+                        if a - c >= 0:
+                            dp[a] = min(dp[a], 1 + dp[a - c])
+                return dp[amount] if dp[amount] != amount + 1 else -1
+        """,
+        "O(n²)", "O(n)", "medium",
+    ),
+    (
+        "longest consecutive sequence: the inner loop only runs from a sequence's start",
+        """
+        class Solution:
+            def longestConsecutive(self, nums):
+                numSet = set(nums)
+                longest = 0
+                for n in numSet:
+                    if (n - 1) not in numSet:
+                        length = 1
+                        while (n + length) in numSet:
+                            length += 1
+                        longest = max(length, longest)
+                return longest
+        """,
+        "O(n)", "O(n)", "medium",
+    ),
+    (
+        "minimum window substring",
+        """
+        class Solution:
+            def minWindow(self, s, t):
+                need = Counter(t)
+                have = {}
+                l = 0
+                res, resLen = [-1, -1], float("inf")
+                formed = 0
+                for r in range(len(s)):
+                    c = s[r]
+                    have[c] = have.get(c, 0) + 1
+                    if c in need and have[c] == need[c]:
+                        formed += 1
+                    while formed == len(need):
+                        if r - l + 1 < resLen:
+                            res, resLen = [l, r], r - l + 1
+                        have[s[l]] -= 1
+                        if s[l] in need and have[s[l]] < need[s[l]]:
+                            formed -= 1
+                        l += 1
+                l, r = res
+                return s[l:r + 1] if resLen != float("inf") else ""
+        """,
+        "O(n)", "O(n)", "medium",
+    ),
+    (
         "constant work",
         """
         class Solution:

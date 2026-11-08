@@ -83,6 +83,7 @@ describe("running analyses", () => {
       analyzed: 1,
       cached: 0,
       failed: 0,
+      outdated: 0,
     });
     expect(calls).toEqual([{ language: "python3", code: CODE }]);
     const [job] = await jobs(user.id);
@@ -101,6 +102,7 @@ describe("running analyses", () => {
       analyzed: 0,
       cached: 0,
       failed: 0,
+      outdated: 0,
     });
   });
 
@@ -114,7 +116,7 @@ describe("running analyses", () => {
     expect(await prisma.analysisResult.count()).toBe(1);
   });
 
-  it("retries when the analyzer is down, and gives up after the last attempt", async () => {
+  it("waits, without using up attempts, while the analyzer is down", async () => {
     const user = await createTestUser();
     await synced(user.id);
     const down = fakeAnalyzer({
@@ -122,18 +124,64 @@ describe("running analyses", () => {
         throw new AnalyzerUnavailableError("The analyzer couldn't be reached.");
       },
     });
-    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    for (let run = 0; run < 5; run++) {
       expect(await runAnalysisJobs({ analyzer: down.analyzer, now: NOW })).toMatchObject({
-        failed: 1,
+        unavailable: true,
       });
     }
+    // Nothing was claimed or failed; the solution simply waits.
+    expect((await jobs(user.id)).filter((j) => j.attempts > 0 || j.status === "FAILED")).toEqual(
+      [],
+    );
+    const up = fakeAnalyzer();
+    await runAnalysisJobs({ analyzer: up.analyzer, now: NOW });
+    expect(up.calls).toHaveLength(1);
+  });
+
+  it("retries a solution the analyzer fails on, and gives up after the last attempt", async () => {
+    const user = await createTestUser();
+    await synced(user.id);
+    const failing: Analyzer = {
+      version: async () => "test-1",
+      analyze: async () => {
+        throw new AnalyzerUnavailableError("The analyzer answered 500.");
+      },
+    };
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      expect(await runAnalysisJobs({ analyzer: failing, now: NOW })).toMatchObject({ failed: 1 });
+    }
     expect(await jobs(user.id)).toMatchObject([
-      { status: "FAILED", attempts: MAX_ATTEMPTS, lastError: "The analyzer couldn't be reached." },
+      { status: "FAILED", attempts: MAX_ATTEMPTS, lastError: "The analyzer answered 500." },
     ]);
     // A failed job isn't picked up again.
     const up = fakeAnalyzer();
     await runAnalysisJobs({ analyzer: up.analyzer, now: NOW });
     expect(up.calls).toHaveLength(0);
+  });
+
+  it("redoes estimates made by an older analyzer version", async () => {
+    const user = await createTestUser();
+    await synced(user.id);
+    await runAnalysisJobs({ analyzer: fakeAnalyzer().analyzer, now: NOW });
+    const newer = fakeAnalyzer({
+      version: async () => "test-2",
+      answer: { ...answer, analyzerVersion: "test-2", time: "O(n log n)" },
+    });
+    expect(await runAnalysisJobs({ analyzer: newer.analyzer, now: NOW })).toMatchObject({
+      outdated: 1,
+      analyzed: 1,
+    });
+    expect((await jobs(user.id))[0]!.result).toMatchObject({
+      analyzerVersion: "test-2",
+      time: "O(n log n)",
+    });
+    // The old estimate is now unused, and the daily cleanup removes it.
+    expect(await deleteUnusedResults()).toBe(1);
+    // Nothing more to redo.
+    expect(await runAnalysisJobs({ analyzer: newer.analyzer, now: NOW })).toMatchObject({
+      outdated: 0,
+      analyzed: 0,
+    });
   });
 
   it("refuses an incomplete estimate rather than storing it", async () => {
@@ -201,7 +249,7 @@ describe("running analyses", () => {
         codeHash: "0".repeat(64),
         language: "python3",
         problemSlug: "two-sum",
-        analyzerVersion: "old",
+        analyzerVersion: "test-1",
         outcome: "OK",
         time: "O(1)",
         space: "O(1)",

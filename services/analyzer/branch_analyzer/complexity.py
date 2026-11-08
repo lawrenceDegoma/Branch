@@ -116,6 +116,18 @@ def _target_names(node: ast.AST) -> set[str]:
     return {n.id for n in ast.walk(node) if isinstance(n, ast.Name)}
 
 
+def _is_buckets(value: ast.expr) -> bool:
+    """`[[] for _ in …]`, `[set() for _ in …]`, or `defaultdict(list)`: a container of lists."""
+    empty = lambda e: (isinstance(e, (ast.List, ast.Set)) and not e.elts) or (  # noqa: E731
+        isinstance(e, ast.Call) and _name(e.func) in {"list", "set", "deque"} and not e.args
+    )
+    if isinstance(value, ast.ListComp):
+        return empty(value.elt)
+    if isinstance(value, ast.Call) and _name(value.func) == "defaultdict" and value.args:
+        return _name(value.args[0]) in {"list", "set", "deque"}
+    return False
+
+
 def _drained_queue(loop: ast.For | ast.AsyncFor) -> str | None:
     """`q` when a loop is `for _ in range(len(q))` and its body pops from q."""
     it = loop.iter
@@ -174,6 +186,10 @@ class _Analyzer:
         self.params = params
         self.hash_names: set[str] = set()
         self.sequence_names: set[str] = set()
+        # Containers of lists (buckets, adjacency lists): each item is filed under one key.
+        self.bucket_names: set[str] = set()
+        # The inputs each enclosing counted loop goes over, to spot loops over different sizes.
+        self.loop_sources: list[set[str]] = []
         self.findings: list[_Finding] = []
         self.confidence: Confidence = "high"
         self.limits: list[str] = []
@@ -264,9 +280,36 @@ class _Analyzer:
                 "Amortized loops (sliding windows, monotonic stacks) are recognized by their shape; "
                 "an unusual one may be counted wrong.",
             )
+        bucket = (
+            isinstance(node.iter, ast.Subscript) and _name(node.iter.value) in self.bucket_names
+        )
+        if bucket and self.loop_depth > 0 and count > ONE:
+            # `for x in buckets[i]` inside a loop over the buckets: every item was filed under
+            # one key, so all the inner passes together handle each item once.
+            count = ONE
+            self.note(
+                f"The inner loop goes through `{_name(node.iter.value)}`'s lists, and each item "
+                "is in only one of them, so in total it handles each item once.",
+                N,
+                "medium",
+                "Loops over buckets or adjacency lists are counted as one pass over everything in "
+                "them (for graphs, nodes plus edges).",
+            )
+        sources = (_target_names(node.iter) & self.params) if count > ONE else set()
+        if sources and any(outer and not (outer & sources) for outer in self.loop_sources):
+            outer = next(o for o in reversed(self.loop_sources) if o and not (o & sources))
+            self.note(
+                f"Nested loops go over different inputs (`{sorted(outer)[0]}` and "
+                f"`{sorted(sources)[0]}`), so the cost is really their sizes multiplied; it's "
+                "shown with both counted as n.",
+                N2,
+                "medium",
+            )
         self.loop_depth += 1
         self.reset_names.append(_assigned_names(node))
+        self.loop_sources.append(sources)
         body = self.block(node.body)
+        self.loop_sources.pop()
         self.reset_names.pop()
         self.loop_depth -= 1
         total = count * body
@@ -349,6 +392,8 @@ class _Analyzer:
             return
         kind = self.kind_of(value)
         name = target.id
+        if _is_buckets(value):
+            self.bucket_names.add(name)
         if kind == "hash":
             self.hash_names.add(name)
             self.sequence_names.discard(name)

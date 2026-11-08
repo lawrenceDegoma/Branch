@@ -38,11 +38,20 @@ export function normalizeCode(code: string): string {
 export const codeHash = (code: string) =>
   createHash("sha256").update(normalizeCode(code)).digest("hex");
 
-export type RunSummary = { analyzed: number; cached: number; failed: number };
+export type RunSummary = {
+  analyzed: number;
+  cached: number;
+  failed: number;
+  /** Estimates from an older analyzer version, queued to be redone. */
+  outdated: number;
+  /** The analyzer didn't answer; nothing was claimed, so no attempt was used up. */
+  unavailable?: true;
+};
 
 /**
- * Gives solutions without one a job, then claims and runs up to `limit` queued jobs (only the
- * user's, when `userId` is given). Returns null when no analyzer is configured.
+ * Gives solutions without one a job, requeues estimates made by an older analyzer version, then
+ * claims and runs up to `limit` queued jobs (only the user's, when `userId` is given). Returns null
+ * when no analyzer is configured.
  */
 export async function runAnalysisJobs({
   analyzer = configuredAnalyzer(),
@@ -56,7 +65,16 @@ export async function runAnalysisJobs({
   now?: Date;
 } = {}): Promise<RunSummary | null> {
   if (!analyzer) return null;
-  const summary: RunSummary = { analyzed: 0, cached: 0, failed: 0 };
+  const summary: RunSummary = { analyzed: 0, cached: 0, failed: 0, outdated: 0 };
+
+  // Asked first: when the analyzer is down, jobs wait without using up their attempts.
+  let version: string;
+  try {
+    version = await analyzer.version();
+  } catch (error) {
+    logger.warn("analyzer unavailable", errorContext(error));
+    return { ...summary, unavailable: true };
+  }
 
   const missing = await prisma.submission.findMany({
     where: { analysis: null, ...(userId ? { userId } : {}) },
@@ -69,6 +87,25 @@ export async function runAnalysisJobs({
       data: missing.map((s) => ({ submissionId: s.id, userId: s.userId, createdAt: now })),
       skipDuplicates: true,
     });
+  }
+
+  // Rules changed: redo estimates from older versions (a batch per run, oldest first).
+  const outdated = await prisma.analysisJob.findMany({
+    where: {
+      status: "DONE",
+      result: { analyzerVersion: { not: version } },
+      ...(userId ? { userId } : {}),
+    },
+    orderBy: { finishedAt: "asc" },
+    take: BACKFILL_BATCH,
+    select: { id: true },
+  });
+  if (outdated.length > 0) {
+    const { count } = await prisma.analysisJob.updateMany({
+      where: { id: { in: outdated.map((j) => j.id) }, status: "DONE" },
+      data: { status: "QUEUED", resultId: null, attempts: 0, finishedAt: null, lastError: null },
+    });
+    summary.outdated = count;
   }
 
   const staleBefore = new Date(now.getTime() - STALE_MS);
@@ -99,18 +136,6 @@ export async function runAnalysisJobs({
       FOR UPDATE SKIP LOCKED
     )
     RETURNING "id", "submissionId", "attempts"`;
-  if (claimed.length === 0) return summary;
-
-  let version: string;
-  try {
-    version = await analyzer.version();
-  } catch (error) {
-    await Promise.all(claimed.map((job) => release(job, error, now)));
-    logger.warn("analyzer unavailable", errorContext(error));
-    summary.failed += claimed.length;
-    return summary;
-  }
-
   for (const job of claimed) {
     try {
       const outcome = await analyzeJob(analyzer, version, job, now);

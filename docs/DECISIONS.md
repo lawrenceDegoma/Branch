@@ -878,6 +878,24 @@ suggestions, M21 code analysis, M22 journeys and docs):
   `code_analysis` (tables, a composite foreign key keeping a job's owner the solution's owner, and
   CHECKs). `/privacy` describes the analysis service.
 
+### After M21: analyzer fixes (2026-11-07)
+
+The owner found Top K Frequent Elements (bucket sort, O(n)) estimated as O(n²). A sweep of common
+solutions found the same mistake for BFS over adjacency lists, and Coin Change (loops over two
+inputs) reported as n² with high confidence.
+
+- **Buckets and adjacency lists:** an inner loop over `buckets[i]`, where `buckets` is
+  `[[] for …]` or `defaultdict(list)`, counts as one pass over everything in them overall
+  (medium confidence).
+- **Different inputs:** nested loops over different parameters keep n² but drop to medium
+  confidence and say the cost is really the two sizes multiplied.
+- 35 evaluation cases now (Top K bucket sort, Course Schedule, Coin Change, Longest Consecutive
+  Sequence, Minimum Window Substring added). Analyzer version `2026.11.2`.
+- **Outdated estimates are redone:** each run asks the analyzer's version first and requeues
+  finished jobs whose estimate came from another version (200 per run); the old estimates are
+  then unused and deleted daily. While the analyzer is down, nothing is claimed, so no attempts
+  are used up.
+
 ## Phase 3 summary
 
 Done when "supported accepted submissions sync once without exposing source to groups; failures
