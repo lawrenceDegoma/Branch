@@ -1,6 +1,7 @@
 "use client";
 
 import { CircleCheck } from "lucide-react";
+import Link from "next/link";
 import { useActionState, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { focusWhenRemoved } from "@/components/forms/confirm-action";
@@ -21,6 +22,8 @@ export type ReviewCardData = {
   };
   /** "Solved Nov 3" or "Last review Oct 30: Struggled", formatted on the server. */
   context: string;
+  /** The estimate of the person's latest solution to it, if any. */
+  estimate: string | null;
   choices: { outcome: ReviewOutcome; label: string; when: string }[];
 };
 
@@ -92,6 +95,14 @@ function ReviewCard({
           <DifficultyPill difficulty={problem.difficulty} />
         </h3>
         <p className="text-xs text-ink-muted">{[...problem.topics, item.context].join(" · ")}</p>
+        {item.estimate ? (
+          <p className="mt-1 text-xs text-ink-muted">
+            {item.estimate}{" "}
+            <Link href="/review/solutions" className="text-ink underline underline-offset-4">
+              Your solutions
+            </Link>
+          </p>
+        ) : null}
       </div>
       <form ref={form} action={action} noValidate className="flex flex-col gap-2">
         <input type="hidden" name="problemId" value={problem.id} />

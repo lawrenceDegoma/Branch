@@ -27,6 +27,8 @@ export const profileUpdateSchema = z.object({
 
 export const sharingSchema = z.object({ shareSolves: checkboxSchema });
 
+export const analysisSchema = z.object({ analyzeSolutions: checkboxSchema });
+
 export const appearanceSchema = z.enum(["SYSTEM", "LIGHT", "DARK"]);
 
 export type OnboardingInput = z.infer<typeof onboardingSchema>;

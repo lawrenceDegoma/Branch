@@ -6,7 +6,14 @@ import { DomainError } from "@/lib/errors";
 import { fieldErrorsFrom, formValues, type FormState } from "@/lib/form";
 import { safeNextPath } from "@/lib/redirect";
 import { getSession, requireUser, requireViewer } from "@/modules/auth/session";
-import { appearanceSchema, onboardingSchema, profileUpdateSchema, sharingSchema } from "./schemas";
+import { setAnalyzeSolutions } from "@/modules/analysis/service";
+import {
+  analysisSchema,
+  appearanceSchema,
+  onboardingSchema,
+  profileUpdateSchema,
+  sharingSchema,
+} from "./schemas";
 import { createProfile, getProfile, setAppearance, setShareSolves, updateProfile } from "./service";
 
 function domainErrorState(error: DomainError, values?: Record<string, string>): FormState {
@@ -79,6 +86,25 @@ export async function updateSharingAction(
   return {
     status: "success",
     message: shareSolves ? "Your solves will be shared." : "Your solves won't be shared.",
+    values,
+  };
+}
+
+export async function updateAnalysisAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const { user } = await requireViewer();
+  const values = formValues(formData, ["analyzeSolutions"]);
+  const { analyzeSolutions } = analysisSchema.parse(values);
+  await setAnalyzeSolutions(user.id, analyzeSolutions);
+  revalidatePath("/settings");
+  revalidatePath("/review", "layout");
+  return {
+    status: "success",
+    message: analyzeSolutions
+      ? "Your solutions will be analyzed."
+      : "Analysis is off, and your estimates were deleted.",
     values,
   };
 }

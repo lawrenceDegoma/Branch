@@ -39,9 +39,10 @@ not affiliated with LeetCode or NeetCode.
   this week across your groups, next week for working ahead, and your backlog. The group page
   shows who solved this week's problems and a branch graph of everyone's progress.
 
-- **Code analysis:** each solution (synced, or pasted on Your solutions) gets an estimate of its
-  time and space complexity, with a confidence level and the reasons. Python only for now; read
-  by Branch's own analyzer, never run, and private to you.
+- **Code analysis:** in Review → Your solutions, each solution (synced, or pasted) gets an
+  estimate of its time and space complexity, with what its letters mean, a confidence level, and
+  the reasons. Python only for now; read by Branch's own analyzer, never run, private to you, and
+  off with one setting. Share a solution to a group yourself if you want to.
 
 Posts are text and code only (no image uploads, by choice). Chat is still to come (see the PRD).
 

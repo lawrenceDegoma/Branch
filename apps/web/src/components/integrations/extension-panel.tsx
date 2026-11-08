@@ -79,7 +79,7 @@ export function ExtensionPanel({
       <ConnectForm />
       <div className="border-t border-line pt-4">
         <Link
-          href="/settings/submissions"
+          href="/review/solutions"
           className={buttonVariants({ variant: "ghost", className: "-ml-3" })}
         >
           Your solutions

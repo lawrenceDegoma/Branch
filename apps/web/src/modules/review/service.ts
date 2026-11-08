@@ -112,6 +112,28 @@ export async function getReviewQueue(userId: string, timeZone: string, now = new
   });
   const lastOutcome = new Map(latest.map((a) => [a.problemId, a.outcome]));
 
+  // The latest estimate of the person's own code for each due problem (none if analysis is off:
+  // turning it off deletes estimates).
+  const analyzed = await prisma.submission.findMany({
+    where: {
+      userId,
+      problemId: { in: due.map((s) => s.problemId) },
+      analysis: { status: "DONE", result: { outcome: "OK" } },
+    },
+    orderBy: { submittedAt: "desc" },
+    select: {
+      problemId: true,
+      analysis: { select: { result: { select: { time: true, space: true, bound: true } } } },
+    },
+  });
+  const estimates = new Map<string, { time: string; space: string; bound: boolean }>();
+  for (const row of analyzed) {
+    const result = row.analysis?.result;
+    if (row.problemId && result?.time && result.space && !estimates.has(row.problemId)) {
+      estimates.set(row.problemId, { time: result.time, space: result.space, bound: result.bound });
+    }
+  }
+
   const toItem = (s: (typeof due)[number]) => ({
     problem: toProblem(s.completion.problem),
     dueOn: fromDbDate(s.dueOn),
@@ -121,7 +143,11 @@ export async function getReviewQueue(userId: string, timeZone: string, now = new
     lastOutcome: lastOutcome.get(s.problemId) ?? null,
   });
   return {
-    due: due.map((s) => ({ ...toItem(s), choices: reviewChoices(s) })),
+    due: due.map((s) => ({
+      ...toItem(s),
+      choices: reviewChoices(s),
+      estimate: estimates.get(s.problemId) ?? null,
+    })),
     dueCount,
     upcoming: upcoming.map(toItem),
   };

@@ -65,7 +65,8 @@ the content still applies.
   > • For each accepted submission, it sends Branch the problem, the language, your code, and the
   > time. On neetcode.io it also reads the name of the problem you open, to tell which LeetCode
   > problem it is. Nothing else on either site is read or sent.
-  > • Your code is visible only to you in Branch, and you can delete it at any time.
+  > • Your code is visible only to you in Branch unless you choose to share it, and you can
+  > delete it at any time.
   > • Your groups see a solve only if you turn on "Share my solves".
   > • The extension never makes requests to LeetCode or neetcode.io; it only reads the results of
   > submissions you make.
@@ -141,7 +142,7 @@ the content still applies.
 > 3. Sign in to leetcode.com with any free LeetCode account, open
 >    https://leetcode.com/problems/two-sum/ and submit a correct solution.
 > 4. Within a few seconds the extension's popup shows "two-sum, counted", and Branch shows Two Sum
->    as solved (Home, and Settings → Your solutions, where the code is visible only to this
+>    as solved (Home, and Review → Your solutions, where the code is visible only to this
 >    account).
 >
 > The extension only observes the results of the user's own submissions on leetcode.com and never

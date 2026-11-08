@@ -939,6 +939,26 @@ interpretation of the code (`branch_analyzer/engine.py`, `cost.py`, `values.py`,
 - **Migration `analysis_notation`:** `notation` and `bound` on `analysis_result`, and longer limits
   for multi-size estimates (120 characters).
 
+### After M21: solutions in Review, an analysis setting, and sharing (2026-11-08)
+
+Owner decisions:
+
+- **Your solutions moved into Review** (`/review/solutions`, a second tab beside the review queue;
+  `/settings/submissions` redirects). Due review cards show the estimate of the person's latest
+  solution to that problem.
+- **Analysis is a setting** (Settings → Code analysis, `profile.analyzeSolutions`, on by default;
+  migration `profile_analyze_solutions`). Off skips the person in every analysis run and deletes
+  their estimates at once; on analyzes their solutions again.
+- **Analysis is never attached to posts automatically** (asked, and the owner chose a share
+  button only): automatic posts would turn progress into comparison, hint at approaches, and
+  publish estimates that can be wrong; the PRD keeps code and analysis private unless explicitly
+  shared. **Share** on a solution posts it to a group the person picks, with an optional note,
+  its estimate, and the code only if they tick it (then the post is a spoiler). It's an ordinary
+  post of theirs: editable, deletable, within the post length limit.
+- `/privacy`, the shared disclosure ("unless you choose to share it"), and the store guide's
+  wording were updated. The extension's built-in copy of the disclosure updates with its next
+  version.
+
 ## Phase 3 summary
 
 Done when "supported accepted submissions sync once without exposing source to groups; failures

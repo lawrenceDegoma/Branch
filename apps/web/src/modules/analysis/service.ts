@@ -38,6 +38,21 @@ export function normalizeCode(code: string): string {
 export const codeHash = (code: string) =>
   createHash("sha256").update(normalizeCode(code)).digest("hex");
 
+/** People who turned analysis off in Settings are skipped entirely. */
+const ANALYSIS_ON = { NOT: { user: { profile: { is: { analyzeSolutions: false } } } } };
+
+/**
+ * Turns analysis of the person's solutions on or off. Off deletes their estimates (and the
+ * cached estimates nobody else uses) at once; on analyzes their solutions again from the start.
+ */
+export async function setAnalyzeSolutions(userId: string, on: boolean): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    await tx.profile.update({ where: { userId }, data: { analyzeSolutions: on } });
+    if (!on) await tx.analysisJob.deleteMany({ where: { userId } });
+  });
+  if (!on) await deleteUnusedResults();
+}
+
 export type RunSummary = {
   analyzed: number;
   cached: number;
@@ -77,7 +92,7 @@ export async function runAnalysisJobs({
   }
 
   const missing = await prisma.submission.findMany({
-    where: { analysis: null, ...(userId ? { userId } : {}) },
+    where: { analysis: null, ...(userId ? { userId } : {}), ...ANALYSIS_ON },
     orderBy: { receivedAt: "asc" },
     take: BACKFILL_BATCH,
     select: { id: true, userId: true },
@@ -95,6 +110,7 @@ export async function runAnalysisJobs({
       status: "DONE",
       result: { analyzerVersion: { not: version } },
       ...(userId ? { userId } : {}),
+      ...ANALYSIS_ON,
     },
     orderBy: { finishedAt: "asc" },
     take: BACKFILL_BATCH,
@@ -127,6 +143,9 @@ export async function runAnalysisJobs({
       WHERE j."status" = 'QUEUED'
         AND j."attempts" < ${MAX_ATTEMPTS}
         AND (${userId ?? null}::text IS NULL OR j."userId" = ${userId ?? null})
+        AND NOT EXISTS (
+          SELECT 1 FROM "profile" p WHERE p."userId" = j."userId" AND NOT p."analyzeSolutions"
+        )
         AND (
           SELECT count(*) FROM "analysis_job" d
           WHERE d."userId" = j."userId" AND d."finishedAt" > ${dayAgo}

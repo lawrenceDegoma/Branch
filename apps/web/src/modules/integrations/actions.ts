@@ -6,11 +6,12 @@ import { requireViewer } from "@/modules/auth/session";
 import { createConnection, revokeConnection } from "./connections";
 import { connectionIdSchema, submissionIdSchema } from "./schemas";
 import { analyzeAfterResponse } from "@/modules/analysis/trigger";
+import { shareSolution } from "./share";
 import { deleteAllSubmissions, deleteSubmission, pasteSolution } from "./submissions";
 
 function refresh() {
   revalidatePath("/settings");
-  revalidatePath("/settings/submissions");
+  revalidatePath("/review/solutions");
 }
 
 /** Creates a connection and returns its token, which is shown this once. */
@@ -79,4 +80,23 @@ export async function pasteSolutionAction(
   analyzeAfterResponse(user.id);
   refresh();
   return { status: "success", message: "Solution saved. Refresh in a moment to see its analysis." };
+}
+
+/** Posts a solution to one of the viewer's groups, as they chose. */
+export async function shareSolutionAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const { user } = await requireViewer();
+  const values = formValues(formData, ["submissionId", "groupId", "note", "includeCode"]);
+  if (!formData.get("includeCode")) delete values.includeCode;
+  let post;
+  try {
+    post = await shareSolution(user.id, values);
+  } catch (error) {
+    return formStateFromError(error, values);
+  }
+  revalidatePath("/home");
+  revalidatePath(`/groups/${post.groupId}`);
+  return { status: "success", message: "Shared.", data: { href: `/posts/${post.id}` } };
 }

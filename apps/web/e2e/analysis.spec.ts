@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { prisma } from "@branch/database";
 import type { Page } from "@playwright/test";
-import { expect, solveInDb, test } from "./support/fixtures";
+import { anotherUser, createGroupInDb, expect, solveInDb, test } from "./support/fixtures";
 
 // Pasting a solution and reading its estimate, against the real analyzer (services/analyzer),
 // which playwright.config.ts starts alongside the app.
@@ -101,14 +101,79 @@ test.describe("code analysis", () => {
         finishedAt: new Date(),
       },
     });
-    await page.goto("/settings/submissions");
+    await page.goto("/review/solutions");
     const card = page.getByRole("article", { name: /Two Sum/ });
     await expect(card).toContainText("Probably O(n) time and O(n) space.", { timeout: 15_000 });
     await expect(card).not.toContainText("O(n²)");
   });
 
+  test("a solution is shared only when its owner chooses, to the group they choose", async ({
+    page,
+    viewer,
+    browser,
+    baseURL,
+  }) => {
+    const friend = await anotherUser(browser, baseURL!);
+    const group = await createGroupInDb(viewer.id, "Share crew", [friend.account.id]);
+    await solveInDb(viewer.id, ["two-sum"]);
+    await page.goto("/review/solutions");
+    await page.waitForFunction(() => document.readyState === "complete");
+    await paste(page, "Two Sum", "Python 3", PYTHON);
+    const card = page.getByRole("article", { name: /Two Sum/ });
+    await expect(card).toContainText("Probably O(n) time", { timeout: 15_000 });
+
+    // Nothing reaches the group until it's shared.
+    await friend.page.goto(`/groups/${group.id}`);
+    await expect(friend.page.getByText("Shared my solution")).toHaveCount(0);
+
+    await card.getByRole("button", { name: "Share Two Sum to a group" }).click();
+    const dialog = page.getByRole("alertdialog");
+    await expect(dialog.getByLabel("Group")).toHaveValue(group.id);
+    await dialog.getByLabel("Note (optional)").fill("Went with a hash map.");
+    await dialog.getByLabel("Include my code").check();
+    await dialog.getByRole("button", { name: "Share", exact: true }).click();
+    await expect(card.getByRole("status")).toContainText("Shared to Share crew.");
+    await expect(card.getByRole("button", { name: "Share Two Sum to a group" })).toBeFocused();
+
+    await friend.page.reload();
+    const post = friend.page
+      .getByRole("article")
+      .filter({ hasText: "Shared my solution to Two Sum" });
+    await expect(post).toContainText("Went with a hash map.");
+    await expect(post).toContainText("probably O(n) time and O(n) space");
+    // The code is folded as a spoiler until the reader opens it.
+    await expect(post.getByText("Show spoiler code")).toBeVisible();
+    await friend.context.close();
+  });
+
+  test("turning analysis off stops it and deletes estimates", async ({ page, viewer }) => {
+    await solveInDb(viewer.id, ["two-sum"]);
+    await page.goto("/review/solutions");
+    await page.waitForFunction(() => document.readyState === "complete");
+    await paste(page, "Two Sum", "Python 3", PYTHON);
+    const card = page.getByRole("article", { name: /Two Sum/ });
+    await expect(card).toContainText("Probably O(n) time", { timeout: 15_000 });
+
+    // On a due review of the same problem, the latest estimate shows.
+    await page.goto("/review");
+    await expect(page.getByRole("article", { name: /Two Sum/ })).toContainText(
+      "Your last solution: probably O(n) time and O(n) space.",
+    );
+
+    await page.goto("/settings");
+    await page.waitForFunction(() => document.readyState === "complete");
+    const section = page.locator("#analysis");
+    await section.getByLabel("Analyze my solutions").uncheck();
+    await section.getByRole("button", { name: "Save analysis" }).click();
+    await expect(section.getByRole("status")).toContainText("Analysis is off");
+    await page.goto("/review/solutions");
+    await expect(page.getByText("Code analysis is off")).toBeVisible();
+    await expect(card).not.toContainText("Probably");
+    expect(await prisma.analysisJob.count({ where: { userId: viewer.id } })).toBe(0);
+  });
+
   test("only solved problems can be pasted", async ({ page, viewer }) => {
-    await page.goto("/settings/submissions");
+    await page.goto("/review/solutions");
     await page.locator("summary", { hasText: "Paste a solution" }).click();
     await expect(
       page.getByText("Mark a problem solved first, then paste your solution for it here."),

@@ -28,7 +28,7 @@ const appRoutes = [
   "/profile",
   "/review",
   "/settings",
-  "/settings/submissions",
+  "/review/solutions",
 ];
 
 async function expectNoViolations(page: Page) {
@@ -282,7 +282,8 @@ for (const colorScheme of ["dark", "light"] as const) {
           { ...base, externalId: "2", problemSlug: "not-in-branch" },
         ],
       });
-      await page.goto("/settings/submissions");
+      await createGroupInDb(viewer.id, "Sharing crew");
+      await page.goto("/review/solutions");
       // Opening the page starts their analysis; the estimate appears without a reload.
       const counted = page.getByRole("article", { name: /Two Sum/ });
       await expect(counted).toContainText("Probably O(1) time", { timeout: 15_000 });
@@ -291,6 +292,14 @@ for (const colorScheme of ["dark", "light"] as const) {
       await expect(page.getByRole("main").locator("pre").first()).toBeVisible();
       await page.locator("summary", { hasText: "Paste a solution" }).click();
       await expectNoViolations(page);
+      // The share dialog, open (it hides the page behind it, h1 included).
+      await counted.getByRole("button", { name: /^Share/ }).click();
+      await expect(page.getByRole("alertdialog")).toBeVisible();
+      await page.waitForFunction(() => document.getAnimations().length === 0);
+      const results = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .analyze();
+      expect(results.violations).toEqual([]);
     });
 
     test("due reviews have no detectable WCAG A/AA violations", async ({ page, viewer }) => {

@@ -11,6 +11,7 @@ import { listConnections } from "@/modules/integrations/connections";
 import { listTimeZones } from "@/modules/profile/timezone";
 import { PasswordForm } from "./password-form";
 import { ProfileForm } from "./profile-form";
+import { AnalysisForm } from "./analysis-form";
 import { SharingForm } from "./sharing-form";
 
 export const metadata = { title: "Settings" };
@@ -46,9 +47,16 @@ export default async function SettingsPage({
       <SettingsSection
         id="sharing"
         title="Sharing"
-        description="Solving a problem never posts anything unless you turn this on."
+        description="Solving a problem never posts anything unless you turn this on. Automatic posts never include your code or its analysis."
       >
         <SharingForm shareSolves={profile.shareSolves} />
+      </SettingsSection>
+      <SettingsSection
+        id="analysis"
+        title="Code analysis"
+        description="Branch reads your code without running it, on its own service; no AI provider or other company sees it. Estimates are private: a group sees one only if you share a solution yourself."
+      >
+        <AnalysisForm analyzeSolutions={profile.analyzeSolutions} />
       </SettingsSection>
       <SettingsSection
         id="extension"

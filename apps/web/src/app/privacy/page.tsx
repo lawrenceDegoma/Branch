@@ -8,7 +8,7 @@ export const metadata = {
   description: "What Branch and the Branch for LeetCode extension collect, and why.",
 };
 
-const EFFECTIVE = "November 7, 2026";
+const EFFECTIVE = "November 8, 2026";
 
 /** Public: linked from the Chrome Web Store listing, the extension, and Branch's own pages. */
 export default function PrivacyPage() {
@@ -105,15 +105,18 @@ export default function PrivacyPage() {
         <h2>Who can see it</h2>
         <ul>
           <li>
-            <strong>Your code is visible only to you.</strong> It never appears in groups, posts, or
-            anyone else&apos;s view.
+            <strong>Your code is visible only to you</strong> unless you share a solution to a group
+            yourself (Review → Your solutions → Share). Then that group&apos;s members see what you
+            chose to include: its estimate, a note, and your code only if you ticked it. Nothing
+            about your code is ever posted automatically.
           </li>
           <li>Your reviews and how they went are visible only to you.</li>
           <li>
             <strong>Code analysis:</strong> Branch estimates each solution&apos;s complexity with
             its own analysis service, which runs on Vercel like the rest of Branch. It reads the
             code without running it and keeps nothing; the estimate is stored with your solution and
-            shown only to you. No AI provider or other company sees your code.
+            shown only to you. No AI provider or other company sees your code. You can turn analysis
+            off in Settings → Code analysis, which deletes your estimates.
           </li>
           <li>
             Members of your groups see your name, username, and, for problems their group&apos;s
@@ -136,7 +139,8 @@ export default function PrivacyPage() {
           <li>Your account and what you create stay until you delete them or your account.</li>
           <li>
             Your solutions (synced or pasted), their code, and their estimates stay until you delete
-            them (Settings → Your solutions). An estimate goes within a day of its solution.
+            them (Review → Your solutions). An estimate goes within a day of its solution, and at
+            once if you turn analysis off.
           </li>
           <li>
             A synced submission for a problem that isn&apos;t in Branch is deleted after 30 days
@@ -151,7 +155,8 @@ export default function PrivacyPage() {
         <h2>Your choices</h2>
         <ul>
           <li>Disconnect the extension from its popup or from Settings at any time.</li>
-          <li>Delete any solution, or all of them, from Settings → Your solutions.</li>
+          <li>Delete any solution, or all of them, from Review → Your solutions.</li>
+          <li>Turn code analysis off or on in Settings → Code analysis.</li>
           <li>Turn sharing on or off, and delete your posts and comments, whenever you like.</li>
           <li>
             To delete your account and everything in it, or for any question about your data,{" "}

@@ -9,6 +9,7 @@ import { AnalyzerUnavailableError, type Analyzer, type AnalyzerAnswer } from "./
 import {
   analysisState,
   codeHash,
+  setAnalyzeSolutions,
   DAILY_ANALYSES_PER_USER,
   deleteUnusedResults,
   MAX_ATTEMPTS,
@@ -338,6 +339,35 @@ describe("running analyses", () => {
     });
     await runAnalysisJobs({ analyzer: newer.analyzer, now: later });
     expect((await analysisState(user.id)).fingerprint).not.toBe(done.fingerprint);
+  });
+
+  it("skips people who turned analysis off, deletes their estimates, and starts over if they turn it on", async () => {
+    const [ada, grace] = await Promise.all([createTestUser(), createTestUser()]);
+    await prisma.profile.createMany({
+      data: [ada, grace].map((u) => ({
+        userId: u.id,
+        username: `u${u.id.slice(0, 8)}`,
+        timezone: "UTC",
+      })),
+    });
+    await synced(ada.id, `${CODE}\n# ada`);
+    await runAnalysisJobs({ analyzer: fakeAnalyzer().analyzer, now: NOW });
+    expect(await jobs(ada.id)).toHaveLength(1);
+
+    await setAnalyzeSolutions(ada.id, false);
+    expect(await jobs(ada.id)).toEqual([]);
+    expect(await prisma.analysisResult.count()).toBe(0);
+    await synced(ada.id, `${CODE}\n# ada again`);
+    await synced(grace.id, `${CODE}\n# grace`);
+    const { analyzer, calls } = fakeAnalyzer();
+    await runAnalysisJobs({ analyzer, now: NOW });
+    expect(calls.map((c) => c.code)).toEqual([`${CODE}\n# grace`]);
+    expect(await jobs(ada.id)).toEqual([]);
+
+    await setAnalyzeSolutions(ada.id, true);
+    const again = fakeAnalyzer();
+    await runAnalysisJobs({ analyzer: again.analyzer, now: NOW });
+    expect(again.calls).toHaveLength(2);
   });
 
   it("deletes estimates once no solution uses them", async () => {
