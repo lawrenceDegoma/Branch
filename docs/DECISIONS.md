@@ -899,6 +899,11 @@ inputs) reported as n² with high confidence.
   finished jobs whose estimate came from another version (200 per run); the old estimates are
   then unused and deleted daily. While the analyzer is down, nothing is claimed, so no attempts
   are used up.
+- **Your solutions checks when it opens** (`checkAnalysesAction`): it runs a few of the viewer's
+  waiting or outdated analyses and returns a fingerprint of their analyses (count, waiting, latest
+  finish); the page refreshes when that differs from the one it was drawn with, whoever did the
+  work, and checks again every 2 seconds while any are waiting (6 checks at most). Before this, an
+  estimate from an older version only updated at the daily job.
 
 ## Phase 3 summary
 

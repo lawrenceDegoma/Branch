@@ -2,26 +2,37 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { checkAnalysesAction } from "@/modules/analysis/actions";
 
-/** How often, and how many times, to look again for analyses still running. */
-const INTERVAL_MS = 3000;
-const TIMES = 5;
+/** Checks at most this many times, this far apart, while analyses are still waiting. */
+const CHECKS = 6;
+const PAUSE_MS = 2000;
 
 /**
- * Rendered while an analysis on the page is still running: refreshes the page's data a few
- * times so the estimate appears without a reload. Gives up after about 15 seconds; the daily job
- * finishes anything slower.
+ * Mounted on Your solutions: asks the server to run the viewer's waiting or outdated analyses,
+ * and refreshes the page as soon as the viewer's analyses differ from what the page was drawn
+ * with, whoever did the work (this check, a run started right after a paste, or the daily job).
+ * Stops when nothing is waiting, or after about ten seconds; the refreshed page checks again.
  */
-export function RefreshWhileAnalyzing() {
+export function RefreshWhileAnalyzing({ fingerprint }: { fingerprint: string }) {
   const router = useRouter();
   useEffect(() => {
-    let count = 0;
-    const timer = setInterval(() => {
-      count += 1;
-      router.refresh();
-      if (count >= TIMES) clearInterval(timer);
-    }, INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, [router]);
+    let cancelled = false;
+    void (async () => {
+      for (let check = 0; check < CHECKS && !cancelled; check++) {
+        const state = await checkAnalysesAction().catch(() => null);
+        if (cancelled || !state) return;
+        if (state.fingerprint !== fingerprint) {
+          router.refresh();
+          return;
+        }
+        if (state.pending === 0) return;
+        await new Promise((resolve) => setTimeout(resolve, PAUSE_MS));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router, fingerprint]);
   return null;
 }

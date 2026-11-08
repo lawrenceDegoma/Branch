@@ -7,6 +7,7 @@ import { setCompletion } from "@/modules/progress/service";
 import { createTestUser, testCatalog } from "@/test/factories";
 import { AnalyzerUnavailableError, type Analyzer, type AnalyzerAnswer } from "./analyzer";
 import {
+  analysisState,
   codeHash,
   DAILY_ANALYSES_PER_USER,
   deleteUnusedResults,
@@ -291,6 +292,28 @@ describe("running analyses", () => {
       now: new Date(NOW.getTime() + 25 * 60 * 60_000),
     });
     expect(tomorrow.calls.map((c) => c.code)).toEqual([`${CODE}\n# grace`]);
+  });
+
+  it("summarizes a person's analyses so a page can tell when they've changed", async () => {
+    const user = await createTestUser();
+    const empty = await analysisState(user.id);
+    expect(empty).toEqual({ fingerprint: "0:0:0", pending: 0 });
+    await synced(user.id);
+    await runAnalysisJobs({ analyzer: fakeAnalyzer().analyzer, limit: 0, now: NOW });
+    const waiting = await analysisState(user.id);
+    expect(waiting.pending).toBe(1);
+    await runAnalysisJobs({ analyzer: fakeAnalyzer().analyzer, now: NOW });
+    const done = await analysisState(user.id);
+    expect(done.pending).toBe(0);
+    expect(new Set([empty.fingerprint, waiting.fingerprint, done.fingerprint]).size).toBe(3);
+    // Redoing an outdated estimate changes it too.
+    const later = new Date(NOW.getTime() + 60_000);
+    const newer = fakeAnalyzer({
+      version: async () => "test-2",
+      answer: { ...answer, analyzerVersion: "test-2" },
+    });
+    await runAnalysisJobs({ analyzer: newer.analyzer, now: later });
+    expect((await analysisState(user.id)).fingerprint).not.toBe(done.fingerprint);
   });
 
   it("deletes estimates once no solution uses them", async () => {

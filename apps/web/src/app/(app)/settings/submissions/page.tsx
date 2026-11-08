@@ -11,15 +11,10 @@ import { EmptyState } from "@/components/states/empty-state";
 import { buttonVariants } from "@/components/ui/button";
 import { serverEnv } from "@/lib/env";
 import { formatDate, formatDateTime } from "@/lib/format";
-import { analyzeAfterResponse } from "@/modules/analysis/trigger";
+import { analysisState } from "@/modules/analysis/service";
 import { requireViewer } from "@/modules/auth/session";
 import { deleteAllSubmissionsAction, deleteSubmissionAction } from "@/modules/integrations/actions";
-import {
-  ANALYZED_LANGUAGES,
-  codeFence,
-  languageLabel,
-  PASTE_LANGUAGES,
-} from "@/modules/integrations/languages";
+import { codeFence, languageLabel, PASTE_LANGUAGES } from "@/modules/integrations/languages";
 import { SUBMISSION_CODE_MAX, submissionIdSchema } from "@/modules/integrations/schemas";
 import {
   listSolvedProblems,
@@ -48,25 +43,17 @@ export default async function SubmissionsPage({
   const { before } = querySchema.parse(await searchParams);
   // Anything waiting whose problem has been added since counts now, not at the next daily run.
   await matchWaitingSubmissions({ userId: user.id });
-  const [{ items, nextCursor }, solved] = await Promise.all([
+  const [{ items, nextCursor }, solved, analysis] = await Promise.all([
     listSubmissions(user.id, { before }),
     listSolvedProblems(user.id),
+    analysisState(user.id),
   ]);
   const analysisOn = Boolean(serverEnv().ANALYZER_URL);
-  const analyzing =
-    analysisOn &&
-    items.some(
-      (item) =>
-        ANALYZED_LANGUAGES.has(item.language) &&
-        (!item.analysis || item.analysis.status === "QUEUED" || item.analysis.status === "RUNNING"),
-    );
-  // Solutions still waiting (say, synced before analysis was set up) start now, not at the daily
-  // run; the page then looks again by itself.
-  if (analyzing) analyzeAfterResponse(user.id);
-
   return (
     <div className="max-w-3xl">
-      {analyzing ? <RefreshWhileAnalyzing /> : null}
+      {analysisOn && items.length > 0 ? (
+        <RefreshWhileAnalyzing fingerprint={analysis.fingerprint} />
+      ) : null}
       <PageHeader
         title="Your solutions"
         description={

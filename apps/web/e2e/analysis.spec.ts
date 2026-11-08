@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import { prisma } from "@branch/database";
 import type { Page } from "@playwright/test";
 import { expect, solveInDb, test } from "./support/fixtures";
 
@@ -57,6 +59,53 @@ test.describe("code analysis", () => {
     await expect(page.getByRole("article", { name: /Valid Anagram/ })).toContainText(
       "Not analyzed: only Python solutions are analyzed so far.",
     );
+  });
+
+  test("an estimate from an older analyzer version is redone when the page opens", async ({
+    page,
+    viewer,
+  }) => {
+    await solveInDb(viewer.id, ["two-sum"]);
+    const twoSum = await prisma.problem.findUniqueOrThrow({ where: { leetcodeSlug: "two-sum" } });
+    const solution = await prisma.submission.create({
+      data: {
+        userId: viewer.id,
+        source: "PASTED",
+        problemSlug: "two-sum",
+        problemId: twoSum.id,
+        language: "python3",
+        code: PYTHON,
+        submittedAt: new Date(),
+      },
+    });
+    // What an older version said, before its rules were fixed.
+    const old = await prisma.analysisResult.create({
+      data: {
+        // Unique per test run, so the desktop and mobile copies of this test don't collide.
+        codeHash: createHash("sha256").update(viewer.id).digest("hex"),
+        language: "python3",
+        problemSlug: "two-sum",
+        analyzerVersion: "2000.1.1",
+        outcome: "OK",
+        time: "O(n²)",
+        space: "O(n)",
+        confidence: "HIGH",
+        reasons: ["An outdated reason."],
+      },
+    });
+    await prisma.analysisJob.create({
+      data: {
+        submissionId: solution.id,
+        userId: viewer.id,
+        status: "DONE",
+        resultId: old.id,
+        finishedAt: new Date(),
+      },
+    });
+    await page.goto("/settings/submissions");
+    const card = page.getByRole("article", { name: /Two Sum/ });
+    await expect(card).toContainText("Probably O(n) time and O(n) space.", { timeout: 15_000 });
+    await expect(card).not.toContainText("O(n²)");
   });
 
   test("only solved problems can be pasted", async ({ page, viewer }) => {

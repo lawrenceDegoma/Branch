@@ -247,3 +247,23 @@ export async function deleteUnusedResults(): Promise<number> {
   const { count } = await prisma.analysisResult.deleteMany({ where: { jobs: { none: {} } } });
   return count;
 }
+
+/**
+ * A summary of a person's analyses that changes whenever any of them does (one starts waiting,
+ * finishes, or is redone), and how many are waiting. Your solutions compares it with the one it
+ * was drawn with to know when to refresh, whoever did the work.
+ */
+export async function analysisState(
+  userId: string,
+): Promise<{ fingerprint: string; pending: number }> {
+  const [row] = await prisma.$queryRaw<{ total: bigint; pending: bigint; latest: Date | null }[]>`
+    SELECT count(*) AS total,
+           count(*) FILTER (WHERE "status" IN ('QUEUED', 'RUNNING')) AS pending,
+           max("finishedAt") AS latest
+    FROM "analysis_job" WHERE "userId" = ${userId}`;
+  const pending = Number(row?.pending ?? 0);
+  return {
+    fingerprint: `${row?.total ?? 0}:${pending}:${row?.latest?.getTime() ?? 0}`,
+    pending,
+  };
+}
