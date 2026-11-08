@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { Feed, GroupFilter } from "@/components/feed/feed";
 import { Backlog, GroupWeek, isPlanned } from "@/components/home/group-week";
+import { GettingStarted } from "@/components/home/getting-started";
 import { WeekSummary } from "@/components/home/week-summary";
 import { PageHeader } from "@/components/shell/page-header";
 import { EmptyState } from "@/components/states/empty-state";
 import { buttonVariants } from "@/components/ui/button";
+import { serverEnv } from "@/lib/env";
 import { requireViewer } from "@/modules/auth/session";
 import { feedQuerySchema } from "@/modules/feed/schemas";
 import { listComposerGroups, listFeed } from "@/modules/feed/service";
+import { listConnections } from "@/modules/integrations/connections";
 import { getHome } from "@/modules/progress/service";
 
 export const metadata = { title: "Home" };
@@ -44,9 +47,10 @@ export default async function HomePage({
   const groups = home.groups.map((g) => g.group);
   // A stale or foreign ?group= falls back to every group rather than revealing anything.
   const selected = groups.some((g) => g.id === query.group) ? query.group : undefined;
-  const [page, composerGroups] = await Promise.all([
+  const [page, composerGroups, connections] = await Promise.all([
     listFeed(user.id, { groupId: selected, before: query.before }),
     listComposerGroups(user.id),
+    profile.gettingStartedHidden ? Promise.resolve([]) : listConnections(user.id),
   ]);
   const planned = home.groups.filter(isPlanned);
   const unplanned = home.groups.filter((g) => !isPlanned(g));
@@ -87,7 +91,15 @@ export default async function HomePage({
             </div>
           ) : null}
         </section>
-        <div className="min-w-0 [grid-area:feed]">
+        <div className="flex min-w-0 flex-col gap-6 [grid-area:feed]">
+          {profile.gettingStartedHidden ? null : (
+            <GettingStarted
+              connected={connections.length > 0}
+              shareSolves={profile.shareSolves}
+              solved={home.summary.totalSolved > 0}
+              storeUrl={serverEnv().EXTENSION_STORE_URL}
+            />
+          )}
           <Feed
             page={page}
             composerGroups={

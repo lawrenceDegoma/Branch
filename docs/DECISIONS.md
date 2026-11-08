@@ -959,6 +959,17 @@ Owner decisions:
   wording were updated. The extension's built-in copy of the disclosure updates with its next
   version.
 
+### Onboarding: "Get started" on Home (2026-11-08)
+
+Owner request, as more friends join. Home shows a "Get started" checklist above the feed:
+sync LeetCode solves (done once the extension is connected; it links to the store and to
+Settings), share solves with groups (sharing is off by default, so friends otherwise never see each
+other's solves), and solve a first problem. Steps are checked off from what the person has done;
+the card disappears when all are done, or for good when hidden (`profile.gettingStartedHidden`,
+migration `profile_getting_started`). Whether the extension is installed can't be told on Home
+(its content script only runs on Settings, and widening that needs a store update), so the step
+is "connected", which is what matters.
+
 ## Phase 3 summary
 
 Done when "supported accepted submissions sync once without exposing source to groups; failures

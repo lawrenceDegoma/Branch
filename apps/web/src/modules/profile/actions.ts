@@ -1,5 +1,6 @@
 "use server";
 
+import { prisma } from "@branch/database";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { DomainError } from "@/lib/errors";
@@ -107,4 +108,12 @@ export async function updateAnalysisAction(
       : "Analysis is off, and your estimates were deleted.",
     values,
   };
+}
+
+/** Hides Home's "Get started" checklist. */
+export async function hideGettingStartedAction(_prev: FormState): Promise<FormState> {
+  const { user } = await requireViewer();
+  await prisma.profile.update({ where: { userId: user.id }, data: { gettingStartedHidden: true } });
+  revalidatePath("/home");
+  return { status: "success", message: "Hidden." };
 }
