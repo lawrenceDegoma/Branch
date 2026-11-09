@@ -100,7 +100,8 @@ export async function updateAnalysisAction(
   const { analyzeSolutions } = analysisSchema.parse(values);
   await setAnalyzeSolutions(user.id, analyzeSolutions);
   revalidatePath("/settings");
-  revalidatePath("/review", "layout");
+  revalidatePath("/review");
+  revalidatePath("/solutions");
   return {
     status: "success",
     message: analyzeSolutions

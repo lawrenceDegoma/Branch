@@ -117,7 +117,10 @@ test.describe("authentication", () => {
 });
 
 test.describe("profile", () => {
-  test("edits to the profile appear on the profile page", async ({ page, viewer }) => {
+  test("edits to the profile are saved, and the old profile page leads to them", async ({
+    page,
+    viewer,
+  }) => {
     await page.goto("/settings");
     await page.getByLabel("Name", { exact: true }).fill("Grace Hopper");
     await page.getByLabel("Bio").fill("Debugging since 1947.");
@@ -125,9 +128,17 @@ test.describe("profile", () => {
     await expect(page.getByRole("main").getByRole("status")).toContainText("Profile saved.");
 
     await page.goto("/profile");
-    await expect(page.getByRole("heading", { level: 1, name: "Grace Hopper" })).toBeVisible();
-    await expect(page.getByText("Debugging since 1947.")).toBeVisible();
-    await expect(page.getByRole("main").getByText(`@${viewer.username}`)).toBeVisible();
+    await expect(page).toHaveURL(/\/settings#profile$/);
+    await expect(page.getByLabel("Bio")).toHaveValue("Debugging since 1947.");
+    await expect(page.getByLabel("Name", { exact: true })).toHaveValue("Grace Hopper");
+    // The sidebar's account card shows the new name and links back to these settings.
+    if ((await page.viewportSize())!.width >= 1024) {
+      await expect(page.getByRole("link", { name: /Grace Hopper/ })).toHaveAttribute(
+        "href",
+        "/settings#profile",
+      );
+    }
+    expect(viewer.username).toBeTruthy();
   });
 
   test("a password change takes effect", async ({ page, viewer }) => {

@@ -7,7 +7,7 @@ import type { listConnections } from "@/modules/integrations/connections";
 import { CONNECT_BUTTON_ID, ConnectForm } from "./connect-form";
 import { GetExtension } from "./get-extension";
 
-/** Settings: the browsers connected to this account, connecting another, and synced submissions. */
+/** Settings: getting the extension, the browsers connected to this account, and connecting one. */
 export function ExtensionPanel({
   connections,
   storeUrl,
@@ -66,15 +66,18 @@ export function ExtensionPanel({
             </li>
           ))}
         </ul>
-      ) : (
-        <p className="text-ink-muted">No browser is connected.</p>
-      )}
-      <p className="text-ink-muted">
-        {EXTENSION_DISCLOSURE} Connecting means you agree to this.{" "}
-        <Link href="/privacy" className="text-ink underline underline-offset-4">
-          Privacy policy
-        </Link>
-      </p>
+      ) : null}
+      <details className="group text-ink-muted">
+        <summary className="inline-flex min-h-8 cursor-pointer items-center font-medium hover:text-ink pointer-coarse:min-h-11">
+          What it reads and sends
+        </summary>
+        <p className="pt-1">
+          {EXTENSION_DISCLOSURE} Connecting means you agree to this.{" "}
+          <Link href="/privacy" className="text-ink underline underline-offset-4">
+            Privacy policy
+          </Link>
+        </p>
+      </details>
       <ConnectForm />
     </div>
   );

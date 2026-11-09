@@ -33,16 +33,12 @@ export function GetExtension({ storeUrl }: { storeUrl?: string }) {
     return (
       <p className="flex items-center gap-2">
         <Check aria-hidden className="size-4 text-positive" />
-        The extension is installed in this browser.
+        Installed in this browser.
       </p>
     );
   }
   if (!storeUrl) {
-    return (
-      <p className="text-ink-muted">
-        The Branch extension for Chrome is coming soon to the Chrome Web Store.
-      </p>
-    );
+    return <p className="text-ink-muted">Coming soon to the Chrome Web Store.</p>;
   }
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -56,9 +52,7 @@ export function GetExtension({ storeUrl }: { storeUrl?: string }) {
         <ExternalLink aria-hidden className="size-4" />
         <span className="sr-only"> (opens the Chrome Web Store in a new tab)</span>
       </a>
-      <p className="text-xs text-ink-muted">
-        Free, for Chrome and other Chromium browsers on a computer.
-      </p>
+      <p className="text-xs text-ink-muted">Free · Chrome on a computer</p>
     </div>
   );
 }

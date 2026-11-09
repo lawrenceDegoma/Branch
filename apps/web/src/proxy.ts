@@ -12,6 +12,8 @@ const PROTECTED_PREFIXES = [
   "/groups",
   "/posts",
   "/profile",
+  "/review",
+  "/solutions",
   "/settings",
   "/onboarding",
 ];

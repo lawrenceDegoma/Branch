@@ -4,7 +4,6 @@ import { z } from "zod";
 import { DifficultyPill } from "@/components/roadmaps/difficulty-pill";
 import { PracticeSection, TopicsSection } from "@/components/review/practice";
 import { ReviewQueue, type ReviewCardData } from "@/components/review/review-queue";
-import { ReviewTabs } from "@/components/review/review-tabs";
 import { PageHeader } from "@/components/shell/page-header";
 import { EmptyState } from "@/components/states/empty-state";
 import { buttonVariants } from "@/components/ui/button";
@@ -60,9 +59,8 @@ export default async function ReviewPage({
     <div className="max-w-3xl">
       <PageHeader
         title="Review"
-        description="Problems you've solved come back here on a schedule. Try each one again on LeetCode, then say how it went: the harder it was, the sooner it returns. Your reviews also point to topics worth more practice, and Your solutions shows how your code performs. Only you see any of this."
+        description="Problems you've solved come back here on a schedule. Try each one again on LeetCode, then say how it went: the harder it was, the sooner it returns. Your reviews also point to topics worth more practice, and Solutions shows how your code performs. Only you see any of this."
       />
-      <ReviewTabs current="/review" />
       <div className="flex flex-col gap-8">
         <section aria-labelledby="due-heading" className="flex flex-col gap-3">
           <h2 id="due-heading" tabIndex={-1} className="text-base font-medium">

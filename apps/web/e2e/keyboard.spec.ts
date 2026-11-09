@@ -180,9 +180,8 @@ test.describe("reflow at 320px", () => {
       new URL(page.url()).pathname,
       "/roadmaps",
       "/settings",
-      "/review/solutions",
+      "/solutions",
       "/privacy",
-      "/profile",
       "/review",
     ];
     for (const path of paths) {
@@ -190,7 +189,7 @@ test.describe("reflow at 320px", () => {
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
       // Opened spoiler code scrolls inside its own block too.
       if (path === "/home") await page.getByText("Show spoiler code").click();
-      if (path === "/review/solutions") await page.getByText("Show code").click();
+      if (path === "/solutions") await page.getByText("Show code").click();
       const overflow = await page.evaluate(
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
       );

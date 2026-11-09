@@ -971,6 +971,16 @@ migration `profile_getting_started`). Whether the extension is installed can't b
 (its content script only runs on Settings, and widening that needs a store update), so the step
 is "connected", which is what matters.
 
+### Navigation: Solutions gets a tab, Profile goes (2026-11-09)
+
+Owner decisions, ahead of widening the user base. Solutions is a main tab (`/solutions`;
+`/review/solutions` and `/settings/submissions` redirect). The Profile tab and page are gone: they
+only repeated what Settings edits, so `/profile` redirects to `/settings#profile`, and the
+sidebar's account card links there. The navigation is Home, Roadmaps, Groups, Review, Solutions.
+Settings' extension section is shorter: a one-line description, install status, connected
+browsers, the full disclosure behind "What it reads and sends" (the extension's own welcome page
+and popup still show it before connecting), and the connect button.
+
 ## Phase 3 summary
 
 Done when "supported accepted submissions sync once without exposing source to groups; failures

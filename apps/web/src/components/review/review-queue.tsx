@@ -98,8 +98,8 @@ function ReviewCard({
         {item.estimate ? (
           <p className="mt-1 text-xs text-ink-muted">
             {item.estimate}{" "}
-            <Link href="/review/solutions" className="text-ink underline underline-offset-4">
-              Your solutions
+            <Link href="/solutions" className="text-ink underline underline-offset-4">
+              Solutions
             </Link>
           </p>
         ) : null}

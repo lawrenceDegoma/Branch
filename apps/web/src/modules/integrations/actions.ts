@@ -11,7 +11,7 @@ import { deleteAllSubmissions, deleteSubmission, pasteSolution } from "./submiss
 
 function refresh() {
   revalidatePath("/settings");
-  revalidatePath("/review/solutions");
+  revalidatePath("/solutions");
 }
 
 /** Creates a connection and returns its token, which is shown this once. */

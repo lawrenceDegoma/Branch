@@ -4,15 +4,19 @@ const destinations = [
   { path: "/home", label: "Home" },
   { path: "/roadmaps", label: "Roadmaps" },
   { path: "/groups", label: "Groups" },
-  { path: "/profile", label: "Profile" },
+  { path: "/review", label: "Review" },
+  { path: "/solutions", label: "Solutions" },
 ];
 
 for (const { path, label } of destinations) {
-  test(`${label} page is titled and marked current in the navigation`, async ({ page, viewer }) => {
+  test(`${label} page is titled and marked current in the navigation`, async ({
+    page,
+    viewer: _viewer,
+  }) => {
     await page.goto(path);
     await expect(page).toHaveTitle(`${label} · Branch`);
-    // The profile page is headed by the person's name.
-    const heading = path === "/profile" ? viewer.name : label;
+    // Solutions is headed "Your solutions".
+    const heading = path === "/solutions" ? "Your solutions" : label;
     await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
     const nav = page.getByRole("navigation", { name: "Main" });
     await expect(nav.getByRole("link", { name: label })).toHaveAttribute("aria-current", "page");

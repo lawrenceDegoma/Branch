@@ -30,11 +30,13 @@ async function paste(page: Page, problem: string, language: string, code: string
 test.describe("code analysis", () => {
   test("a pasted solution gets an estimate, shown as an estimate", async ({ page, viewer }) => {
     await solveInDb(viewer.id, ["two-sum", "valid-anagram"]);
-    await page.goto("/review");
-    await page
-      .getByRole("navigation", { name: "Review sections" })
-      .getByRole("link", { name: "Your solutions" })
-      .click();
+    await page.goto("/home");
+    // (Next's dev badge can cover the last item of the mobile bar, so follow the link's address.)
+    const tab = page
+      .getByRole("navigation", { name: "Main" })
+      .getByRole("link", { name: "Solutions" });
+    await expect(tab).toHaveAttribute("href", "/solutions");
+    await page.goto("/solutions");
     await expect(page.getByRole("heading", { level: 1, name: "Your solutions" })).toBeVisible();
     await page.waitForFunction(() => document.readyState === "complete");
 
@@ -104,7 +106,7 @@ test.describe("code analysis", () => {
         finishedAt: new Date(),
       },
     });
-    await page.goto("/review/solutions");
+    await page.goto("/solutions");
     const card = page.getByRole("article", { name: /Two Sum/ });
     await expect(card).toContainText("Probably O(n) time and O(n) space.", { timeout: 15_000 });
     await expect(card).not.toContainText("O(n²)");
@@ -119,7 +121,7 @@ test.describe("code analysis", () => {
     const friend = await anotherUser(browser, baseURL!);
     const group = await createGroupInDb(viewer.id, "Share crew", [friend.account.id]);
     await solveInDb(viewer.id, ["two-sum"]);
-    await page.goto("/review/solutions");
+    await page.goto("/solutions");
     await page.waitForFunction(() => document.readyState === "complete");
     await paste(page, "Two Sum", "Python 3", PYTHON);
     const card = page.getByRole("article", { name: /Two Sum/ });
@@ -151,7 +153,7 @@ test.describe("code analysis", () => {
 
   test("turning analysis off stops it and deletes estimates", async ({ page, viewer }) => {
     await solveInDb(viewer.id, ["two-sum"]);
-    await page.goto("/review/solutions");
+    await page.goto("/solutions");
     await page.waitForFunction(() => document.readyState === "complete");
     await paste(page, "Two Sum", "Python 3", PYTHON);
     const card = page.getByRole("article", { name: /Two Sum/ });
@@ -169,14 +171,14 @@ test.describe("code analysis", () => {
     await section.getByLabel("Analyze my solutions").uncheck();
     await section.getByRole("button", { name: "Save analysis" }).click();
     await expect(section.getByRole("status")).toContainText("Analysis is off");
-    await page.goto("/review/solutions");
+    await page.goto("/solutions");
     await expect(page.getByText("Code analysis is off")).toBeVisible();
     await expect(card).not.toContainText("Probably");
     expect(await prisma.analysisJob.count({ where: { userId: viewer.id } })).toBe(0);
   });
 
   test("only solved problems can be pasted", async ({ page, viewer }) => {
-    await page.goto("/review/solutions");
+    await page.goto("/solutions");
     await page.locator("summary", { hasText: "Paste a solution" }).click();
     await expect(
       page.getByText("Mark a problem solved first, then paste your solution for it here."),

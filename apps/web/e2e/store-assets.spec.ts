@@ -299,7 +299,7 @@ test.describe("Chrome Web Store images", () => {
       await page.waitForTimeout(300);
       const groupShot = await page.screenshot();
 
-      await page.goto("/review/solutions");
+      await page.goto("/solutions");
       await hideDevBadge();
       await page.getByText("Show code").first().click();
       await page.waitForTimeout(200);

@@ -1,14 +1,15 @@
-import { CircleUser, History, House, Map as MapIcon, Users, type LucideIcon } from "lucide-react";
+import { FileCode, History, House, Map as MapIcon, Users, type LucideIcon } from "lucide-react";
 
 export type NavItem = { href: string; label: string; icon: LucideIcon };
 
-// PRD §4: Home, Roadmaps, Groups, Review, Profile.
+// PRD §4, adjusted by the owner (2026-11-09): Profile lives in Settings, and Solutions has its
+// own tab.
 export const primaryNav: NavItem[] = [
   { href: "/home", label: "Home", icon: House },
   { href: "/roadmaps", label: "Roadmaps", icon: MapIcon },
   { href: "/groups", label: "Groups", icon: Users },
   { href: "/review", label: "Review", icon: History },
-  { href: "/profile", label: "Profile", icon: CircleUser },
+  { href: "/solutions", label: "Solutions", icon: FileCode },
 ];
 
 /** A nav item is active on its own route and on any route nested beneath it. */

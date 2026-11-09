@@ -21,15 +21,7 @@ const publicRoutes = [
   "/reset-password?token=example",
   "/missing-page",
 ];
-const appRoutes = [
-  "/home",
-  "/roadmaps",
-  "/groups",
-  "/profile",
-  "/review",
-  "/settings",
-  "/review/solutions",
-];
+const appRoutes = ["/home", "/roadmaps", "/groups", "/review", "/settings", "/solutions"];
 
 async function expectNoViolations(page: Page) {
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
@@ -283,7 +275,7 @@ for (const colorScheme of ["dark", "light"] as const) {
         ],
       });
       await createGroupInDb(viewer.id, "Sharing crew");
-      await page.goto("/review/solutions");
+      await page.goto("/solutions");
       // Opening the page starts their analysis; the estimate appears without a reload.
       const counted = page.getByRole("article", { name: /Two Sum/ });
       await expect(counted).toContainText("Probably O(1) time", { timeout: 15_000 });

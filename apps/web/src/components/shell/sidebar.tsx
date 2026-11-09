@@ -51,12 +51,18 @@ export function Sidebar({ viewer, className }: { viewer: ShellViewer; className?
         item={{ href: "/settings", label: "Settings", icon: Settings }}
         pathname={pathname}
       />
-      <div className="mt-3 flex items-center gap-2.5 border-t border-line px-2.5 pt-4">
-        <Avatar userId={viewer.id} name={viewer.name} />
-        <div className="min-w-0 leading-4">
-          <p className="truncate font-medium text-ink">{viewer.name}</p>
-          <p className="truncate text-xs text-ink-muted">@{viewer.username}</p>
-        </div>
+      <div className="mt-3 border-t border-line pt-3">
+        <Link
+          href="/settings#profile"
+          className="flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 hover:bg-raised"
+        >
+          <Avatar userId={viewer.id} name={viewer.name} />
+          <span className="min-w-0 leading-4">
+            <span className="block truncate font-medium text-ink">{viewer.name}</span>
+            <span className="block truncate text-xs text-ink-muted">@{viewer.username}</span>
+          </span>
+          <span className="sr-only"> (your profile settings)</span>
+        </Link>
       </div>
     </aside>
   );

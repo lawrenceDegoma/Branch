@@ -142,7 +142,7 @@ the content still applies.
 > 3. Sign in to leetcode.com with any free LeetCode account, open
 >    https://leetcode.com/problems/two-sum/ and submit a correct solution.
 > 4. Within a few seconds the extension's popup shows "two-sum, counted", and Branch shows Two Sum
->    as solved (Home, and Review → Your solutions, where the code is visible only to this
+>    as solved (Home, and Solutions, where the code is visible only to this
 >    account).
 >
 > The extension only observes the results of the user's own submissions on leetcode.com and never

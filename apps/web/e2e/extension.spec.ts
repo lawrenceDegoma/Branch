@@ -9,7 +9,7 @@ test.describe("LeetCode extension", () => {
     await page.goto("/settings");
     await page.waitForFunction(() => document.readyState === "complete");
     const section = page.locator("#extension");
-    await expect(section).toContainText("No browser is connected.");
+    await expect(section.getByRole("list", { name: "Connected browsers" })).toHaveCount(0);
     // No extension in this browser: offer the store page.
     await expect(section.getByRole("link", { name: /Get the extension/ })).toHaveAttribute(
       "href",
@@ -46,7 +46,7 @@ test.describe("LeetCode extension", () => {
     expect(completion).toMatchObject({ source: "EXTENSION", problem: { leetcodeSlug: "two-sum" } });
 
     // The private list: one counted, one waiting with its deletion date; code on request.
-    await page.goto("/review/solutions");
+    await page.goto("/solutions");
     const list = page.getByRole("list", { name: "Your solutions" });
     await expect(list.getByRole("article")).toHaveCount(2);
     const waiting = list.getByRole("article").filter({ hasText: "not-in-branch-yet" });
@@ -68,7 +68,7 @@ test.describe("LeetCode extension", () => {
     await page.waitForFunction(() => document.readyState === "complete");
     await section.getByRole("button", { name: "Disconnect" }).click();
     await page.getByRole("alertdialog").getByRole("button", { name: "Disconnect" }).click();
-    await expect(section).toContainText("No browser is connected.");
+    await expect(section.getByRole("list", { name: "Connected browsers" })).toHaveCount(0);
     await expect(section.getByRole("button", { name: "Connect a browser" })).toBeFocused();
     expect((await sync("103", "two-sum")).status()).toBe(401);
     expect(await prisma.problemCompletion.count({ where: { userId: viewer.id } })).toBe(1);

@@ -61,7 +61,7 @@ export default async function SettingsPage({
       <SettingsSection
         id="extension"
         title="LeetCode extension"
-        description="Syncs accepted submissions you make on leetcode.com or neetcode.io while a browser is connected. Your code is private to you; groups only see a solve if sharing is on."
+        description="Counts what you solve on leetcode.com and neetcode.io automatically."
       >
         <ExtensionPanel
           connections={connections}
