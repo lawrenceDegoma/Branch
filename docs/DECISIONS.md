@@ -992,6 +992,16 @@ per person and problem keeps simultaneous syncs to one post; unsolving withdraws
 with the rest. Migrations `post_resolve_kind` (the enum value, alone) and `post_resolve_shape`
 (the kind's CHECK branch and an index for the weekly look-up). The PRD records the change.
 
+### Badges (2026-11-09)
+
+Owner decision: milestone badges only (no streaks, per the brand rules): first solve, 10, 50 and
+100 solved, finished a week, finished a roadmap, and 25 reviews. Earned once and kept
+(`badge_award`, migration `badges`), checked whenever badges are shown, so they catch up on earlier
+progress. Privacy: a solve count reveals progress beyond a group's plan, so groups see a member's
+top two badges (the highest solve count, and a finished roadmap or week) only while that member
+shares their solves; the review badge is never shown to anyone else. Settings lists all of them,
+earned (with the date) and still to come.
+
 ## Phase 3 summary
 
 Done when "supported accepted submissions sync once without exposing source to groups; failures

@@ -1,4 +1,5 @@
 import { ExtensionPanel } from "@/components/integrations/extension-panel";
+import { Badges } from "@/components/settings/badges";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { PageHeader } from "@/components/shell/page-header";
 import { ThemeSelect } from "@/components/theme/theme-select";
@@ -7,6 +8,7 @@ import { serverEnv } from "@/lib/env";
 import { hasPasswordAccount } from "@/modules/auth/accounts";
 import { signOutAction } from "@/modules/auth/actions";
 import { requireViewer } from "@/modules/auth/session";
+import { syncBadges } from "@/modules/badges/service";
 import { listConnections } from "@/modules/integrations/connections";
 import { listTimeZones } from "@/modules/profile/timezone";
 import { PasswordForm } from "./password-form";
@@ -24,7 +26,10 @@ export default async function SettingsPage({
   const { user, profile } = await requireViewer();
   const passwordUpdated = (await searchParams).password === "updated";
   const canChangePassword = await hasPasswordAccount(user.id);
-  const connections = await listConnections(user.id);
+  const [connections, badges] = await Promise.all([
+    listConnections(user.id),
+    syncBadges([user.id]),
+  ]);
 
   return (
     <div className="max-w-4xl">
@@ -43,6 +48,13 @@ export default async function SettingsPage({
           }}
           zones={listTimeZones()}
         />
+      </SettingsSection>
+      <SettingsSection
+        id="badges"
+        title="Badges"
+        description="Milestones, kept once earned. Your groups see your top ones next to your name while you share your solves."
+      >
+        <Badges earned={badges.get(user.id) ?? []} timeZone={profile.timezone} />
       </SettingsSection>
       <SettingsSection
         id="sharing"

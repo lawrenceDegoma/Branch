@@ -8,6 +8,8 @@ export type MemberRow = {
   username: string | null;
   role: "ADMIN" | "MEMBER";
   joinedAt: Date;
+  /** Milestones shown to the group (only for people sharing their solves). */
+  badges?: string[];
 };
 
 export function MemberList({
@@ -34,6 +36,14 @@ export function MemberList({
               <span className="truncate font-medium">{member.name}</span>
               {member.userId === viewerId ? <span className="text-ink-muted">(you)</span> : null}
               <RolePill role={member.role} />
+              {member.badges?.map((badge) => (
+                <span
+                  key={badge}
+                  className="inline-flex h-5 items-center rounded-full bg-raised px-2 text-xs font-medium whitespace-nowrap text-ink-muted"
+                >
+                  {badge}
+                </span>
+              ))}
             </p>
             <p className="truncate text-xs text-ink-muted">
               {member.username ? `@${member.username} · ` : ""}Joined{" "}

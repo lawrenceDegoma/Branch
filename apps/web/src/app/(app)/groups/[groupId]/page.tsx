@@ -12,6 +12,7 @@ import { requireViewer } from "@/modules/auth/session";
 import { feedQuerySchema } from "@/modules/feed/schemas";
 import { listComposerGroups, listFeed } from "@/modules/feed/service";
 import { leaveGroupAction } from "@/modules/groups/actions";
+import { badgesForGroup } from "@/modules/badges/service";
 import { getGroupOverview } from "@/modules/groups/service";
 import { getGroupProgress } from "@/modules/progress/service";
 
@@ -34,6 +35,9 @@ export default async function GroupPage({ params, searchParams }: Params & Searc
     listComposerGroups(user.id),
   ]);
   const isAdmin = group.viewerRole === "ADMIN";
+
+  const badges = await badgesForGroup(group.members);
+  const withBadges = group.members.map((m) => ({ ...m, badges: badges.get(m.userId) ?? [] }));
 
   return (
     <div className="max-w-4xl">
@@ -75,7 +79,7 @@ export default async function GroupPage({ params, searchParams }: Params & Searc
         <h2 id="members-heading" className="mb-4 text-base font-medium">
           Members <span className="font-normal text-ink-muted">{group.members.length}</span>
         </h2>
-        <MemberList members={group.members} viewerId={user.id} timeZone={profile.timezone} />
+        <MemberList members={withBadges} viewerId={user.id} timeZone={profile.timezone} />
       </section>
       {!isAdmin ? (
         <div className="mt-6 flex justify-end">

@@ -45,6 +45,7 @@ model User {
   submissions      Submission[]
   reviewAttempts   ReviewAttempt[]
   analysisJobs     AnalysisJob[]
+  badges           BadgeAward[]
 
   @@unique([email])
   @@map("user")
@@ -761,4 +762,29 @@ model AnalysisJob {
   @@index([userId, finishedAt])
   @@index([resultId])
   @@map("analysis_job")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Badges: milestones, earned once and kept. No streaks (brand rule: no streak pressure).
+// ---------------------------------------------------------------------------------------------
+
+enum BadgeKind {
+  FIRST_SOLVE
+  SOLVED_10
+  SOLVED_50
+  SOLVED_100
+  WEEK_DONE
+  ROADMAP_DONE
+  REVIEWS_25
+}
+
+/// A milestone the person reached. Kept even if what earned it changes later.
+model BadgeAward {
+  userId   String
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind     BadgeKind
+  earnedAt DateTime  @default(now())
+
+  @@id([userId, kind])
+  @@map("badge_award")
 }
