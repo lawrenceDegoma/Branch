@@ -140,6 +140,9 @@ test.describe("automatic posts", () => {
       ),
     );
     for (const tab of [page, second]) {
+      // Both saves race; once they've settled, each tab shows one solve.
+      await tab.waitForLoadState("networkidle");
+      await tab.reload();
       const graph = tab.getByRole("list", { name: "Progress by member" });
       await expect(graph.getByRole("listitem").filter({ hasText: "(you)" })).toContainText(
         "1/22 solved",
