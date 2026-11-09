@@ -52,6 +52,8 @@ export default defineConfig({
         GOOGLE_CLIENT_ID: "e2e-google-client",
         GOOGLE_CLIENT_SECRET: "e2e-google-secret",
         EXTENSION_STORE_URL: "https://chromewebstore.google.com/detail/branch-for-leetcode/e2e",
+        // The fixtures create accounts with passwords; the pages still show only Google and GitHub.
+        PASSWORD_SIGN_UP: "true",
         ANALYZER_URL: `http://localhost:${analyzerPort}`,
         ANALYZER_SECRET: analyzerSecret,
       },

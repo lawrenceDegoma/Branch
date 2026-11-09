@@ -6,7 +6,16 @@ import { Sidebar, type ShellViewer } from "./sidebar";
  * Desktop: labelled sidebar on the page ground beside a fluid canvas.
  * Below 1024px: a compact header and a bottom bar with the primary destinations.
  */
-export function AppShell({ viewer, children }: { viewer: ShellViewer; children: React.ReactNode }) {
+export function AppShell({
+  viewer,
+  notice,
+  children,
+}: {
+  viewer: ShellViewer;
+  /** Something every page should mention (moving off a password, say). */
+  notice?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[var(--sidebar-width)_minmax(0,1fr)]">
       <a
@@ -18,6 +27,11 @@ export function AppShell({ viewer, children }: { viewer: ShellViewer; children: 
       <Sidebar viewer={viewer} className="hidden lg:flex" />
       <div className="flex min-w-0 flex-col">
         <MobileHeader className="lg:hidden" />
+        {notice ? (
+          <div role="region" aria-label="Notice" className="bg-raised px-4 py-2.5 sm:px-6 lg:px-8">
+            {notice}
+          </div>
+        ) : null}
         <main
           id="main"
           tabIndex={-1}

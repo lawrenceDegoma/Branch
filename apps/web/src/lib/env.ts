@@ -38,6 +38,14 @@ const serverEnvSchema = z
       .transform((value) => value || undefined)
       .pipe(z.string().min(16, "must be at least 16 characters").optional())
       .optional(),
+    /**
+     * Lets new accounts be created with a password. Off in production once Google or GitHub is
+     * set up (Branch signs people in with those); on for local development and tests.
+     */
+    PASSWORD_SIGN_UP: z
+      .enum(["true", "false", ""])
+      .optional()
+      .transform((value) => value === "true"),
     /** Branch's analyzer service (services/analyzer); without it, code isn't analyzed. */
     ANALYZER_URL: z
       .string()

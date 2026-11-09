@@ -14,7 +14,7 @@ import {
   signUpSchema,
   socialProviderSchema,
 } from "./schemas";
-import { requireUser } from "./session";
+import { requireUser, requireViewer } from "./session";
 
 function logUnexpected(action: string, error: unknown) {
   // Expected failures (bad password, duplicate email) are API errors with a 4xx status.
@@ -117,5 +117,22 @@ export async function resetPasswordAction(
     logUnexpected("reset-password", error);
     return { status: "error", message: authErrorMessage(error) };
   }
-  redirect("/sign-in?reset=done");
+  redirect("/sign-in/password?reset=done");
+}
+
+/** Starts connecting Google or GitHub to the signed-in account (moving off a password). */
+export async function connectProviderAction(formData: FormData): Promise<void> {
+  await requireViewer();
+  const provider = socialProviderSchema.safeParse(formData.get("provider"));
+  if (!provider.success) redirect("/account/move?error=unable_to_link_account");
+  const result = await auth.api.linkSocialAccount({
+    body: {
+      provider: provider.data,
+      callbackURL: "/account/move",
+      errorCallbackURL: "/account/move",
+    },
+    headers: await headers(),
+  });
+  if (!result.url) redirect("/account/move?error=unable_to_link_account");
+  redirect(result.url);
 }

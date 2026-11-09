@@ -183,6 +183,7 @@ test.describe("reflow at 320px", () => {
       "/solutions",
       "/privacy",
       "/review",
+      "/account/move",
     ];
     for (const path of paths) {
       await page.goto(path);

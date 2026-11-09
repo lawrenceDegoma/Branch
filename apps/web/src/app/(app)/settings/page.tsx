@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ExtensionPanel } from "@/components/integrations/extension-panel";
 import { Badges } from "@/components/settings/badges";
 import { SettingsSection } from "@/components/settings/settings-section";
@@ -5,7 +6,8 @@ import { PageHeader } from "@/components/shell/page-header";
 import { ThemeSelect } from "@/components/theme/theme-select";
 import { Button } from "@/components/ui/button";
 import { serverEnv } from "@/lib/env";
-import { hasPasswordAccount } from "@/modules/auth/accounts";
+import { hasPasswordAccount, signInMethods } from "@/modules/auth/accounts";
+import { enabledSocialProviders } from "@/modules/auth/auth";
 import { signOutAction } from "@/modules/auth/actions";
 import { requireViewer } from "@/modules/auth/session";
 import { syncBadges } from "@/modules/badges/service";
@@ -26,6 +28,7 @@ export default async function SettingsPage({
   const { user, profile } = await requireViewer();
   const passwordUpdated = (await searchParams).password === "updated";
   const canChangePassword = await hasPasswordAccount(user.id);
+  const methods = await signInMethods(user.id);
   const [connections, badges] = await Promise.all([
     listConnections(user.id),
     syncBadges([user.id]),
@@ -96,11 +99,21 @@ export default async function SettingsPage({
               Password updated. Other devices have been signed out.
             </p>
           ) : null}
-          {canChangePassword ? (
-            <PasswordForm />
+          {enabledSocialProviders.length === 0 ? (
+            canChangePassword ? (
+              <PasswordForm />
+            ) : null
+          ) : methods.providers.length > 0 ? (
+            <p className="text-ink-muted">
+              You sign in with{" "}
+              {methods.providers.map((p) => (p === "google" ? "Google" : "GitHub")).join(" and ")}.
+            </p>
           ) : (
             <p className="text-ink-muted">
-              You sign in with Google or GitHub, so there&apos;s no password to change.
+              You sign in with a password, which Branch is phasing out.{" "}
+              <Link href="/account/move" className="text-ink underline underline-offset-4">
+                Move to Google or GitHub
+              </Link>
             </p>
           )}
           <form action={signOutAction} className="flex justify-end border-t border-line pt-4">

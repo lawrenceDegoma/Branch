@@ -9,7 +9,8 @@ not affiliated with LeetCode or NeetCode.
 
 ## What works today
 
-- **Accounts:** email and password sign-up (optional Google and GitHub sign-in), a username and timezone,
+- **Accounts:** sign-up with Google or GitHub (password accounts from before can move theirs over,
+  keeping everything; with neither configured, password sign-up stays on), a username and timezone,
   profile, and Dark / Light / System appearance that follows your account.
 - **Groups:** create a private group, invite friends with a link (expiring, limited uses,
   revocable), one admin who can remove members or hand the role on.
@@ -103,6 +104,8 @@ is server-only.
 | `BETTER_AUTH_SECRET`                        | Yes                       | Signs sessions. At least 32 characters: `openssl rand -base64 32`.                                              |
 | `BETTER_AUTH_URL`                           | Yes                       | Public origin of the app, e.g. `http://localhost:3000`.                                                         |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | No (set both or neither)  | Enables "Continue with GitHub". Create an OAuth app with callback `<BETTER_AUTH_URL>/api/auth/callback/github`. |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | No (set both or neither)  | Enables "Continue with Google" (redirect URI `<BETTER_AUTH_URL>/api/auth/callback/google`).                     |
+| `PASSWORD_SIGN_UP`                          | No                        | `"true"` keeps password sign-up open next to Google or GitHub: local development and tests only.                |
 
 The server validates its environment at startup and reports invalid variable names without echoing
 their values.

@@ -37,13 +37,16 @@ const providers: Record<SocialProvider, { label: string; icon: React.ReactNode }
   },
 };
 
-/** One button per configured provider, then an "or" rule above the email form. */
+/** One button per configured provider, then (optionally) an "or" rule above a form. */
 export function SocialSignIn({
   providers: enabled,
   next,
+  divider = true,
 }: {
   providers: readonly SocialProvider[];
   next?: string | null;
+  /** The "or" rule above a form that follows. */
+  divider?: boolean;
 }) {
   if (enabled.length === 0) return null;
   return (
@@ -64,11 +67,13 @@ export function SocialSignIn({
           </form>
         ))}
       </div>
-      <div className="my-5 flex items-center gap-3 text-xs text-ink-faint" aria-hidden="true">
-        <span className="h-px flex-1 bg-line" />
-        or
-        <span className="h-px flex-1 bg-line" />
-      </div>
+      {divider ? (
+        <div className="my-5 flex items-center gap-3 text-xs text-ink-faint" aria-hidden="true">
+          <span className="h-px flex-1 bg-line" />
+          or
+          <span className="h-px flex-1 bg-line" />
+        </div>
+      ) : null}
     </>
   );
 }

@@ -17,10 +17,21 @@ the content still applies.
    LeetCode" uses LeetCode's name to say what the extension works with, and the listing says
    Branch isn't affiliated with LeetCode. Google may still question it; if they do, rename it in
    `apps/extension/wxt.config.ts` (for example "Branch: LeetCode progress sync") and resubmit.
-4. **A reviewer account.** Sign up on production as a new account for Google's reviewers (an
-   address you control, a fresh password). Create a group as that account and choose the
-   Patterns 150 roadmap, so the reviewer sees a plan. You'll paste these credentials into the Test
-   instructions tab. Don't use your own account.
+4. **A reviewer account.** Google's reviewers sign in with an email and password, so keep the
+   reviewer account made with a password (an address you control, a fresh password) and don't
+   move it to Google or GitHub. Production no longer offers password sign-up; if you ever need a
+   new reviewer account, set `PASSWORD_SIGN_UP=true` in Vercel, redeploy, create it with
+
+   ```sh
+   curl -X POST https://<your-domain>/api/auth/sign-up/email -H 'Origin: https://<your-domain>' \
+     -H 'Content-Type: application/json' \
+     -d '{"name":"Store reviewer","email":"<reviewer email>","password":"<reviewer password>"}'
+   ```
+
+   then remove the variable and redeploy. Sign in as that account to choose a username, create a
+   group, and choose the Patterns 150 roadmap, so the reviewer sees a plan. You'll paste these
+   credentials into the Test instructions tab. Don't use your own account.
+
 5. **Build the package:** from the repository root,
 
    ```sh
@@ -136,7 +147,8 @@ the content still applies.
 >
 > 1. Install the extension. A welcome page explains what it reads and sends; choose "Agree and
 >    connect in Branch".
-> 2. Sign in to Branch with the account above. On Settings, under LeetCode extension, click
+> 2. Sign in to Branch with the account above: on the sign-in page, choose "Sign in with your
+>    password" (you can ignore the notice about moving to Google or GitHub). On Settings, under LeetCode extension, click
 >    "Connect a browser". The page confirms the extension is connected (or shows a key to paste
 >    into the extension's popup).
 > 3. Sign in to leetcode.com with any free LeetCode account, open

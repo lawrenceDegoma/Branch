@@ -9,7 +9,14 @@ import { Input } from "@/components/ui/input";
 import { initialFormState } from "@/lib/form";
 import { signInAction } from "@/modules/auth/actions";
 
-export function SignInForm({ next }: { next: string | null }) {
+export function SignInForm({
+  next,
+  signUpLink = true,
+}: {
+  next: string | null;
+  /** Offer password sign-up (only where it's allowed). */
+  signUpLink?: boolean;
+}) {
   const [state, action] = useActionState(signInAction, initialFormState);
   const signUpHref = next ? `/sign-up?next=${encodeURIComponent(next)}` : "/sign-up";
 
@@ -40,12 +47,17 @@ export function SignInForm({ next }: { next: string | null }) {
       <SubmitButton className="mt-2 w-full" pendingLabel="Signing in…">
         Sign in
       </SubmitButton>
-      <p className="text-center text-ink-muted">
-        New to Branch?{" "}
-        <Link href={signUpHref} className="font-medium text-ink underline-offset-4 hover:underline">
-          Create an account
-        </Link>
-      </p>
+      {signUpLink ? (
+        <p className="text-center text-ink-muted">
+          New to Branch?{" "}
+          <Link
+            href={signUpHref}
+            className="font-medium text-ink underline-offset-4 hover:underline"
+          >
+            Create an account
+          </Link>
+        </p>
+      ) : null}
     </form>
   );
 }

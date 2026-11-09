@@ -1,5 +1,12 @@
 import { prisma } from "@branch/database";
-import { anotherUser, createGroupInDb, expect, newAccountDetails, test } from "./support/fixtures";
+import {
+  anotherUser,
+  createGroupInDb,
+  expect,
+  newAccountDetails,
+  signUpViaApi,
+  test,
+} from "./support/fixtures";
 
 test.describe("groups", () => {
   test("two friends join one invite-only group", async ({ page, viewer, browser, baseURL }) => {
@@ -28,10 +35,12 @@ test.describe("groups", () => {
     ).toBeVisible();
     await expect(friend.getByText(`${viewer.name} invited you to join`)).toBeVisible();
     await friend.getByRole("link", { name: "Create an account to join" }).click();
-    await friend.getByLabel("Name", { exact: true }).fill(details.name);
-    await friend.getByLabel("Email").fill(details.email);
-    await friend.getByLabel("Password", { exact: true }).fill(details.password);
-    await friend.getByRole("button", { name: "Create account" }).click();
+    await expect(friend).toHaveURL(/\/sign-up\?next=%2Finvite%2F/);
+    await expect(friend.getByRole("button", { name: "Continue with GitHub" })).toBeVisible();
+    // Signing up with GitHub returns to the invite (the GitHub round trip isn't run here).
+    await signUpViaApi(friendContext.request, baseURL!, details, { onboard: false });
+    await friend.goto(inviteUrl);
+    await expect(friend).toHaveURL(/\/onboarding\?next=%2Finvite%2F/);
     await friend.getByLabel("Username").fill(details.username);
     await friend.getByRole("button", { name: "Continue" }).click();
     await friend.getByRole("button", { name: "Join group" }).click();

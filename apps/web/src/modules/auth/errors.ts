@@ -30,7 +30,11 @@ export function authErrorMessage(error: unknown): string {
 export function socialSignInErrorMessage(code: string): string {
   switch (code) {
     case "account_not_linked":
-      return "An account with this email already exists. Sign in with your email and password.";
+      return "You made your account with an email and password. Sign in with your password once more, then connect Google or GitHub.";
+    case "account_already_linked_to_different_user":
+      return "That Google or GitHub account already has its own Branch account. Connect a different one, or ask the person who runs Branch to merge the two.";
+    case "unable_to_link_account":
+      return "That account couldn't be connected. Try again, or use the other provider.";
     case "access_denied":
       return "Sign-in was cancelled. Choose a way to sign in below.";
     case "state_not_found":
@@ -38,6 +42,6 @@ export function socialSignInErrorMessage(code: string): string {
     case "please_restart_the_process":
       return "That sign-in took too long or was started in another tab. Try again.";
     default:
-      return "That sign-in didn't complete. Try again, or sign in with your email and password.";
+      return "That sign-in didn't complete. Try again.";
   }
 }

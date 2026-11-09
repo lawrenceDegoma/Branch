@@ -28,12 +28,16 @@ export function newAccountDetails(prefix = "user") {
   };
 }
 
-/** Signs up through Better Auth's HTTP API; the session cookie lands in `request`'s context. */
+/**
+ * Signs up through Better Auth's HTTP API; the session cookie lands in `request`'s context.
+ * Accounts sign in with GitHub too, like everyone who has moved off passwords; `passwordOnly`
+ * leaves one that hasn't moved yet. (The password stays so tests can sign in through the API.)
+ */
 export async function signUpViaApi(
   request: APIRequestContext,
   baseURL: string,
   details = newAccountDetails(),
-  { onboard = true } = {},
+  { onboard = true, passwordOnly = false } = {},
 ): Promise<TestAccount> {
   const response = await request.post("/api/auth/sign-up/email", {
     data: { name: details.name, email: details.email, password: details.password },
@@ -41,12 +45,20 @@ export async function signUpViaApi(
   });
   expect(response.ok(), await response.text()).toBe(true);
   const { user } = (await response.json()) as { user: { id: string } };
+  if (!passwordOnly) await connectGitHubInDb(user.id);
   if (onboard) {
     await prisma.profile.create({
       data: { userId: user.id, username: details.username, timezone: "UTC" },
     });
   }
   return { ...details, id: user.id };
+}
+
+/** What Better Auth stores once someone connects GitHub (without the GitHub round trip). */
+export async function connectGitHubInDb(userId: string) {
+  await prisma.account.create({
+    data: { id: randomUUID(), userId, providerId: "github", accountId: `e2e-${randomUUID()}` },
+  });
 }
 
 export async function signInViaApi(

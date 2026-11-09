@@ -15,6 +15,7 @@ import {
 const publicRoutes = [
   "/",
   "/sign-in",
+  "/sign-in/password",
   "/sign-up",
   "/forgot-password",
   "/privacy",
@@ -59,6 +60,18 @@ for (const colorScheme of ["dark", "light"] as const) {
         await expectNoViolations(page);
       });
     }
+
+    test("moving a password account has no detectable WCAG A/AA violations", async ({
+      page,
+      baseURL,
+    }) => {
+      await signUpViaApi(page.context().request, baseURL!, undefined, { passwordOnly: true });
+      // Home with the notice, then the page that moves the account.
+      for (const path of ["/home", "/account/move"]) {
+        await page.goto(path);
+        await expectNoViolations(page);
+      }
+    });
 
     test("group pages have no detectable WCAG A/AA violations", async ({ page, viewer }) => {
       const group = await createGroupInDb(viewer.id, "Accessible crew");
@@ -355,9 +368,9 @@ for (const colorScheme of ["dark", "light"] as const) {
     });
 
     test("form errors have no detectable WCAG A/AA violations", async ({ page }) => {
-      await page.goto("/sign-up");
-      await page.getByRole("button", { name: "Create account" }).click();
-      await expect(page.getByText("Enter your name.")).toBeVisible();
+      await page.goto("/sign-in/password");
+      await page.getByRole("button", { name: "Sign in" }).click();
+      await expect(page.getByText("Enter your password.")).toBeVisible();
       await expectNoViolations(page);
     });
   });

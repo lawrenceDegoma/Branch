@@ -58,8 +58,8 @@ an old schema.
    | `ANALYZER_URL`          | The analyzer's address, once deployed (see "Code analyzer" below)            |
    | `ANALYZER_SECRET`       | The same secret as the analyzer project's `ANALYZER_SECRET`                  |
 
-   Leave `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` unset unless you want GitHub sign-in (see
-   below).
+   Add the Google and GitHub keys too (see "Google and GitHub sign-in" below): new accounts sign
+   up with them. Leave `PASSWORD_SIGN_UP` unset in production.
 
 4. Deploy. On the first deploy you don't know the URL yet: deploy once, copy the domain Vercel
    gives you, set `BETTER_AUTH_URL` to it, and **redeploy** so the new value takes effect. Sign-in
@@ -107,7 +107,8 @@ data. Turn previews off under **Settings → Git** if the failed builds bother y
 
 ## Password resets
 
-Branch sends no email. When someone forgets their password, create a link for them:
+Branch sends no email. When someone who still signs in with a password (an account from before
+the move to Google and GitHub) forgets it, create a link for them:
 
 ```bash
 DATABASE_URL="$PROD_DIRECT_URL" BETTER_AUTH_URL='https://<your-domain>' \
@@ -118,10 +119,11 @@ Send them the printed link privately: whoever holds it can set the password. It 
 expires after an hour. Using it signs that account out on every device. The pooled string works
 here too.
 
-## Optional: Google and GitHub sign-in
+## Google and GitHub sign-in
 
-Each button appears only when both of its variables are set; setting just one stops the app from
-starting. Redeploy after adding them.
+New accounts sign up with Google or GitHub; password sign-up turns off as soon as either is set
+up. Each button appears only when both of its variables are set; setting just one stops the app
+from starting. Redeploy after adding them.
 
 - **GitHub:** create an OAuth app at https://github.com/settings/developers with the callback URL
   `https://<your-domain>/api/auth/callback/github`, then set `GITHUB_CLIENT_ID` and
@@ -133,9 +135,14 @@ starting. Redeploy after adding them.
   `GOOGLE_CLIENT_SECRET`. While the consent screen is in **Testing**, only the test users you list
   can sign in; add your friends' Google addresses, or publish the app.
 
-Branch can't confirm email addresses, so Better Auth won't attach a Google or GitHub sign-in to an
-existing email-and-password account with the same address (it would let anyone claim an account).
-That person sees "That sign-in didn't complete" and should keep using their password.
+**Accounts made with a password** keep working. They sign in with "Sign in with your password"
+under the buttons, then connect Google or GitHub on the page Branch shows them (every page shows a
+notice until they do). Connecting attaches the provider to the same account, so groups, progress,
+and solutions all stay; then the password is switched off. The provider's email doesn't have to
+match. Someone who instead clicks "Continue with Google" with the same email is told to sign in
+with their password first: Branch can't confirm email addresses, so it never attaches a provider
+to a password account by email alone (that would let anyone claim an account). If someone has
+already made a second account, nothing merges them automatically.
 
 ## Backups
 

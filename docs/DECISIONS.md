@@ -1002,6 +1002,28 @@ top two badges (the highest solve count, and a finished roadmap or week) only wh
 shares their solves; the review badge is never shown to anyone else. Settings lists all of them,
 earned (with the date) and still to come.
 
+### Sign-in with Google and GitHub only (2026-11-09)
+
+Owner decision: new accounts sign up with Google or GitHub only, so there are no new passwords to
+reset by hand; existing password accounts get a way to move without losing anything. Better
+Auth's `disableSignUp` turns off password sign-up whenever a provider is configured (with none,
+the password form stays, so a fresh checkout still works; `PASSWORD_SIGN_UP=true` keeps the API
+open for local development and E2E). Password sign-in stays, on `/sign-in/password` ("Sign in
+with your password" under the provider buttons), for accounts made before the change.
+
+Moving is linking, not copying: a password account connects Google or GitHub on `/account/move`
+(`linkSocialAccount`, `accountLinking.allowDifferentEmails`, so the provider's email may differ),
+which adds a provider row to the same user. Every group, completion, post, and solution stays,
+because nothing moves. Once a provider is connected, `finishMove` deletes the password (so the
+account has one way in, and the password can't be guessed later). Until then, every app page shows
+a notice linking to the move, Settings → Account says the password is being phased out, and a
+password sign-in lands on the move page. Better Auth still refuses to link a provider whose email
+it hasn't verified (`unable_to_link_account`, explained on the page). If someone has already
+signed up again with Google, that second account is separate: there's no merge, and the owner
+merges by hand if it ever comes up. Password resets (`pnpm auth:reset-link`) still work for
+accounts that haven't moved. E2E accounts get a GitHub account row by default (`passwordOnly`
+leaves one unmoved); the GitHub round trip itself is stubbed at github.com, as before.
+
 ## Phase 3 summary
 
 Done when "supported accepted submissions sync once without exposing source to groups; failures
@@ -1061,10 +1083,8 @@ approval.
 
 ## Known limitations
 
-- There is no email delivery, so no email verification, and password resets need the owner to run
-  `pnpm auth:reset-link`. Sign-up
-  reveals whether an email is already registered; acceptable for invite-only groups of friends,
-  to revisit before public sign-up.
+- There is no email delivery, so no email verification, and password resets (for accounts that
+  haven't moved to Google or GitHub yet) need the owner to run `pnpm auth:reset-link`.
 - Accounts cannot yet be deleted from the UI.
 - User-added problems become part of the shared catalog with user-entered titles; there is no
   moderation of catalog edits yet.

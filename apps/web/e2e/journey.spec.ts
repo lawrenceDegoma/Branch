@@ -5,19 +5,22 @@ import {
   expect,
   mondayWeeksAgo,
   newAccountDetails,
+  signUpViaApi,
   test,
 } from "./support/fixtures";
 
-// Phase 1's definition of done, entirely through the UI: two people join one group, see the same
+// Phase 1's definition of done, through the UI (all but the GitHub sign-up itself): two people join one group, see the same
 // weekly assignments, and track independent progress. Also covers PRD acceptance scenarios 1
 // (same current-week problems), 2 (a missed week stays in the backlog while the group advances),
 // and 5 (a non-member can't reach the group by URL).
 
-async function signUp(page: Page, details: ReturnType<typeof newAccountDetails>) {
-  await page.getByLabel("Name", { exact: true }).fill(details.name);
-  await page.getByLabel("Email").fill(details.email);
-  await page.getByLabel("Password", { exact: true }).fill(details.password);
-  await page.getByRole("button", { name: "Create account" }).click();
+async function signUp(page: Page, baseURL: string, details: ReturnType<typeof newAccountDetails>) {
+  await expect(page.getByRole("button", { name: "Continue with GitHub" })).toBeVisible();
+  // Signing up with GitHub comes back to where they were headed (the GitHub round trip isn't
+  // run here), then asks for a username.
+  const next = new URL(page.url()).searchParams.get("next");
+  await signUpViaApi(page.context().request, baseURL, details, { onboard: false });
+  await page.goto(next ?? "/home");
   await page.getByLabel("Username").fill(details.username);
   await chooseTimezone(page, "Timezone", "UTC");
   await page.getByRole("button", { name: "Continue" }).click();
@@ -53,7 +56,7 @@ test("two friends share a weekly plan and track their own progress", async ({
   // 1. The admin signs up, creates a group, and schedules a roadmap that started last week.
   await page.goto("/");
   await page.getByRole("link", { name: "Create account" }).click();
-  await signUp(page, admin);
+  await signUp(page, baseURL!, admin);
   await expect(page.getByText("Join or create a group")).toBeVisible();
   await page.getByRole("main").getByRole("link", { name: "Create group" }).click();
   await page.getByLabel("Group name").fill("Offer season");
@@ -82,7 +85,7 @@ test("two friends share a weekly plan and track their own progress", async ({
   const friendPage = await friendContext.newPage();
   await friendPage.goto(inviteUrl);
   await friendPage.getByRole("link", { name: "Create an account to join" }).click();
-  await signUp(friendPage, friend);
+  await signUp(friendPage, baseURL!, friend);
   await friendPage.getByRole("button", { name: "Join group" }).click();
   await expect(friendPage.getByRole("heading", { level: 1, name: "Offer season" })).toBeVisible();
 

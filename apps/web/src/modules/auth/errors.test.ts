@@ -29,7 +29,7 @@ describe("authErrorMessage", () => {
 
 describe("socialSignInErrorMessage", () => {
   it("explains known codes and falls back for unknown ones", () => {
-    expect(socialSignInErrorMessage("account_not_linked")).toMatch(/email and password/);
+    expect(socialSignInErrorMessage("account_not_linked")).toMatch(/password once more/);
     expect(socialSignInErrorMessage("access_denied")).toMatch(/cancelled/);
     expect(socialSignInErrorMessage("<script>")).toMatch(/didn't complete/);
   });

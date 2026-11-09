@@ -40,8 +40,10 @@ export default function PrivacyPage() {
         <h2>What the web app stores</h2>
         <ul>
           <li>
-            <strong>Your account:</strong> name, email address, and either a password (stored only
-            as a secure hash) or the Google or GitHub account you sign in with.
+            <strong>Your account:</strong> name, email address, and the Google or GitHub account you
+            sign in with (Branch receives its name, email address, and profile photo). Accounts made
+            before Branch moved to Google and GitHub keep a password, stored only as a secure hash,
+            until they connect one.
           </li>
           <li>
             <strong>Your profile and settings:</strong> username, optional bio, time zone,
