@@ -5,6 +5,7 @@ import { isForeignKeyViolation } from "@/lib/db-errors";
 import { NotFoundError } from "@/lib/errors";
 import { syncAutomaticPosts } from "@/modules/feed/automatic";
 import { getGroupPlan, listViewerPlans, type PlanLayout } from "@/modules/plans/service";
+import { photoSelect, shownPhoto } from "@/modules/profile/photo";
 import { countDueReviews, startReviews } from "@/modules/review/service";
 import { problemIdSchema } from "./schemas";
 import { standingOn } from "./standing";
@@ -103,7 +104,7 @@ export async function getGroupProgress(userId: string, groupId: string, now = ne
   const memberships = await prisma.groupMembership.findMany({
     where: { groupId },
     orderBy: { joinedAt: "asc" },
-    select: { userId: true, user: { select: { name: true } } },
+    select: { userId: true, user: { select: { name: true, ...photoSelect } } },
   });
   const completions = await prisma.problemCompletion.findMany({
     where: {
@@ -124,6 +125,7 @@ export async function getGroupProgress(userId: string, groupId: string, now = ne
       return {
         userId: m.userId,
         name: m.user.name,
+        photo: shownPhoto(m.user),
         isViewer: m.userId === userId,
         standing: standingOn(plan.weeks, plan.currentWeek, (id) => solved.has(id)),
         solvedProblemIds: [...solved],

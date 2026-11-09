@@ -125,7 +125,13 @@ function Comment({
   const headingId = `comment-${comment.id}-author`;
   return (
     <article aria-labelledby={headingId} className="flex gap-3">
-      <Avatar userId={comment.author.id} name={comment.author.name} size="sm" className="mt-0.5" />
+      <Avatar
+        userId={comment.author.id}
+        name={comment.author.name}
+        photo={comment.author.photo}
+        size="sm"
+        className="mt-0.5"
+      />
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <p className="flex flex-wrap items-baseline gap-x-1.5">
           <span id={headingId} className="font-medium">

@@ -27,7 +27,7 @@ function SidebarLink({ item, pathname }: { item: NavItem; pathname: string }) {
   );
 }
 
-export type ShellViewer = { id: string; name: string; username: string };
+export type ShellViewer = { id: string; name: string; username: string; photo: string | null };
 
 export function Sidebar({ viewer, className }: { viewer: ShellViewer; className?: string }) {
   const pathname = usePathname();
@@ -56,7 +56,7 @@ export function Sidebar({ viewer, className }: { viewer: ShellViewer; className?
           href="/settings#profile"
           className="flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 hover:bg-raised"
         >
-          <Avatar userId={viewer.id} name={viewer.name} />
+          <Avatar userId={viewer.id} name={viewer.name} photo={viewer.photo} />
           <span className="min-w-0 leading-4">
             <span className="block truncate font-medium text-ink">{viewer.name}</span>
             <span className="block truncate text-xs text-ink-muted">@{viewer.username}</span>

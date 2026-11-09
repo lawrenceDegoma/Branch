@@ -47,7 +47,12 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Your profile and settings:</strong> username, optional bio, time zone,
-            appearance, and whether to share your solves.
+            appearance, which photo to show, and whether to share your solves.
+          </li>
+          <li>
+            <strong>A photo, if you upload one:</strong> Branch shrinks it to a small square in your
+            browser and stores it with Vercel Blob, under an address that can&apos;t be guessed.
+            Otherwise the photo from Google or GitHub is shown, loaded from them.
           </li>
           <li>
             <strong>Sign-in sessions:</strong> a session cookie, and the IP address and browser
@@ -121,24 +126,27 @@ export default function PrivacyPage() {
             off in Settings → Code analysis, which deletes your estimates.
           </li>
           <li>
-            Members of your groups see your name, username, and, for problems their group&apos;s
-            plan assigns, whether you&apos;ve solved them. A post about a solve appears only if you
-            turn on &quot;Share my solves&quot;.
+            Members of your groups see your name, username, photo (unless you choose initials), and,
+            for problems their group&apos;s plan assigns, whether you&apos;ve solved them. A post
+            about a solve appears only if you turn on &quot;Share my solves&quot;.
           </li>
           <li>
             People don&apos;t read your data. The only exceptions are when you ask for help with
             your account, to investigate security problems or abuse, or when the law requires it.
           </li>
           <li>
-            Branch runs on Vercel (hosting) and Neon (database), which process data only to run the
-            service. If you sign in with Google or GitHub, they handle that sign-in under their own
-            policies. Data isn&apos;t shared with anyone else.
+            Branch runs on Vercel (hosting and uploaded photos) and Neon (database), which process
+            data only to run the service. If you sign in with Google or GitHub, they handle that
+            sign-in under their own policies. Data isn&apos;t shared with anyone else.
           </li>
         </ul>
 
         <h2>How long it&apos;s kept</h2>
         <ul>
           <li>Your account and what you create stay until you delete them or your account.</li>
+          <li>
+            An uploaded photo is deleted as soon as you replace it or switch to another photo.
+          </li>
           <li>
             Your solutions (synced or pasted), their code, and their estimates stay until you delete
             them (Solutions). An estimate goes within a day of its solution, and at once if you turn
@@ -159,6 +167,7 @@ export default function PrivacyPage() {
           <li>Disconnect the extension from its popup or from Settings at any time.</li>
           <li>Delete any solution, or all of them, from Solutions.</li>
           <li>Turn code analysis off or on in Settings → Code analysis.</li>
+          <li>Upload a photo, use the one from Google or GitHub, or show initials, in Settings.</li>
           <li>Turn sharing on or off, and delete your posts and comments, whenever you like.</li>
           <li>
             To delete your account and everything in it, or for any question about your data,{" "}

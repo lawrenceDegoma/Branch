@@ -46,6 +46,8 @@ const serverEnvSchema = z
       .enum(["true", "false", ""])
       .optional()
       .transform((value) => value === "true"),
+    /** Vercel Blob, for uploaded profile photos. Without it, uploads are off in production. */
+    BLOB_READ_WRITE_TOKEN: optionalSecret,
     /** Branch's analyzer service (services/analyzer); without it, code isn't analyzed. */
     ANALYZER_URL: z
       .string()

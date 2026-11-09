@@ -6,6 +6,7 @@ export type MemberRow = {
   userId: string;
   name: string;
   username: string | null;
+  photo: string | null;
   role: "ADMIN" | "MEMBER";
   joinedAt: Date;
   /** Milestones shown to the group (only for people sharing their solves). */
@@ -30,7 +31,7 @@ export function MemberList({
           key={member.userId}
           className="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0"
         >
-          <Avatar userId={member.userId} name={member.name} />
+          <Avatar userId={member.userId} name={member.name} photo={member.photo} />
           <div className="min-w-0 flex-1 leading-5">
             <p className="flex flex-wrap items-center gap-2">
               <span className="truncate font-medium">{member.name}</span>

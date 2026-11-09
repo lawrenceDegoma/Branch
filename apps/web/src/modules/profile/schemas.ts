@@ -31,6 +31,9 @@ export const analysisSchema = z.object({ analyzeSolutions: checkboxSchema });
 
 export const appearanceSchema = z.enum(["SYSTEM", "LIGHT", "DARK"]);
 
+/** The choices besides uploading: the photo from Google or GitHub, or initials. */
+export const photoChoiceSchema = z.enum(["PROVIDER", "NONE"]);
+
 export type OnboardingInput = z.infer<typeof onboardingSchema>;
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
 export type AppearanceValue = z.infer<typeof appearanceSchema>;

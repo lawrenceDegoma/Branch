@@ -121,26 +121,39 @@ enum Appearance {
 
 /// Branch-owned profile, created during onboarding. A signed-in user without one is sent to
 /// onboarding before using the app.
+enum PhotoChoice {
+  PROVIDER
+  UPLOAD
+  NONE
+}
+
 model Profile {
-  userId               String     @id
-  user                 User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId               String      @id
+  user                 User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// Lowercase handle, 3-30 characters (CHECK constraint in migration).
-  username             String     @unique
+  username             String      @unique
   /// At most 280 characters (CHECK constraint in migration).
   bio                  String?
   /// IANA timezone name, validated by the application.
   timezone             String
-  appearance           Appearance @default(SYSTEM)
+  appearance           Appearance  @default(SYSTEM)
   /// Post automatically when solving a problem a group's plan assigns, finishing a week, or
   /// finishing a plan. Off by default: completion never implies sharing.
-  shareSolves          Boolean    @default(false)
+  shareSolves          Boolean     @default(false)
   /// Estimate the complexity of the person's solutions (privately). On by default; turning it
   /// off deletes their estimates.
-  analyzeSolutions     Boolean    @default(true)
+  analyzeSolutions     Boolean     @default(true)
   /// The person hid Home's "Get started" checklist.
-  gettingStartedHidden Boolean    @default(false)
-  createdAt            DateTime   @default(now())
-  updatedAt            DateTime   @updatedAt
+  gettingStartedHidden Boolean     @default(false)
+  /// Which photo people see: Google's or GitHub's (the default), an upload, or none (initials).
+  photo                PhotoChoice @default(PROVIDER)
+  /// The uploaded photo's address, set exactly while `photo` is UPLOAD (CHECK constraint in
+  /// migration).
+  photoUrl             String?
+  /// When the photo last changed (uploads are limited to one a minute).
+  photoChangedAt       DateTime?
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
 
   @@map("profile")
 }

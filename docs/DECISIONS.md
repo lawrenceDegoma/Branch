@@ -1024,6 +1024,24 @@ merges by hand if it ever comes up. Password resets (`pnpm auth:reset-link`) sti
 accounts that haven't moved. E2E accounts get a GitHub account row by default (`passwordOnly`
 leaves one unmoved); the GitHub round trip itself is stubbed at github.com, as before.
 
+### Profile photos (2026-11-09)
+
+Owner decision: the photo from Google or GitHub by default, plus uploads ("Uploads too"), on
+Vercel Blob's free Hobby allowance. `profile.photo` is PROVIDER, UPLOAD, or NONE (initials);
+`photoUrl` exists exactly while it's UPLOAD (CHECK, migration `profile_photo`, https or the local
+route only). Better Auth's `user.image` is the provider photo; connecting a provider while moving
+brings it (`updateUserInfoOnLink`), and a user-update hook (`keepChosenName`) stops the provider
+from renaming anyone. Uploads are cropped to a 256px square and re-encoded (WebP, else JPEG) in the
+browser, then checked on the server by their first bytes (JPEG, PNG, or WebP; never SVG) and size
+(200 KB), with one change a minute (a conditional update, so two uploads at once can't strand a
+photo). Replacing or switching away deletes the old upload. Storage sits behind `PhotoStorage`
+(`modules/profile/photo-storage.ts`): Blob when `BLOB_READ_WRITE_TOKEN` is set (public store,
+random names, cached for a year since a new photo gets a new name), a local folder served by
+`/api/photos/[name]` outside production, and no uploads in production without the token. Photos
+render as plain `<img>` with no referrer over the initials, so a failed load shows initials; they
+skip Next's image optimizer and its monthly allowance. Groups see a member's photo wherever their
+name appears (posts, comments, members, who solved a problem).
+
 ## Phase 3 summary
 
 Done when "supported accepted submissions sync once without exposing source to groups; failures

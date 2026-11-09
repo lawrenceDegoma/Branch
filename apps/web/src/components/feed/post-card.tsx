@@ -45,7 +45,7 @@ export function PostCard({
     >
       <CommentsDisclosure defaultOpen={commentsOpen}>
         <header className="flex items-start gap-3">
-          <Avatar userId={post.author.id} name={post.author.name} />
+          <Avatar userId={post.author.id} name={post.author.name} photo={post.author.photo} />
           <div className="min-w-0 flex-1">
             <p className="flex flex-wrap items-baseline gap-x-1.5">
               <span id={headingId} className="font-medium">

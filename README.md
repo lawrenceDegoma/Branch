@@ -105,6 +105,7 @@ is server-only.
 | `BETTER_AUTH_URL`                           | Yes                       | Public origin of the app, e.g. `http://localhost:3000`.                                                         |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | No (set both or neither)  | Enables "Continue with GitHub". Create an OAuth app with callback `<BETTER_AUTH_URL>/api/auth/callback/github`. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | No (set both or neither)  | Enables "Continue with Google" (redirect URI `<BETTER_AUTH_URL>/api/auth/callback/google`).                     |
+| `BLOB_READ_WRITE_TOKEN`                     | No                        | Vercel Blob, for uploaded profile photos. Unset locally: photos are kept in `apps/web/.photos/`.                |
 | `PASSWORD_SIGN_UP`                          | No                        | `"true"` keeps password sign-up open next to Google or GitHub: local development and tests only.                |
 
 The server validates its environment at startup and reports invalid variable names without echoing

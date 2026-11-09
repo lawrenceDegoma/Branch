@@ -2,6 +2,7 @@ import "server-only";
 import { prisma } from "@branch/database";
 import { DomainError, ForbiddenError, NotFoundError } from "@/lib/errors";
 import { requireMembership } from "@/modules/groups/access";
+import { shownPhoto } from "@/modules/profile/photo";
 import {
   FEED_PAGE_SIZE,
   postIdSchema,
@@ -20,7 +21,14 @@ const POSTS_PER_MINUTE = 5;
 const FEED_THREADS = 20;
 
 const postInclude = {
-  author: { select: { id: true, name: true, profile: { select: { username: true } } } },
+  author: {
+    select: {
+      id: true,
+      name: true,
+      image: true,
+      profile: { select: { username: true, photo: true, photoUrl: true } },
+    },
+  },
   group: { select: { id: true, name: true } },
   problem: { select: { id: true, title: true, leetcodeSlug: true, difficulty: true } },
   plan: {
@@ -96,7 +104,12 @@ function toFeedItem(
     spoiler: post.spoiler,
     createdAt: post.createdAt,
     editedAt: post.editedAt,
-    author: { id: post.author.id, name: post.author.name, username: post.author.profile?.username },
+    author: {
+      id: post.author.id,
+      name: post.author.name,
+      username: post.author.profile?.username,
+      photo: shownPhoto(post.author),
+    },
     group: post.group,
     problem: post.problem,
     roadmap: post.plan?.roadmapVersion.roadmap ?? null,

@@ -4,6 +4,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { serverEnv } from "@/lib/env";
+import { keepChosenName } from "./link";
 
 const env = serverEnv();
 
@@ -47,7 +48,15 @@ export const auth = betterAuth({
     // Moving to Google or GitHub links the provider to the account that's signed in, even when
     // its email differs from the one used with the password. (Signing in with a provider never
     // joins an unverified password account by email; Better Auth refuses that.)
-    accountLinking: { enabled: true, allowDifferentEmails: true },
+    // Connecting one also brings its photo (the name stays; see the hook below).
+    accountLinking: { enabled: true, allowDifferentEmails: true, updateUserInfoOnLink: true },
+  },
+  databaseHooks: {
+    user: {
+      update: {
+        before: async (data, context) => ({ data: keepChosenName(data, context?.path) }),
+      },
+    },
   },
   // Failures that happen before a sign-in knows where to return (e.g. an expired attempt) land on
   // the sign-in page, which explains the error code, rather than Better Auth's unstyled /error.

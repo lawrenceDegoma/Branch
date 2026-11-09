@@ -93,6 +93,21 @@ just without complexity estimates.
 It runs on the Hobby plan's free allowance (Python is supported, and an analysis takes
 milliseconds). Each push to `main` deploys both projects.
 
+**Profile photos (Vercel Blob):** uploaded photos are stored in Vercel Blob. Without it, people
+see their Google or GitHub photo (or initials) and the upload button doesn't appear.
+
+1. In the app's project, open **Storage → Create Database → Blob**, name it (for example
+   `branch-photos`), and choose **Public** access (photos are shown in pages, each under an
+   unguessable address). Connect it to the project for **Production**; Vercel adds
+   `BLOB_READ_WRITE_TOKEN` itself.
+2. Redeploy. Settings → Profile now offers "Upload a photo".
+
+The Hobby plan includes 1 GB of storage, 10 GB of transfer, and 2,000 advanced operations
+(uploads count as these) a month for free. Branch's photos are about 20 KB each, and each person
+can change theirs once a minute at most. Going past an allowance blocks the store for up to 30
+days; Hobby is never billed. Photos of accounts deleted by hand stay in the store; delete them from the
+store's **Browser** if that ever matters.
+
 **Preview deployments:** Vercel also builds a preview for each pull request. Previews have no
 environment variables, so they fail to start. That's intended: it keeps them away from production
 data. Turn previews off under **Settings → Git** if the failed builds bother you.

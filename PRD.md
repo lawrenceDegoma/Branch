@@ -68,7 +68,7 @@ Users need to: (a) see what friends are studying, (b) know what to solve this we
 ### Activity feed
 - **Home is feed-first.** Unified chronological activity from all groups, with group filtering and clear group labels.
 - Desktop layout: left navigation; center activity feed; right 'Your Week' summary with assignments/progress/reviews. Mobile: single-column feed, compact weekly summary, bottom navigation.
-- Navigation: Home, Roadmaps, Groups, Review, Profile. Chat is accessed within a group.
+- Navigation: Home, Roadmaps, Groups, Review, Profile. Chat is accessed within a group. (Owner change, 2026-11-09: Home, Roadmaps, Groups, Review, Solutions; profile details live in Settings, and there is no separate Profile page.)
 - Auto-generated posts for newly accepted problems and meaningful milestones, **subject to user opt-in and per-post visibility control**. Do not publish duplicates for re-submissions; a re-solve is its own, rate-limited activity (owner change, 2026-11-09).
 - Manual posts support help requests, tips, reflections, Markdown-style text, and syntax-highlighted code blocks. No image uploads (owner decision, 2026-11-04).
 - Posts support reactions and threaded comments (initial UI depth cap: two reply levels; maintain a clear data model for parent relationships).
@@ -118,7 +118,7 @@ Users need to: (a) see what friends are studying, (b) know what to solve this we
 2. **Group:** members, current roadmap, this week's assignments, progress, activity, group chat when shipped, admin settings.
 3. **Roadmap:** ordered sections, assigned weeks, completion state, overdue/backlog, ahead-of-schedule work.
 4. **Review:** due reviews, targeted new problems, explanation of why each was suggested, private performance history.
-5. **Profile:** personal accomplishments, group memberships, goals, appearance, privacy, extension connection.
+5. **Profile:** personal accomplishments, group memberships, goals, appearance, privacy, extension connection. (Owner change, 2026-11-09: part of Settings, including milestone badges and a profile photo: the one from Google or GitHub, an upload, or initials. New accounts sign in with Google or GitHub only; password accounts can move to one and keep their data.)
 6. **Admin setup:** create group, invite, choose/author roadmap, define schedule and dates, transfer admin.
 
 ## 6. Data and event semantics

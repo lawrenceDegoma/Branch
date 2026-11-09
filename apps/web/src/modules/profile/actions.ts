@@ -12,10 +12,21 @@ import {
   analysisSchema,
   appearanceSchema,
   onboardingSchema,
+  photoChoiceSchema,
   profileUpdateSchema,
   sharingSchema,
 } from "./schemas";
-import { createProfile, getProfile, setAppearance, setShareSolves, updateProfile } from "./service";
+import { MAX_PHOTO_BYTES } from "./photo";
+import { photoStorage } from "./photo-storage";
+import {
+  choosePhoto,
+  createProfile,
+  getProfile,
+  setAppearance,
+  setShareSolves,
+  updateProfile,
+  uploadPhoto,
+} from "./service";
 
 function domainErrorState(error: DomainError, values?: Record<string, string>): FormState {
   return error.field
@@ -117,4 +128,37 @@ export async function hideGettingStartedAction(_prev: FormState): Promise<FormSt
   await prisma.profile.update({ where: { userId: user.id }, data: { gettingStartedHidden: true } });
   revalidatePath("/home");
   return { status: "success", message: "Hidden." };
+}
+
+export async function uploadPhotoAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const { user } = await requireViewer();
+  const storage = photoStorage();
+  if (!storage) return { status: "error", message: "Photo uploads aren't set up yet." };
+  const file = formData.get("photo");
+  if (!(file instanceof File) || file.size === 0) {
+    return { status: "error", fieldErrors: { photo: "Choose a photo." } };
+  }
+  if (file.size > MAX_PHOTO_BYTES) {
+    return { status: "error", fieldErrors: { photo: "That photo is too large. Choose another." } };
+  }
+  try {
+    await uploadPhoto(user.id, new Uint8Array(await file.arrayBuffer()), storage);
+  } catch (error) {
+    if (error instanceof DomainError) return domainErrorState(error);
+    throw error;
+  }
+  revalidatePath("/", "layout");
+  return { status: "success", message: "Photo saved." };
+}
+
+export async function choosePhotoAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const { user } = await requireViewer();
+  const choice = photoChoiceSchema.safeParse(formData.get("photo"));
+  if (!choice.success) return { status: "error", message: "Choose a photo option." };
+  await choosePhoto(user.id, choice.data, photoStorage());
+  revalidatePath("/", "layout");
+  return {
+    status: "success",
+    message: choice.data === "NONE" ? "Your initials show instead of a photo." : "Photo updated.",
+  };
 }

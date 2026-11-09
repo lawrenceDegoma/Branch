@@ -1,12 +1,13 @@
 import "server-only";
 import type { prisma } from "@branch/database";
+import { photoSelect, shownPhoto } from "@/modules/profile/photo";
 
 // Shaping comment rows into threads, shared by the post page (paged) and the feed (inline).
 
 /** Replies shown under one comment; generous for a group of friends, but bounded. */
 export const REPLIES_SHOWN = 100;
 
-const commentInclude = { author: { select: { id: true, name: true } } } as const;
+const commentInclude = { author: { select: { id: true, name: true, ...photoSelect } } } as const;
 
 /** Prisma include for a top-level comment with its replies. */
 export const threadInclude = {
@@ -26,7 +27,7 @@ function toCommentItem(row: CommentRow, viewerId: string, isAdmin: boolean) {
     id: row.id,
     body: row.body,
     spoiler: row.spoiler,
-    author: row.author,
+    author: { id: row.author.id, name: row.author.name, photo: shownPhoto(row.author) },
     createdAt: row.createdAt,
     editedAt: row.editedAt,
     canEdit: row.authorId === viewerId,

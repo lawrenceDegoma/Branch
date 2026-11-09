@@ -13,12 +13,17 @@ import { requireViewer } from "@/modules/auth/session";
 import { syncBadges } from "@/modules/badges/service";
 import { listConnections } from "@/modules/integrations/connections";
 import { listTimeZones } from "@/modules/profile/timezone";
+import { shownPhoto } from "@/modules/profile/photo";
+import { photoStorage } from "@/modules/profile/photo-storage";
 import { PasswordForm } from "./password-form";
+import { PhotoForm } from "./photo-form";
 import { ProfileForm } from "./profile-form";
 import { AnalysisForm } from "./analysis-form";
 import { SharingForm } from "./sharing-form";
 
 export const metadata = { title: "Settings" };
+
+const PROVIDER_LABEL = { google: "Google", github: "GitHub" } as const;
 
 export default async function SettingsPage({
   searchParams,
@@ -29,6 +34,9 @@ export default async function SettingsPage({
   const passwordUpdated = (await searchParams).password === "updated";
   const canChangePassword = await hasPasswordAccount(user.id);
   const methods = await signInMethods(user.id);
+  const providerPhotoLabel = shownPhoto({ image: user.image ?? null, profile: null })
+    ? `Use my ${methods.providers.length === 1 ? PROVIDER_LABEL[methods.providers[0]!] : "Google or GitHub"} photo`
+    : null;
   const [connections, badges] = await Promise.all([
     listConnections(user.id),
     syncBadges([user.id]),
@@ -42,15 +50,25 @@ export default async function SettingsPage({
         title="Profile"
         description="How you appear to people in your groups."
       >
-        <ProfileForm
-          profile={{
-            name: user.name,
-            username: profile.username,
-            bio: profile.bio ?? "",
-            timezone: profile.timezone,
-          }}
-          zones={listTimeZones()}
-        />
+        <div className="flex flex-col gap-5">
+          <PhotoForm
+            userId={user.id}
+            name={user.name}
+            photo={shownPhoto({ image: user.image ?? null, profile })}
+            choice={profile.photo}
+            providerPhotoLabel={providerPhotoLabel}
+            uploadsEnabled={photoStorage() !== null}
+          />
+          <ProfileForm
+            profile={{
+              name: user.name,
+              username: profile.username,
+              bio: profile.bio ?? "",
+              timezone: profile.timezone,
+            }}
+            zones={listTimeZones()}
+          />
+        </div>
       </SettingsSection>
       <SettingsSection
         id="badges"
@@ -105,8 +123,7 @@ export default async function SettingsPage({
             ) : null
           ) : methods.providers.length > 0 ? (
             <p className="text-ink-muted">
-              You sign in with{" "}
-              {methods.providers.map((p) => (p === "google" ? "Google" : "GitHub")).join(" and ")}.
+              You sign in with {methods.providers.map((p) => PROVIDER_LABEL[p]).join(" and ")}.
             </p>
           ) : (
             <p className="text-ink-muted">

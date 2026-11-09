@@ -37,3 +37,6 @@ blob-report/
 # extension build output
 .output/
 .wxt/
+
+# local profile photos (development and tests)
+apps/web/.photos/

@@ -3,6 +3,7 @@ import { prisma, type GroupRole } from "@branch/database";
 import { isUniqueViolation } from "@/lib/db-errors";
 import { DomainError, ForbiddenError, NotFoundError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
+import { shownPhoto } from "@/modules/profile/photo";
 import { requireAdmin, requireMembership } from "./access";
 import {
   generateInviteToken,
@@ -55,7 +56,14 @@ export async function getGroupOverview(userId: string, groupId: string) {
       memberships: {
         orderBy: [{ role: "asc" }, { joinedAt: "asc" }],
         include: {
-          user: { select: { id: true, name: true, profile: { select: { username: true } } } },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+              profile: { select: { username: true, photo: true, photoUrl: true } },
+            },
+          },
         },
       },
     },
@@ -70,6 +78,7 @@ export async function getGroupOverview(userId: string, groupId: string) {
       userId: m.userId,
       name: m.user.name,
       username: m.user.profile?.username ?? null,
+      photo: shownPhoto(m.user),
       role: m.role,
       joinedAt: m.joinedAt,
     })),

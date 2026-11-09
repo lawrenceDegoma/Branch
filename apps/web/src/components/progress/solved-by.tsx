@@ -12,7 +12,7 @@ function names(people: { name: string; isViewer: boolean }[]): string {
 export function SolvedBy({
   people,
 }: {
-  people: { userId: string; name: string; isViewer: boolean }[];
+  people: { userId: string; name: string; photo: string | null; isViewer: boolean }[];
 }) {
   if (people.length === 0) return null;
   const extra = people.length - SHOWN;
@@ -25,6 +25,7 @@ export function SolvedBy({
             key={person.userId}
             userId={person.userId}
             name={person.name}
+            photo={person.photo}
             size="sm"
             className="ring-2 ring-surface"
           />

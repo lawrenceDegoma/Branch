@@ -3,6 +3,7 @@ import { AppShell } from "@/components/shell/app-shell";
 import { AppearanceSync } from "@/components/theme/appearance-sync";
 import { needsToMove } from "@/modules/auth/accounts";
 import { requireViewer } from "@/modules/auth/session";
+import { shownPhoto } from "@/modules/profile/photo";
 
 // Every page under this layout requires a signed-in, onboarded user.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -10,7 +11,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const moving = await needsToMove(user.id);
   return (
     <AppShell
-      viewer={{ id: user.id, name: user.name, username: profile.username }}
+      viewer={{
+        id: user.id,
+        name: user.name,
+        username: profile.username,
+        photo: shownPhoto({ image: user.image ?? null, profile }),
+      }}
       notice={
         moving ? (
           <p>
