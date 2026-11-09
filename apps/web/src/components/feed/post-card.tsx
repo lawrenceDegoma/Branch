@@ -1,4 +1,4 @@
-import { CircleCheck, Flag } from "lucide-react";
+import { CircleCheck, Flag, RotateCw } from "lucide-react";
 import Link from "next/link";
 import { ConfirmAction } from "@/components/forms/confirm-action";
 import { DifficultyPill } from "@/components/roadmaps/difficulty-pill";
@@ -152,7 +152,7 @@ function ProblemLink({ problem }: { problem: NonNullable<FeedItem["problem"]> })
 
 /** A solve or a milestone, in one quiet line; the orange mark is progress data. */
 function AutomaticPostBody({ post }: { post: FeedItem }) {
-  const Icon = post.kind === "SOLVE" ? CircleCheck : Flag;
+  const Icon = post.kind === "SOLVE" ? CircleCheck : post.kind === "RESOLVE" ? RotateCw : Flag;
   return (
     <p className="flex flex-wrap items-center gap-2">
       <Icon aria-hidden className="size-4 flex-none text-brand" />
@@ -160,6 +160,12 @@ function AutomaticPostBody({ post }: { post: FeedItem }) {
         <>
           <span>Solved</span>
           <ProblemLink problem={post.problem} />
+        </>
+      ) : post.kind === "RESOLVE" && post.problem ? (
+        <>
+          <span>Solved</span>
+          <ProblemLink problem={post.problem} />
+          <span>again</span>
         </>
       ) : post.kind === "WEEK_DONE" ? (
         <span>

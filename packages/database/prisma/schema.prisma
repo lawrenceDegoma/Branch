@@ -534,6 +534,9 @@ enum PostKind {
   TEXT
   /// Automatic: the author solved a problem the group's plan assigns (problemId).
   SOLVE
+  /// Automatic: the extension synced another accepted submission of a problem the author had
+  /// already solved (problemId). At most one a week per problem, counting the SOLVE post.
+  RESOLVE
   /// Automatic: the author solved every problem in one week of a plan (planId, weekNumber).
   WEEK_DONE
   /// Automatic: the author solved every problem in a plan (planId).

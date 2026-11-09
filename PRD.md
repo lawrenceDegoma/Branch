@@ -60,7 +60,7 @@ Users need to: (a) see what friends are studying, (b) know what to solve this we
 
 ### Completion and progress
 - A canonical **user + problem** accepted completion is counted once globally, even when the problem appears in multiple groups or roadmaps.
-- Completion is reflected in all applicable roadmap progress views. Re-submissions may update analysis history but must not create repeated completion celebrations.
+- Completion is reflected in all applicable roadmap progress views. Re-submissions may update analysis history but must not create a second completion. (Owner change, 2026-11-09: a new accepted submission of an already solved problem may post a distinct "solved again" activity, at most once a week per problem, with the same opt-in.)
 - Record completion source (`manual`, `extension`, later `import`), timestamp, optional language, and external submission ID where available.
 - Personal weekly goals are optional and secondary to the shared roadmap.
 - Keep roadmap completion, review sessions, and code-analysis outcomes as distinct concepts.
@@ -69,7 +69,7 @@ Users need to: (a) see what friends are studying, (b) know what to solve this we
 - **Home is feed-first.** Unified chronological activity from all groups, with group filtering and clear group labels.
 - Desktop layout: left navigation; center activity feed; right 'Your Week' summary with assignments/progress/reviews. Mobile: single-column feed, compact weekly summary, bottom navigation.
 - Navigation: Home, Roadmaps, Groups, Review, Profile. Chat is accessed within a group.
-- Auto-generated posts for newly accepted problems and meaningful milestones, **subject to user opt-in and per-post visibility control**. Do not publish duplicates for re-submissions.
+- Auto-generated posts for newly accepted problems and meaningful milestones, **subject to user opt-in and per-post visibility control**. Do not publish duplicates for re-submissions; a re-solve is its own, rate-limited activity (owner change, 2026-11-09).
 - Manual posts support help requests, tips, reflections, Markdown-style text, and syntax-highlighted code blocks. No image uploads (owner decision, 2026-11-04).
 - Posts support reactions and threaded comments (initial UI depth cap: two reply levels; maintain a clear data model for parent relationships).
 - Posts and comments should support spoiler marking/collapsing, especially for solutions.
@@ -159,7 +159,7 @@ Design decisions:
 4. A member creates a help post with code, marks the code as a spoiler, and receives threaded replies.
 5. A nonmember cannot access private group activity through the feed, direct URLs, or APIs.
 6. A user disables auto-sharing; their completion still updates progress but does not create a visible post.
-7. Re-submitting an accepted solution does not generate another completion celebration.
+7. Re-submitting an accepted solution does not create a second completion or a duplicate solve post; at most one "solved again" post a week per problem, with sharing on.
 8. A user without the extension can manually track problems and use social features.
 9. An uncertain complexity analysis is labeled as such and does not expose source code to other members.
 10. Theme follows system by default and user overrides persist.

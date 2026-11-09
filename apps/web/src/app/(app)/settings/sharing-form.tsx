@@ -15,7 +15,7 @@ export function SharingForm({ shareSolves }: { shareSolves: boolean }) {
         id="field-shareSolves"
         name="shareSolves"
         label="Share my solves"
-        description="When you mark a problem solved, post it to each group whose plan includes it, along with finished weeks and plans. Unmarking takes the post down. You can hide any single post."
+        description="When you mark a problem solved, post it to each group whose plan includes it, along with finished weeks and plans, and when the extension sees you solve one again (at most once a week per problem). Unmarking takes the posts down. You can hide any single post."
         defaultChecked={state.values ? state.values.shareSolves === "on" : shareSolves}
       />
       <div className="flex flex-wrap items-center justify-end gap-3">

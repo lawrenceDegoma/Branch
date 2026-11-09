@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@branch/database";
 import { DomainError, NotFoundError } from "@/lib/errors";
+import { announceResolve } from "@/modules/feed/automatic";
 import { setCompletion } from "@/modules/progress/service";
 import { pastedSolutionSchema, submissionIdSchema, type SubmissionPayload } from "./schemas";
 
@@ -65,10 +66,14 @@ export async function ingestSubmission(
     skipDuplicates: true,
   });
   if (problem) {
-    await setCompletion(userId, problem.id, true, now, {
+    const { changed } = await setCompletion(userId, problem.id, true, now, {
       source: "EXTENSION",
       language: payload.language,
     });
+    // Already solved, and this is a new accepted submission: a re-solve.
+    if (!changed && count > 0) {
+      await prisma.$transaction((tx) => announceResolve(tx, userId, problem.id, now));
+    }
   }
   return { stored: count > 0 ? "new" : "duplicate", counted: problem !== null };
 }

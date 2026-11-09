@@ -981,6 +981,17 @@ Settings' extension section is shorter: a one-line description, install status, 
 browsers, the full disclosure behind "What it reads and sends" (the extension's own welcome page
 and popup still show it before connecting), and the connect button.
 
+### Re-solve posts (2026-11-09)
+
+Owner change to an original PRD rule (no second celebration for a re-submission): when the
+extension syncs a new accepted submission of a problem the person had already solved, Branch
+posts "Solved Two Sum again" (`PostKind.RESOLVE`) to each group whose active plan assigns it, with
+"Share my solves" on, at most once a week per problem and group, counting the original solve post.
+Retries of the same submission, manual marks, and pasted solutions never post. An advisory lock
+per person and problem keeps simultaneous syncs to one post; unsolving withdraws re-solve posts
+with the rest. Migrations `post_resolve_kind` (the enum value, alone) and `post_resolve_shape`
+(the kind's CHECK branch and an index for the weekly look-up). The PRD records the change.
+
 ## Phase 3 summary
 
 Done when "supported accepted submissions sync once without exposing source to groups; failures

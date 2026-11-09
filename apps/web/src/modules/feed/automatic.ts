@@ -122,10 +122,58 @@ async function withdraw(tx: Tx, userId: string, problemId: string, now: Date) {
       withdrawnAt: null,
       OR: [
         { kind: "SOLVE", problemId },
+        { kind: "RESOLVE", problemId },
         { kind: "PLAN_DONE", plan: inPlan },
         { id: { in: weekPostIds } },
       ],
     },
     data: { withdrawnAt: now },
+  });
+}
+
+/** A re-solve posts at most once a week per problem, counting the original solve post. */
+export const RESOLVE_GAP_DAYS = 7;
+
+/**
+ * The extension synced another accepted submission of a problem the author had already solved:
+ * post "solved it again" to each group whose active plan assigns it, with "Share my solves" on,
+ * unless they posted about this problem in the last week. Serialized per author and problem, so
+ * two submissions syncing at once can't both post.
+ */
+export async function announceResolve(tx: Tx, userId: string, problemId: string, now: Date) {
+  const profile = await tx.profile.findUnique({ where: { userId }, select: { shareSolves: true } });
+  if (!profile?.shareSolves) return;
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`resolve:${userId}:${problemId}`}))`;
+  const since = new Date(now.getTime() - RESOLVE_GAP_DAYS * 24 * 60 * 60 * 1000);
+  const plans = await tx.groupRoadmapPlan.findMany({
+    where: {
+      status: "ACTIVE",
+      group: { memberships: { some: { userId } } },
+      assignments: { some: { roadmapItem: { problemId } } },
+    },
+    select: { groupId: true },
+  });
+  if (plans.length === 0) return;
+  const recent = await tx.post.findMany({
+    where: {
+      authorId: userId,
+      problemId,
+      kind: { in: ["SOLVE", "RESOLVE"] },
+      createdAt: { gt: since },
+      groupId: { in: plans.map((p) => p.groupId) },
+    },
+    select: { groupId: true },
+  });
+  const posted = new Set(recent.map((p) => p.groupId));
+  const fresh = plans.filter((p) => !posted.has(p.groupId));
+  if (fresh.length === 0) return;
+  await tx.post.createMany({
+    data: fresh.map((p) => ({
+      groupId: p.groupId,
+      authorId: userId,
+      kind: "RESOLVE" as const,
+      problemId,
+      createdAt: now,
+    })),
   });
 }
