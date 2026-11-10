@@ -26,7 +26,10 @@ export default async function LandingPage() {
           Sign in
         </Link>
       </div>
-      <p className="text-xs text-ink-muted">
+      <p className="flex gap-4 text-xs text-ink-muted">
+        <Link href="/changelog" className="underline underline-offset-4 hover:text-ink">
+          What&apos;s new
+        </Link>
         <Link href="/privacy" className="underline underline-offset-4 hover:text-ink">
           Privacy
         </Link>

@@ -148,6 +148,9 @@ model Profile {
   analyzeSolutions     Boolean     @default(true)
   /// The person hid Home's "Get started" checklist.
   gettingStartedHidden Boolean     @default(false)
+  /// The newest changelog entry the person dismissed from Home's "What's new" card; entries
+  /// newer than it (and newer than the day they joined) show there.
+  changelogSeenId      String?
   /// Which photo people see: Google's or GitHub's (the default), an upload, or none (initials).
   photo                PhotoChoice @default(PROVIDER)
   /// The uploaded photo's address, set exactly while `photo` is UPLOAD (CHECK constraint in

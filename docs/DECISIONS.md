@@ -1140,6 +1140,27 @@ the extension's problem timer, M26 stats, M27 journeys and docs) with these deci
   unlink; outsiders 404; the foreign key and CHECKs; account deletion still works) and an E2E in
   `e2e/sharing.spec.ts` (Settings, sync, the groupmate opens the spoiler, then it's gone).
 
+### Changelog: "What's new" (2026-11-09)
+
+Owner decisions: an in-app, plain-language changelog, built before M24; a dismissible card on Home
+after an update, with a link to a longer description of each one; the main releases so far
+backfilled.
+
+- **Entries** live in one file, `apps/web/src/modules/changelog/entries.ts` (newest first; a
+  permanent `YYYY-MM-DD-slug` ID, date, title, a one-line summary, Markdown details), added in the
+  same commit as each update (CLAUDE.md). A unit test checks IDs, order, and lengths, and keeps
+  other parties' list names out. Eleven entries backfill the launch (2026-11-03) to M23.
+- **Pages:** `/changelog` (every update) and `/changelog/[id]` (one, statically generated;
+  unknown IDs 404) are public, like `/privacy`, and linked from the landing page and Settings.
+- **Home card:** the newest entry the person hasn't seen, "And N more updates" if several, "Read
+  more", and "Dismiss" (focus then moves to the feed's heading). Seen means up to the entry they
+  dismissed (`profile.changelogSeenId`, migration `profile_changelog_seen`, CHECK on the ID's
+  shape); updates from on or before the day someone joined never show. The PRD's "no
+  notifications" stands: the card is part of Home, with no counts, pop-ups, or emails.
+- **Tests:** unit (entries, `unseenEntries`), integration (dismissing, joined-after, the CHECK),
+  E2E `e2e/changelog.spec.ts` (card, read more, keyboard dismiss and focus, new accounts don't see
+  it, public pages, 404), and both pages in the axe scans and 320px reflow.
+
 ## Phase 4 summary
 
 Done when "a user receives useful private review suggestions; analysis is asynchronous, bounded,

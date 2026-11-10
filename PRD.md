@@ -76,7 +76,7 @@ Users need to: (a) see what friends are studying, (b) know what to solve this we
 - Posts support reactions and threaded comments (initial UI depth cap: two reply levels; maintain a clear data model for parent relationships).
 - Posts and comments should support spoiler marking/collapsing, especially for solutions.
 - Privacy: private group scope; never automatically expose source code, weakness metrics, or detailed analysis (except code on one's own solve posts, by a setting that is off by default; owner change, 2026-11-09). A post should have a clear group destination; no cross-group forwarding by default.
-- No notifications in version one.
+- No notifications in version one. (Owner change, 2026-11-09: after an update, Home shows a dismissible "What's new" card linking to a public changelog; it's part of Home, not a notification.)
 
 ### Personalized review (phase 4)
 - **Spaced repetition:** revisit previously solved problems based on review performance/history.

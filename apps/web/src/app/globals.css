@@ -388,6 +388,10 @@
   font-size: 1.125rem;
   font-weight: 600;
 }
+/* Headings inside a list (the changelog's entries) sit tight against their date. */
+.prose-branch li h2 {
+  margin-top: 0;
+}
 .prose-branch ul {
   display: flex;
   flex-direction: column;

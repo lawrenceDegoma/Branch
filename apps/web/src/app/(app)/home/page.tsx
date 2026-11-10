@@ -2,12 +2,14 @@ import Link from "next/link";
 import { Feed, GroupFilter } from "@/components/feed/feed";
 import { Backlog, GroupWeek, isPlanned } from "@/components/home/group-week";
 import { GettingStarted } from "@/components/home/getting-started";
+import { WhatsNew } from "@/components/home/whats-new";
 import { WeekSummary } from "@/components/home/week-summary";
 import { PageHeader } from "@/components/shell/page-header";
 import { EmptyState } from "@/components/states/empty-state";
 import { buttonVariants } from "@/components/ui/button";
 import { serverEnv } from "@/lib/env";
 import { requireViewer } from "@/modules/auth/session";
+import { whatsNewFor } from "@/modules/changelog/service";
 import { feedQuerySchema } from "@/modules/feed/schemas";
 import { listComposerGroups, listFeed } from "@/modules/feed/service";
 import { listConnections } from "@/modules/integrations/connections";
@@ -26,6 +28,7 @@ export default async function HomePage({
   const { user, profile } = await requireViewer();
   const query = feedQuerySchema.parse(await searchParams);
   const home = await getHome(user.id, profile.timezone);
+  const whatsNew = whatsNewFor(user, profile);
 
   if (home.groups.length === 0) {
     // New accounts: the checklist starts with joining a group. Hidden, the plain prompt remains.
@@ -34,20 +37,26 @@ export default async function HomePage({
       return (
         <div className="max-w-3xl">
           <PageHeader title="Home" headingId="home-heading" />
-          <GettingStarted
-            inGroup={false}
-            hasPlan={false}
-            connected={connections.length > 0}
-            shareSolves={profile.shareSolves}
-            solved={home.summary.totalSolved > 0}
-            storeUrl={serverEnv().EXTENSION_STORE_URL}
-          />
+          <div className="flex flex-col gap-6">
+            <WhatsNew entries={whatsNew} focusTarget="home-heading" />
+            <GettingStarted
+              inGroup={false}
+              hasPlan={false}
+              connected={connections.length > 0}
+              shareSolves={profile.shareSolves}
+              solved={home.summary.totalSolved > 0}
+              storeUrl={serverEnv().EXTENSION_STORE_URL}
+            />
+          </div>
         </div>
       );
     }
     return (
       <div className="max-w-4xl">
         <PageHeader title="Home" headingId="home-heading" />
+        <div className="mb-6 empty:hidden">
+          <WhatsNew entries={whatsNew} focusTarget="home-heading" />
+        </div>
         <EmptyState
           title="Start with a group"
           description="Create a group for your friends, or open an invite link someone shared with you. Your weekly problems and your groups' activity show up here."
@@ -109,6 +118,7 @@ export default async function HomePage({
           ) : null}
         </section>
         <div className="flex min-w-0 flex-col gap-6 [grid-area:feed]">
+          <WhatsNew entries={whatsNew} focusTarget="activity-heading" />
           {profile.gettingStartedHidden ? null : (
             <GettingStarted
               inGroup

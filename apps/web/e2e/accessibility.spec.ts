@@ -19,6 +19,8 @@ const publicRoutes = [
   "/sign-up",
   "/forgot-password",
   "/privacy",
+  "/changelog",
+  "/changelog/2026-11-09-code-on-solve-posts",
   "/reset-password?token=example",
   "/missing-page",
 ];

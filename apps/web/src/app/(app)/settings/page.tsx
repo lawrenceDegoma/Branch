@@ -140,6 +140,14 @@ export default async function SettingsPage({
           </form>
         </div>
       </SettingsSection>
+      <p className="flex flex-wrap gap-x-4 gap-y-1 text-ink-muted">
+        <Link href="/changelog" className="underline underline-offset-4 hover:text-ink">
+          What&apos;s new
+        </Link>
+        <Link href="/privacy" className="underline underline-offset-4 hover:text-ink">
+          Privacy policy
+        </Link>
+      </p>
     </div>
   );
 }
