@@ -36,6 +36,7 @@ const postInclude = {
     select: { roadmapVersion: { select: { roadmap: { select: { id: true, title: true } } } } },
   },
   submission: { select: { code: true, language: true } },
+  studySession: { select: { startedAt: true, endedAt: true } },
   _count: { select: { comments: true } },
 } as const;
 
@@ -98,11 +99,18 @@ function toFeedItem(
 ) {
   const isAuthor = post.authorId === viewerId;
   const written = post.kind === "TEXT";
+  // A shared study session is the author's choice, like a written post: deleted, not hidden.
+  const chosen = written || post.kind === "STUDY";
   return {
     id: post.id,
     kind: post.kind,
-    /** Set for TEXT posts only. */
+    /** Set for TEXT posts, and the optional note on a STUDY post. */
     body: post.body,
+    /** How long a shared study session lasted. */
+    studyMs:
+      post.studySession?.endedAt != null
+        ? post.studySession.endedAt.getTime() - post.studySession.startedAt.getTime()
+        : null,
     spoiler: post.spoiler,
     createdAt: post.createdAt,
     editedAt: post.editedAt,
@@ -129,10 +137,12 @@ function toFeedItem(
         : null,
     reactions,
     commentCount: post._count.comments,
+    /** The viewer wrote or shared it. */
+    mine: isAuthor,
     canEdit: written && isAuthor,
     // Automatic posts hold no member-written text to moderate; the author hides them instead.
-    canDelete: written && (isAuthor || adminGroupIds.has(post.groupId)),
-    canHide: !written && isAuthor,
+    canDelete: chosen && (isAuthor || adminGroupIds.has(post.groupId)),
+    canHide: !chosen && isAuthor,
   };
 }
 export type FeedItem = ReturnType<typeof toFeedItem> & {
@@ -282,7 +292,7 @@ export async function deletePost(viewerId: string, postId: string) {
   if (!found) throw new NotFoundError("We couldn't find that post.");
   const { post, membership } = found;
   const isAuthor = post.authorId === viewerId;
-  if (post.kind !== "TEXT") {
+  if (post.kind !== "TEXT" && post.kind !== "STUDY") {
     throw new ForbiddenError("Automatic posts can be hidden by their author, not deleted.");
   }
   if (!isAuthor && membership.role !== "ADMIN") {

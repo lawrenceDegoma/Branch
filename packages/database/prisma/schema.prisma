@@ -43,6 +43,7 @@ model User {
   comments         Comment[]
   extensionLinks   ExtensionConnection[]
   submissions      Submission[]
+  studySessions    StudySession[]
   reviewAttempts   ReviewAttempt[]
   analysisJobs     AnalysisJob[]
   badges           BadgeAward[]
@@ -128,38 +129,44 @@ enum PhotoChoice {
 }
 
 model Profile {
-  userId               String      @id
-  user                 User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId               String       @id
+  user                 User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// Lowercase handle, 3-30 characters (CHECK constraint in migration).
-  username             String      @unique
+  username             String       @unique
   /// At most 280 characters (CHECK constraint in migration).
   bio                  String?
   /// IANA timezone name, validated by the application.
   timezone             String
-  appearance           Appearance  @default(SYSTEM)
+  appearance           Appearance   @default(SYSTEM)
   /// Post automatically when solving a problem a group's plan assigns, finishing a week, or
   /// finishing a plan. Off by default: completion never implies sharing.
-  shareSolves          Boolean     @default(false)
+  shareSolves          Boolean      @default(false)
   /// Attach the synced code to automatic solve posts, folded as a spoiler. Off by default, and
   /// only on while shareSolves is; read when the post is shown, so turning it off hides the code.
-  attachSolutions      Boolean     @default(false)
+  attachSolutions      Boolean      @default(false)
   /// Estimate the complexity of the person's solutions (privately). On by default; turning it
   /// off deletes their estimates.
-  analyzeSolutions     Boolean     @default(true)
+  analyzeSolutions     Boolean      @default(true)
   /// The person hid Home's "Get started" checklist.
-  gettingStartedHidden Boolean     @default(false)
+  gettingStartedHidden Boolean      @default(false)
   /// The newest changelog entry the person dismissed from Home's "What's new" card; entries
   /// newer than it (and newer than the day they joined) show there.
   changelogSeenId      String?
+  /// What happens when a study session ends: ask, always share to studyShareGroupId, or never.
+  studySharing         StudySharing @default(ASK)
+  /// The remembered group, set only with GROUP (CHECK). If it's deleted, or the person left it,
+  /// Branch asks again.
+  studyShareGroupId    String?      @db.Uuid
+  studyShareGroup      Group?       @relation(fields: [studyShareGroupId], references: [id], onDelete: SetNull)
   /// Which photo people see: Google's or GitHub's (the default), an upload, or none (initials).
-  photo                PhotoChoice @default(PROVIDER)
+  photo                PhotoChoice  @default(PROVIDER)
   /// The uploaded photo's address, set exactly while `photo` is UPLOAD (CHECK constraint in
   /// migration).
   photoUrl             String?
   /// When the photo last changed (uploads are limited to one a minute).
   photoChangedAt       DateTime?
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
 
   @@map("profile")
 }
@@ -175,22 +182,24 @@ enum GroupRole {
 
 /// A private, invite-only group. Week boundaries for its plan use `timezone`.
 model Group {
-  id          String             @id @default(uuid(7)) @db.Uuid
+  id           String             @id @default(uuid(7)) @db.Uuid
   /// 1-60 characters (CHECK).
-  name        String
+  name         String
   /// At most 280 characters (CHECK).
-  description String?
+  description  String?
   /// IANA timezone name, validated by the application.
-  timezone    String
-  createdById String?
-  createdBy   User?              @relation("GroupCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
-  memberships GroupMembership[]
-  invites     GroupInvite[]
-  auditEvents GroupAuditEvent[]
-  plans       GroupRoadmapPlan[]
-  posts       Post[]
+  timezone     String
+  createdById  String?
+  createdBy    User?              @relation("GroupCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  memberships  GroupMembership[]
+  invites      GroupInvite[]
+  auditEvents  GroupAuditEvent[]
+  plans        GroupRoadmapPlan[]
+  posts        Post[]
+  /// Profiles that share every finished study session here ("Remember my decision").
+  studySharers Profile[]
 
   @@map("group")
 }
@@ -557,6 +566,8 @@ enum PostKind {
   /// Automatic: the extension synced another accepted submission of a problem the author had
   /// already solved (problemId). At most one a week per problem, counting the SOLVE post.
   RESOLVE
+  /// A study session the author chose to share (studySessionId), with an optional note (body).
+  STUDY
   /// Automatic: the author solved every problem in one week of a plan (planId, weekNumber).
   WEEK_DONE
   /// Automatic: the author solved every problem in a plan (planId).
@@ -566,38 +577,43 @@ enum PostKind {
 /// Which columns each kind uses is enforced by CHECK constraints in the migration, and each
 /// automatic post exists at most once per author (partial unique indexes).
 model Post {
-  id           String            @id @default(uuid(7)) @db.Uuid
-  groupId      String            @db.Uuid
-  group        Group             @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  authorId     String
-  author       User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  kind         PostKind          @default(TEXT)
+  id             String            @id @default(uuid(7)) @db.Uuid
+  groupId        String            @db.Uuid
+  group          Group             @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  authorId       String
+  author         User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  kind           PostKind          @default(TEXT)
   /// Markdown source, 1-5000 characters, for TEXT posts only (CHECK). Rendered without raw HTML.
-  body         String?
+  body           String?
   /// The problem the post is about, if any; the solved problem for SOLVE.
-  problemId    String?           @db.Uuid
-  problem      Problem?          @relation(fields: [problemId], references: [id], onDelete: Restrict)
+  problemId      String?           @db.Uuid
+  problem        Problem?          @relation(fields: [problemId], references: [id], onDelete: Restrict)
   /// The plan a milestone belongs to; always a plan of the post's own group (trigger).
-  planId       String?           @db.Uuid
-  plan         GroupRoadmapPlan? @relation(fields: [planId], references: [id], onDelete: Cascade)
+  planId         String?           @db.Uuid
+  plan           GroupRoadmapPlan? @relation(fields: [planId], references: [id], onDelete: Cascade)
   /// The finished week, for WEEK_DONE (1-based).
-  weekNumber   Int?
+  weekNumber     Int?
   /// The author marked the post as containing spoilers: its code blocks render folded.
-  spoiler      Boolean           @default(false)
-  createdAt    DateTime          @default(now())
-  editedAt     DateTime?
+  spoiler        Boolean           @default(false)
+  createdAt      DateTime          @default(now())
+  editedAt       DateTime?
   /// The author hid this automatic post. It stays hidden and is never posted again.
-  hiddenAt     DateTime?
+  hiddenAt       DateTime?
   /// The solve behind this automatic post was undone. Cleared if it is redone with sharing on.
-  withdrawnAt  DateTime?
+  withdrawnAt    DateTime?
   /// The author's synced solution shown on a SOLVE or RESOLVE post (CHECK), attached only with
   /// profile.attachSolutions on. The composite key means a post can only link its own author's
   /// submission; deleting a submission unlinks it first (modules/integrations/submissions.ts).
-  submissionId String?           @db.Uuid
-  submission   Submission?       @relation(fields: [submissionId, authorId], references: [id, userId], onDelete: NoAction)
-  reactions    Reaction[]
-  comments     Comment[]
+  /// The shared study session of a STUDY post (exactly then; CHECK); only the author's own, and
+  /// the post goes with it.
+  studySessionId String?           @db.Uuid
+  studySession   StudySession?     @relation(fields: [studySessionId, authorId], references: [id, userId], onDelete: Cascade)
+  submissionId   String?           @db.Uuid
+  submission     Submission?       @relation(fields: [submissionId, authorId], references: [id, userId], onDelete: NoAction)
+  reactions      Reaction[]
+  comments       Comment[]
 
+  @@unique([studySessionId, groupId])
   @@index([groupId, id(sort: Desc)])
   @@index([authorId, createdAt])
   @@index([problemId])
@@ -813,4 +829,27 @@ model BadgeAward {
 
   @@id([userId, kind])
   @@map("badge_award")
+}
+
+enum StudySharing {
+  ASK
+  GROUP
+  NEVER
+}
+
+/// Time studied, started and stopped with Home's timer. Private: it reaches a group only as a
+/// STUDY post the person chose to share. One runs at a time (partial unique index); a session
+/// counts at most 4 hours (CHECK), and one left running is closed at 4 hours, autoStopped.
+model StudySession {
+  id          String    @id @default(uuid(7)) @db.Uuid
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startedAt   DateTime
+  endedAt     DateTime?
+  autoStopped Boolean   @default(false)
+  posts       Post[]
+
+  @@unique([id, userId])
+  @@index([userId, startedAt])
+  @@map("study_session")
 }

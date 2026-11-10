@@ -1,10 +1,11 @@
-import { CircleCheck, Flag, RotateCw } from "lucide-react";
+import { CircleCheck, Flag, RotateCw, Timer } from "lucide-react";
 import Link from "next/link";
 import { ConfirmAction } from "@/components/forms/confirm-action";
 import { DifficultyPill } from "@/components/roadmaps/difficulty-pill";
 import { Avatar } from "@/components/user/avatar";
 import { formatDateTime, formatRelative } from "@/lib/format";
-import { hidePostAction } from "@/modules/feed/actions";
+import { deletePostAction, hidePostAction } from "@/modules/feed/actions";
+import { formatStudyTime } from "@/modules/study/duration";
 import type { FeedItem } from "@/modules/feed/service";
 import { PostComments } from "./comments";
 import { CommentsDisclosure, CommentsPanel, CommentsToggle } from "./comments-disclosure";
@@ -98,6 +99,7 @@ export function PostCard({
         ) : (
           <>
             <AutomaticPostBody post={post} />
+            {post.kind === "STUDY" && post.body ? <Markdown>{post.body}</Markdown> : null}
             {post.solution ? (
               <div className="flex flex-col gap-1">
                 <p className="text-xs text-ink-muted">{post.solution.language} code</p>
@@ -106,6 +108,25 @@ export function PostCard({
             ) : null}
             <div className="-mb-1 flex flex-wrap items-center gap-1">
               {footer}
+              {post.kind === "STUDY" && post.canDelete ? (
+                <div className="ml-auto">
+                  <ConfirmAction
+                    action={deletePostAction}
+                    fields={{ postId: post.id, ...(returnTo ? { returnTo } : {}) }}
+                    focusAfterRemoval="activity-heading"
+                    trigger="Delete"
+                    title="Delete this post?"
+                    description={
+                      post.mine
+                        ? "It disappears from the group's feed, with its comments. The session itself stays in your study time."
+                        : "You're removing a member's post as the group admin. It disappears from the group's feed and the removal is recorded in the group's activity log."
+                    }
+                    confirmLabel="Delete post"
+                    pendingLabel="Deleting…"
+                    destructive
+                  />
+                </div>
+              ) : null}
               {post.canHide ? (
                 <div className="ml-auto">
                   <ConfirmAction
@@ -158,7 +179,14 @@ function ProblemLink({ problem }: { problem: NonNullable<FeedItem["problem"]> })
 
 /** A solve or a milestone, in one quiet line; the orange mark is progress data. */
 function AutomaticPostBody({ post }: { post: FeedItem }) {
-  const Icon = post.kind === "SOLVE" ? CircleCheck : post.kind === "RESOLVE" ? RotateCw : Flag;
+  const Icon =
+    post.kind === "SOLVE"
+      ? CircleCheck
+      : post.kind === "RESOLVE"
+        ? RotateCw
+        : post.kind === "STUDY"
+          ? Timer
+          : Flag;
   return (
     <p className="flex flex-wrap items-center gap-2">
       <Icon aria-hidden className="size-4 flex-none text-brand" />
@@ -173,6 +201,8 @@ function AutomaticPostBody({ post }: { post: FeedItem }) {
           <ProblemLink problem={post.problem} />
           <span>again</span>
         </>
+      ) : post.kind === "STUDY" && post.studyMs !== null ? (
+        <span>Studied for {formatStudyTime(post.studyMs)}</span>
       ) : post.kind === "WEEK_DONE" ? (
         <span>
           Finished week {post.weekNumber} of{" "}

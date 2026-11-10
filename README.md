@@ -46,6 +46,8 @@ not affiliated with LeetCode or NeetCode.
   the reasons. Python only for now; read by Branch's own analyzer, never run, private to you, and
   off with one setting. Share a solution to a group yourself if you want to.
 
+- **Study timer:** start and stop a study session from Home. When it ends, share it to a group
+  ("Studied for 45 min") or keep it to yourself, and remember the choice if you like.
 - **What's new:** after an update, Home shows a card saying what changed, with a link to its
   details; every update is listed at `/changelog` (also linked from Settings).
 

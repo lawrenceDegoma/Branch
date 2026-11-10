@@ -93,7 +93,8 @@ action), the Settings page.
 **Behaviour**
 
 - Home shows an orange "Start studying" button above "Your week" (decision 2). While a session
-  runs it reads "Stop · 0:42", counted from the server's start time, so it survives reloads, tabs,
+  runs it reads "Stop studying" with the time beside it (the time sits outside the button so its
+  name matches its text), counted from the server's start time, so it survives reloads, tabs,
   and devices. One session runs at a time.
 - Stopping saves the session and, unless a decision is remembered, asks whether to share it:
   "Share to a group" (group, optional note) or "Don't share", with "Remember my decision"

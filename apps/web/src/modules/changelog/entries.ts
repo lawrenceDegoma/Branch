@@ -13,6 +13,18 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    id: "2026-11-09-study-timer",
+    date: "2026-11-09",
+    title: "A study timer",
+    summary: "Time your study sessions from Home, and share one with a group if you like.",
+    details: `Press **Start studying** above "Your week" on Home, and **Stop studying** when you're done. The timer keeps going if you reload or switch devices.
+
+- When you stop, Branch asks whether to share the session to one of your groups, with an optional note. It shows there as "Studied for 45 min". Nothing is shared unless you choose to.
+- Tick **Remember my decision** to always share to that group, or never share, without being asked. Change it any time in Settings → Sharing.
+- A session counts at most 4 hours. If you forget to stop the timer, it stops counting there and asks before sharing anything.
+- Sessions under a minute aren't kept.`,
+  },
+  {
     id: "2026-11-09-whats-new",
     date: "2026-11-09",
     title: "What's new",

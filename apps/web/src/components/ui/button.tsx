@@ -10,6 +10,8 @@ const buttonStyles = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary/85",
+        /** Home's study timer only (an owner-approved exception to "no orange buttons"). */
+        study: "bg-study font-semibold text-study-ink hover:brightness-95",
         outline: "border-control bg-transparent text-ink hover:bg-raised aria-expanded:bg-raised",
         secondary: "bg-raised text-ink hover:bg-raised/70 aria-expanded:bg-raised/70",
         ghost: "text-ink-muted hover:bg-raised hover:text-ink aria-expanded:bg-raised",

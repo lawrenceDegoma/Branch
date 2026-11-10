@@ -47,7 +47,8 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Your profile and settings:</strong> username, optional bio, time zone,
-            appearance, which photo to show, and whether to share your solves.
+            appearance, which photo to show, whether to share your solves, and what to do with study
+            sessions.
           </li>
           <li>
             <strong>A photo, if you upload one:</strong> Branch shrinks it to a small square in your
@@ -124,6 +125,11 @@ export default function PrivacyPage() {
             analysis is never posted automatically.
           </li>
           <li>Your reviews and how they went are visible only to you.</li>
+          <li>
+            Your study sessions (when each started and stopped) are visible only to you, unless you
+            share one to a group when it ends, or choose in Settings → Sharing to share them all to
+            one group. Then that group sees how long you studied and any note you added.
+          </li>
           <li>
             <strong>Code analysis:</strong> Branch estimates each solution&apos;s complexity with
             its own analysis service, which runs on Vercel like the rest of Branch. It reads the

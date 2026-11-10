@@ -3,6 +3,7 @@ import { Feed, GroupFilter } from "@/components/feed/feed";
 import { Backlog, GroupWeek, isPlanned } from "@/components/home/group-week";
 import { GettingStarted } from "@/components/home/getting-started";
 import { WhatsNew } from "@/components/home/whats-new";
+import { StudyTimer } from "@/components/study/study-timer";
 import { WeekSummary } from "@/components/home/week-summary";
 import { PageHeader } from "@/components/shell/page-header";
 import { EmptyState } from "@/components/states/empty-state";
@@ -14,6 +15,7 @@ import { feedQuerySchema } from "@/modules/feed/schemas";
 import { listComposerGroups, listFeed } from "@/modules/feed/service";
 import { listConnections } from "@/modules/integrations/connections";
 import { getHome } from "@/modules/progress/service";
+import { runningSession } from "@/modules/study/service";
 
 export const metadata = { title: "Home" };
 
@@ -73,10 +75,11 @@ export default async function HomePage({
   const groups = home.groups.map((g) => g.group);
   // A stale or foreign ?group= falls back to every group rather than revealing anything.
   const selected = groups.some((g) => g.id === query.group) ? query.group : undefined;
-  const [page, composerGroups, connections] = await Promise.all([
+  const [page, composerGroups, connections, studying] = await Promise.all([
     listFeed(user.id, { groupId: selected, before: query.before }),
     listComposerGroups(user.id),
     profile.gettingStartedHidden ? Promise.resolve([]) : listConnections(user.id),
+    runningSession(user.id),
   ]);
   const planned = home.groups.filter(isPlanned);
   const unplanned = home.groups.filter((g) => !isPlanned(g));
@@ -85,7 +88,19 @@ export default async function HomePage({
     <div>
       <PageHeader title="Home" />
       <div className="grid gap-6 [grid-template-areas:'summary'_'feed'_'week'_'backlog'] xl:grid-cols-[minmax(0,1fr)_var(--rail-width)] xl:grid-rows-[auto_auto_1fr] xl:items-start xl:[grid-template-areas:'feed_summary'_'feed_week'_'feed_backlog']">
-        <aside aria-label="Weekly summary" className="[grid-area:summary]">
+        <aside aria-label="Weekly summary" className="flex flex-col gap-3 [grid-area:summary]">
+          <StudyTimer
+            running={
+              studying
+                ? {
+                    id: studying.id,
+                    startedAt: studying.startedAt.toISOString(),
+                    expired: studying.expired,
+                  }
+                : null
+            }
+            groups={groups.map(({ id, name }) => ({ id, name }))}
+          />
           <WeekSummary summary={home.summary} weekLink={planned.length > 0} />
         </aside>
         <section

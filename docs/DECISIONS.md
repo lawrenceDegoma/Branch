@@ -1140,6 +1140,34 @@ the extension's problem timer, M26 stats, M27 journeys and docs) with these deci
   unlink; outsiders 404; the foreign key and CHECKs; account deletion still works) and an E2E in
   `e2e/sharing.spec.ts` (Settings, sync, the groupmate opens the spoiler, then it's gone).
 
+### M24 — Study sessions (complete)
+
+- **Timer:** Home's orange "Start studying" button above "Your week" (the owner's exception to
+  the no-orange-buttons rule, with its own tokens, `--study-fill` and dark `--study-ink`: 5.6:1
+  text and 3.2:1 outline in light, 6.1:1 and 5.6:1 in dark; hover darkens instead of fading).
+  Running, it reads "Stop studying" with the time beside it; the time is `aria-hidden` (axe's
+  label-in-name rule failed while it was inside the button) and screen readers get "Studying
+  since …" instead, so nothing is announced every second. It counts from the server's start time.
+- **Rules:** one running session per person (partial unique index); at most 4 hours (CHECK). A
+  session found running past that is saved as 4 hours, `autoStopped`, the next time it's touched
+  (stop, or start, which saves it first); Home then says so and offers "Save 4 h" or "Delete it".
+  Sessions under a minute aren't kept (a start and stop by mistake leaves nothing).
+- **Sharing:** stopping asks "Share this session?" (group, optional note up to 500 characters,
+  "Remember my decision"), unless a choice is remembered: `profile.studySharing` ASK, NEVER, or
+  GROUP with `studyShareGroupId` (CHECK: the group only with GROUP; deleting the group clears it,
+  and a group the person left is treated as ASK). An auto-stopped session always asks. A shared
+  session is a `STUDY` post ("Studied for 45 min"), linked by a composite foreign key to the
+  author's own session (`ON DELETE CASCADE`), one per session and group; its author or the admin
+  can delete it, and deleting the session deletes its posts. Settings → Sharing shows and
+  changes the remembered choice.
+- **Migrations:** `study_post_kind` (the enum value, on its own) and `study_sessions`.
+- **Tests:** unit (`duration.test.ts`), integration (`modules/study/service.int.test.ts`: start,
+  stop, the cap, discarding, remembered choices, leaving the group, ownership and membership,
+  deleting, the database rules, the feed), and E2E (`e2e/study.spec.ts`: across reloads,
+  sharing with a note seen by a groupmate, keyboard and focus back to the timer, remembering then
+  asking again from Settings, a timer left running, a mistaken start, axe in both themes with
+  the dialog open).
+
 ### Changelog: "What's new" (2026-11-09)
 
 Owner decisions: an in-app, plain-language changelog, built before M24; a dismissible card on Home

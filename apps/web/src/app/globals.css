@@ -14,7 +14,8 @@
  * - Elevation is a lightness step (ground → surface → raised); cards carry no border or shadow in
  *   dark mode. Only floating layers (menus, popovers, dialogs) get a shadow.
  * - Orange (--brand) marks progress data only, plus the focus ring. It never fills buttons, tabs
- *   or navigation. The primary action is an inverted pill.
+ *   or navigation. The primary action is an inverted pill. One owner-approved exception: Home's
+ *   study timer button (--study-fill, with dark --study-ink text).
  * - Every text colour holds at least 4.5:1, and control outlines at least 3:1, on every surface
  *   in its theme. Re-check contrast after changing any value here.
  */
@@ -39,6 +40,8 @@
 
   --primary-fill: #1d1f23;
   --primary-ink: #ffffff;
+  --study-fill: #f26430; /* the study timer only; 3.2:1 on surface, 5.6:1 with --study-ink */
+  --study-ink: #16181c;
 
   --positive: #247b50;
   --positive-soft: #dcfae5;
@@ -89,6 +92,8 @@
 
   --primary-fill: #f3f4f6;
   --primary-ink: #17191d;
+  --study-fill: #ff683b; /* 5.6:1 on surface, 6.1:1 with --study-ink */
+  --study-ink: #17191d;
 
   --positive: #3fc07a;
   --positive-soft: #172a1d;
@@ -164,6 +169,8 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-study: var(--study-fill);
+  --color-study-ink: var(--study-ink);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);

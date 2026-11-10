@@ -15,11 +15,13 @@ import { listConnections } from "@/modules/integrations/connections";
 import { listTimeZones } from "@/modules/profile/timezone";
 import { shownPhoto } from "@/modules/profile/photo";
 import { photoStorage } from "@/modules/profile/photo-storage";
+import { studySharingView } from "@/modules/study/service";
 import { PasswordForm } from "./password-form";
 import { PhotoForm } from "./photo-form";
 import { ProfileForm } from "./profile-form";
 import { AnalysisForm } from "./analysis-form";
 import { SharingForm } from "./sharing-form";
+import { StudySharingForm } from "./study-sharing-form";
 
 export const metadata = { title: "Settings" };
 
@@ -37,9 +39,10 @@ export default async function SettingsPage({
   const providerPhotoLabel = shownPhoto({ image: user.image ?? null, profile: null })
     ? `Use my ${methods.providers.length === 1 ? PROVIDER_LABEL[methods.providers[0]!] : "Google or GitHub"} photo`
     : null;
-  const [connections, badges] = await Promise.all([
+  const [connections, badges, studySharing] = await Promise.all([
     listConnections(user.id),
     syncBadges([user.id]),
+    studySharingView(user.id),
   ]);
 
   return (
@@ -80,9 +83,10 @@ export default async function SettingsPage({
       <SettingsSection
         id="sharing"
         title="Sharing"
-        description="Solving a problem never posts anything unless you turn this on. Automatic posts include your code only if you add it below, and never its analysis."
+        description="Solving a problem never posts anything unless you turn this on. Automatic posts include your code only if you add it below, and never its analysis. Study sessions are shared only as you choose."
       >
         <SharingForm shareSolves={profile.shareSolves} attachSolutions={profile.attachSolutions} />
+        <StudySharingForm value={studySharing.value} groups={studySharing.groups} />
       </SettingsSection>
       <SettingsSection
         id="analysis"
