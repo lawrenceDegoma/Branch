@@ -1057,7 +1057,25 @@ render as plain `<img>` with no referrer over the initials, so a failed load sho
 skip Next's image optimizer and its monthly allowance. Groups see a member's photo wherever their
 name appears (posts, comments, members, who solved a problem).
 
-## Phase 3 summary
+### Owner requests: solutions on solve posts, timers, statistics (2026-11-09)
+
+Approved directions, to be built as milestones after M22 and before Phase 5 (chat); each gets a
+plan before it starts:
+
+- **Solutions on solve posts:** a Settings toggle, off by default. When it's on, an automatic
+  solve post made from an extension sync includes the latest accepted code, folded as a spoiler;
+  manual completions have no code, so nothing is attached. This is an owner change to the PRD
+  rule against automatically exposing code: turning the toggle on is the person choosing to share.
+  No complexity estimate is attached.
+- **Timers:** a study-session timer in Branch, and a problem timer with the extension: it notes
+  when a problem is opened and reports the solve time with the accepted submission; the running
+  time and an optional time budget show on the extension's toolbar badge and popup. The extension
+  never changes LeetCode's or neetcode.io's pages. What it reads changes, so the disclosure,
+  /privacy, and `docs/CHROME-WEB-STORE.md` change together, the version is bumped, and the store
+  reviews it again.
+- **Personal statistics:** private by default, like reviews. A setting lets groups see weekly
+  study-time totals only; never per-problem times or weak topics, and no rankings.
+
 
 Done when "supported accepted submissions sync once without exposing source to groups; failures
 do not corrupt progress":

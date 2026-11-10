@@ -40,7 +40,9 @@ Users need to: (a) see what friends are studying, (b) know what to solve this we
 
 **Owner changes (2026-11-04):** image uploads dropped from posts; reporting and blocking deferred to a later phase. The phase order is unchanged: the extension (phase 3) comes before review, because it is how solution code reaches the analyzer.
 
-**Explicitly out of v1:** push/email/in-app notification center, public group discovery, monetization, full in-browser coding judge, compulsory leaderboards, automatic publishing of source code, elaborate XP economy.
+**Explicitly out of v1:** push/email/in-app notification center, public group discovery, monetization, full in-browser coding judge, compulsory leaderboards, automatic publishing of source code, elaborate XP economy. (Owner change, 2026-11-09: a person may turn on a setting, off by default, that attaches their code as a spoiler to their own automatic solve posts.)
+
+**Owner additions (2026-11-09), after Phase 4 and before Phase 5:** solutions on solve posts (opt-in, above); a study-session timer and an extension problem timer with an optional time budget (toolbar badge and popup, never changing the coding sites' pages); private personal statistics, with an opt-in to show groups weekly study-time totals only. Details in `docs/DECISIONS.md`.
 
 ## 4. Core concepts and business rules
 
@@ -73,7 +75,7 @@ Users need to: (a) see what friends are studying, (b) know what to solve this we
 - Manual posts support help requests, tips, reflections, Markdown-style text, and syntax-highlighted code blocks. No image uploads (owner decision, 2026-11-04).
 - Posts support reactions and threaded comments (initial UI depth cap: two reply levels; maintain a clear data model for parent relationships).
 - Posts and comments should support spoiler marking/collapsing, especially for solutions.
-- Privacy: private group scope; never automatically expose source code, weakness metrics, or detailed analysis. A post should have a clear group destination; no cross-group forwarding by default.
+- Privacy: private group scope; never automatically expose source code, weakness metrics, or detailed analysis (except code on one's own solve posts, by a setting that is off by default; owner change, 2026-11-09). A post should have a clear group destination; no cross-group forwarding by default.
 - No notifications in version one.
 
 ### Personalized review (phase 4)
