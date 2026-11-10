@@ -34,6 +34,7 @@ export function ConfirmAction({
   action,
   fields,
   trigger,
+  triggerName,
   triggerVariant = "ghost",
   title,
   description,
@@ -45,6 +46,8 @@ export function ConfirmAction({
   action: (state: FormState, formData: FormData) => Promise<FormState>;
   fields: Record<string, string>;
   trigger: string;
+  /** The trigger's accessible name, when "Delete" alone wouldn't say which; it starts with `trigger`. */
+  triggerName?: string;
   triggerVariant?: "ghost" | "outline" | "destructive";
   title: string;
   description: React.ReactNode;
@@ -64,7 +67,11 @@ export function ConfirmAction({
   }, initialFormState);
   return (
     <AlertDialog>
-      <AlertDialogTrigger render={<Button ref={triggerRef} variant={triggerVariant} size="sm" />}>
+      <AlertDialogTrigger
+        render={
+          <Button ref={triggerRef} variant={triggerVariant} size="sm" aria-label={triggerName} />
+        }
+      >
         {trigger}
       </AlertDialogTrigger>
       <AlertDialogContent>

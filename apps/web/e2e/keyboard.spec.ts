@@ -226,6 +226,7 @@ test.describe("reflow at 320px", () => {
       "/changelog",
       "/changelog/2026-11-09-code-on-solve-posts",
       "/review",
+      "/stats",
       "/account/move",
     ];
     for (const path of paths) {

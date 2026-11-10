@@ -13,6 +13,21 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    id: "2026-11-09-your-stats",
+    date: "2026-11-09",
+    title: "Your stats",
+    summary: "A private page of your progress over time: solves, study time, topics, and reviews.",
+    details: `Open **Your stats** from "Your week" on Home, or from Review.
+
+- **Solving:** how many problems you've solved, by difficulty, and each week for the last 12 weeks.
+- **Time:** how long you studied each week, and your typical time per problem by difficulty, from the extension's problem timer.
+- **Topics:** how much of each topic you've solved, and which ones Review suggests practising.
+- **Reviews:** how your reviews went in the last 30 days.
+- **Study sessions:** your latest sessions, which you can delete.
+
+Only you see this page. There are no streaks, rankings, or comparisons with anyone.`,
+  },
+  {
     id: "2026-11-09-problem-timer",
     date: "2026-11-09",
     title: "A problem timer in the extension",

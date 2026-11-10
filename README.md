@@ -48,6 +48,8 @@ not affiliated with LeetCode or NeetCode.
 
 - **Study timer:** start and stop a study session from Home. When it ends, share it to a group
   ("Studied for 45 min") or keep it to yourself, and remember the choice if you like.
+- **Your stats:** a private page of solves per week and by difficulty, study time, typical time
+  per problem, topics, and recent reviews and study sessions. No streaks or rankings.
 - **What's new:** after an update, Home shows a card saying what changed, with a link to its
   details; every update is listed at `/changelog` (also linked from Settings).
 

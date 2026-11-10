@@ -1198,6 +1198,33 @@ the extension's problem timer, M26 stats, M27 journeys and docs) with these deci
   none from old versions, the CHECK), and the real-extension E2E (both sites' submissions carry a
   time, Solutions shows it, the popup's budget).
 
+### M26 — Your stats (complete)
+
+- **Page:** `/stats` (owner decision 7: linked from "Your week" on Home and from Review's header,
+  no new tab; the page doesn't depend on where it's linked from). Private, derived on every read.
+  Sections: solving (total and per difficulty as figures; solves each week for 12 weeks), time
+  (study time each week; the median time per problem by difficulty from the extension's timer,
+  with how many solves it rests on), topics (Review's own standings, solved of total, "Needs
+  practice" as text), reviews in the last 30 days by outcome, and the latest 20 study sessions,
+  each deletable (the list M24 promised).
+- **Queries:** grouped in SQL per person (`count`, `sum`, `percentile_cont`), weeks by
+  `date_trunc('week', … AT TIME ZONE <profile zone>)` so a Sunday-night solve in New York lands
+  in that week, not UTC's next one. No new tables or migration.
+- **Charts** (the dataviz skill's method, Branch's tokens): one series each, in `--brand` (orange
+  marks progress data); columns at most 24px with 4px rounded tops, 2px gaps, a hairline
+  baseline, no gridlines; only this week labelled (values on hover, every value in the table
+  view); horizontal count bars with the value at the tip. Labels stay in text colours. The
+  skill's validator passes `#d9480f` on light surfaces; `#ff683b` fails only its lightness band
+  for dark mode (L 0.70), a check its own note scopes to categorical palettes, while contrast
+  passes (5.6:1), so the existing brand token stays.
+- **Accessibility:** each chart is `role="img"` with a written summary, plus a table; deleting a
+  session moves focus to the section heading (`ConfirmAction` gained `triggerName`, so each
+  "Delete" names its session).
+- **Tests:** unit (`weeks.test.ts`), integration (`stats/service.int.test.ts`: own rows only,
+  time zone week boundaries, 30-day reviews, running sessions excluded, the median, empty), and
+  E2E (`e2e/stats.spec.ts`: from Home and Review, figures, table view, deleting a session from
+  the keyboard, privacy between two people, axe in both themes with data, 320px, text spacing).
+
 ### Changelog: "What's new" (2026-11-09)
 
 Owner decisions: an in-app, plain-language changelog, built before M24; a dismissible card on Home

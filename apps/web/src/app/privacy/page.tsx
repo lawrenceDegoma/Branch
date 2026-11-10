@@ -132,7 +132,7 @@ export default function PrivacyPage() {
             code, folded until opened, and turning it off takes it off every post at once. Its
             analysis is never posted automatically.
           </li>
-          <li>Your reviews and how they went are visible only to you.</li>
+          <li>Your reviews and how they went are visible only to you, and so is Your stats.</li>
           <li>
             Your study sessions (when each started and stopped) are visible only to you, unless you
             share one to a group when it ends, or choose in Settings → Sharing to share them all to

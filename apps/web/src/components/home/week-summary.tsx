@@ -50,6 +50,12 @@ export function WeekSummary({
           See reviews
         </Link>
       </div>
+      <Link
+        href="/stats"
+        className="self-start font-medium text-ink underline-offset-4 hover:underline"
+      >
+        Your stats
+      </Link>
       {weekLink ? (
         <a
           href="#this-week"

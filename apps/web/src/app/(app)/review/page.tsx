@@ -60,6 +60,11 @@ export default async function ReviewPage({
       <PageHeader
         title="Review"
         description="Problems you've solved come back here on a schedule. Try each one again on LeetCode, then say how it went: the harder it was, the sooner it returns. Your reviews also point to topics worth more practice, and Solutions shows how your code performs. Only you see any of this."
+        actions={
+          <Link href="/stats" className={buttonVariants({ variant: "outline", size: "sm" })}>
+            Your stats
+          </Link>
+        }
       />
       <div className="flex flex-col gap-8">
         <section aria-labelledby="due-heading" className="flex flex-col gap-3">
