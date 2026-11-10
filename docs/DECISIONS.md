@@ -1030,8 +1030,10 @@ Owner decision: the photo from Google or GitHub by default, plus uploads ("Uploa
 Vercel Blob's free Hobby allowance. `profile.photo` is PROVIDER, UPLOAD, or NONE (initials);
 `photoUrl` exists exactly while it's UPLOAD (CHECK, migration `profile_photo`, https or the local
 route only). Better Auth's `user.image` is the provider photo; connecting a provider while moving
-brings it (`updateUserInfoOnLink`), and a user-update hook (`keepChosenName`) stops the provider
-from renaming anyone. Uploads are cropped to a 256px square and re-encoded (WebP, else JPEG) in the
+brings it (`updateUserInfoOnLink`), and so does every later sign-in (`overrideUserInfoOnSignIn`,
+added the same day, so a changed Google or GitHub photo shows on the next sign-in; with both
+connected, the last one used wins). A user-update hook (`keepChosenIdentity`) keeps only the photo
+from those callbacks: the provider never renames anyone or changes their email. Uploads are cropped to a 256px square and re-encoded (WebP, else JPEG) in the
 browser, then checked on the server by their first bytes (JPEG, PNG, or WebP; never SVG) and size
 (200 KB), with one change a minute (a conditional update, so two uploads at once can't strand a
 photo). Replacing or switching away deletes the old upload. Storage sits behind `PhotoStorage`

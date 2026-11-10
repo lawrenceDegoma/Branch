@@ -52,7 +52,8 @@ export default function PrivacyPage() {
           <li>
             <strong>A photo, if you upload one:</strong> Branch shrinks it to a small square in your
             browser and stores it with Vercel Blob, under an address that can&apos;t be guessed.
-            Otherwise the photo from Google or GitHub is shown, loaded from them.
+            Otherwise the photo from Google or GitHub is shown, loaded from them and updated each
+            time you sign in.
           </li>
           <li>
             <strong>Sign-in sessions:</strong> a session cookie, and the IP address and browser
