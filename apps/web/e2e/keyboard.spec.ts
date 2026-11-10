@@ -59,6 +59,47 @@ test.describe("keyboard", () => {
     await expect(page.getByRole("heading", { level: 2, name: /^Week 1\b/ })).toBeVisible();
   });
 
+  test("pasting and deleting a solution work from the keyboard and keep focus", async ({
+    page,
+    viewer,
+  }) => {
+    await solveInDb(viewer.id, ["two-sum"]);
+    await page.goto("/solutions");
+    await ready(page);
+
+    const summary = page.locator("summary", { hasText: "Paste a solution" });
+    await summary.focus();
+    await page.keyboard.press("Enter");
+    // Typing filters the problems; Enter picks the highlighted one.
+    await page.keyboard.press("Tab");
+    const problem = page.getByRole("combobox", { name: "Problem" });
+    await expect(problem).toBeFocused();
+    await page.keyboard.type("Two");
+    await expect(page.getByRole("option", { name: "Two Sum" })).toBeVisible();
+    await page.keyboard.press("Enter");
+    await expect(problem).toHaveValue("Two Sum");
+    await page.getByLabel("Language").selectOption({ label: "Python 3" });
+    await page.getByLabel("Your solution").focus();
+    await page.keyboard.type("print(1)");
+    await page.keyboard.press("Tab");
+    await expect(page.getByRole("button", { name: "Save solution" })).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("main").getByRole("status").first()).toContainText(
+      "Solution saved.",
+    );
+
+    // Deleting from the keyboard: the dialog starts on Cancel, and focus lands on the heading.
+    const card = page.getByRole("article", { name: /Two Sum/ });
+    await card.getByRole("button", { name: "Delete" }).focus();
+    await page.keyboard.press("Enter");
+    const dialog = page.getByRole("alertdialog");
+    await expect(dialog.getByRole("button", { name: "Cancel" })).toBeFocused();
+    await dialog.getByRole("button", { name: "Delete solution" }).focus();
+    await page.keyboard.press("Enter");
+    await expect(card).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Solutions", exact: true })).toBeFocused();
+  });
+
   test("posts, reactions, and comments work from the keyboard and keep focus", async ({
     page,
     viewer,
@@ -252,4 +293,40 @@ test("posts and comments grow with increased text spacing", async ({ page, viewe
       ).length,
   );
   expect(clipped).toBe(0);
+});
+
+test("review and solution cards grow with increased text spacing", async ({ page, viewer }) => {
+  await solveInDb(viewer.id, ["two-sum", "contains-duplicate"]);
+  const twoSum = await prisma.problem.findUniqueOrThrow({ where: { leetcodeSlug: "two-sum" } });
+  await prisma.submission.create({
+    data: {
+      userId: viewer.id,
+      source: "PASTED",
+      problemSlug: "two-sum",
+      problemId: twoSum.id,
+      language: "java",
+      code: "class Solution { int[] twoSum(int[] nums, int target) { return null; } }",
+      submittedAt: new Date(),
+    },
+  });
+  for (const path of ["/review", "/solutions"]) {
+    await page.goto(path);
+    await page.addStyleTag({
+      content: `* { line-height: 1.5 !important; letter-spacing: 0.12em !important;
+        word-spacing: 0.16em !important; } p { margin-bottom: 2em !important; }`,
+    });
+    const blocks = page.getByRole("main").locator("article, article *");
+    await expect(blocks.first()).toBeVisible();
+    const clipped = await blocks.evaluateAll(
+      (items) =>
+        items.filter(
+          (item) =>
+            getComputedStyle(item).overflowY !== "visible" &&
+            item.tagName !== "PRE" &&
+            !item.classList.contains("sr-only") &&
+            item.scrollHeight > item.clientHeight + 1,
+        ).length,
+    );
+    expect(clipped, `${path} clips text`).toBe(0);
+  }
 });

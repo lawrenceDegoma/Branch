@@ -30,8 +30,8 @@ not affiliated with LeetCode or NeetCode.
 - **Reactions and comments:** react to posts with kudos, impressive, helpful, or same here, and
   discuss it in a comment thread that opens inside the post (spoilers work there too).
 - **LeetCode extension:** install it from the Chrome Web Store, connect it in Settings, and
-  submissions accepted on leetcode.com or neetcode.io sync as completions. Your code stays private on a Synced
-  submissions page you can clear at any time.
+  submissions accepted on leetcode.com or neetcode.io sync as completions. Your code stays private,
+  on your Solutions page, which you can clear at any time.
 - **Review:** problems you've solved come back on a spaced schedule. Rate each review (couldn't
   solve, struggled, solved, easy) and it sets when the problem returns. Topics you keep
   struggling with get suggested problems to practice, easiest first, with the reason. Private to
@@ -40,7 +40,7 @@ not affiliated with LeetCode or NeetCode.
   this week across your groups, next week for working ahead, and your backlog. The group page
   shows who solved this week's problems and a branch graph of everyone's progress.
 
-- **Code analysis:** in Review → Your solutions, each solution (synced, or pasted) gets an
+- **Code analysis:** on the Solutions tab, each solution (synced, or pasted) gets an
   estimate of its time and space complexity, with what its letters mean, a confidence level, and
   the reasons. Python only for now; read by Branch's own analyzer, never run, private to you, and
   off with one setting. Share a solution to a group yourself if you want to.
@@ -186,6 +186,6 @@ submission is in [docs/LEETCODE-SPIKE.md](docs/LEETCODE-SPIKE.md) and
 
 ## Status
 
-Phases 1 (Foundation), 2 (the social feed), and 3 (the LeetCode extension, published on the Chrome
-Web Store) are complete. Phase 4 (review and analysis) is in progress: the review queue, practice suggestions, and code
-analysis are done. See [docs/DECISIONS.md](docs/DECISIONS.md) for the milestone log and known limitations.
+Phases 1 (Foundation), 2 (the social feed), 3 (the LeetCode extension, published on the Chrome
+Web Store), and 4 (review and analysis) are complete. Next, before Phase 5 (chat): solutions on
+solve posts as an opt-in setting, study and problem timers, and personal statistics. See [docs/DECISIONS.md](docs/DECISIONS.md) for the milestone log and known limitations.

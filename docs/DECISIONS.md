@@ -1057,7 +1057,24 @@ render as plain `<img>` with no referrer over the initials, so a failed load sho
 skip Next's image optimizer and its monthly allowance. Groups see a member's photo wherever their
 name appears (posts, comments, members, who solved a problem).
 
-### Owner requests: solutions on solve posts, timers, statistics (2026-11-09)
+### M22 — Journeys, accessibility, and docs (complete)
+
+- **Phase 4 journey** (`e2e/review-journey.spec.ts`): a solve synced from the extension with
+  Python code (twice; the second is a duplicate) posts once to the group without code; its
+  estimate arrives in the background, worded as an estimate; once due, a "Struggled" review flags
+  the topic and suggests new problems in it. The groupmate sees none of the code, estimate,
+  review, or weak topic (on Review, Solutions, or the group's page) until the person shares the
+  solution themselves.
+- **Keyboard:** pasting a solution (the problem picker by typing and Enter) and deleting one, with
+  focus on the safe choice in the dialog and on the heading afterwards. Rating a review by
+  keyboard was already covered (`e2e/review.spec.ts`).
+- **Text spacing (WCAG 1.4.12):** review and solution cards keep their text with increased
+  spacing. Review and Solutions were already in the axe scans and the 320px reflow list.
+- **Docs:** README (Solutions has its own tab; Phase 4 complete), Phase 4 known limitations, and
+  this summary. `/privacy` was checked against Phase 4 and needed no change.
+- **Checks:** `pnpm check` (unit 180, integration 220, analyzer 87), `pnpm build`, and
+  `pnpm test:e2e` (290 passed; 8 skipped by design: keyboard journeys and one shell and one
+  extension test are desktop-only, and store images are generated only with `STORE_ASSETS=1`).
 
 Approved directions, to be built as milestones after M22 and before Phase 5 (chat); each gets a
 plan before it starts:
@@ -1076,6 +1093,31 @@ plan before it starts:
 - **Personal statistics:** private by default, like reviews. A setting lets groups see weekly
   study-time totals only; never per-problem times or weak topics, and no rankings.
 
+## Phase 4 summary
+
+Done when "a user receives useful private review suggestions; analysis is asynchronous, bounded,
+and uncertainty-aware":
+
+- **Review suggestions:** every solved problem comes back 3 days later, then on a spaced schedule
+  set by four outcomes (Couldn't solve, Struggled, Solved, Easy; at most 180 days apart). A topic
+  needs practice when at least half of its last 5 reviews, or two of them, were struggles; Review
+  then suggests up to 2 unsolved free problems in each of up to 3 such topics, easiest first, with
+  the reason in words. Everything is derived on each read, and only the person sees it.
+- **Asynchronous:** a solution is saved and counted first; analysis runs after the response
+  (`analyzeAfterResponse`), from a Postgres job table claimed with SKIP LOCKED, and the daily job
+  catches up anything missed. Progress never waits for it.
+- **Bounded:** 100 analyses per person per day, 3 attempts per job, a 15-second request timeout,
+  answers cached by normalized code, language, problem, and analyzer version, and no paid
+  provider (no AI model; the analyzer is a free Vercel project).
+- **Uncertainty-aware:** estimates read "probably" (or "at most") with a confidence level, the
+  reasons, and what reading code can't tell; they never feed reviews or suggestions, and can be
+  turned off (which deletes them).
+- **Beyond the plan:** paste your solution (for people without the extension), sharing one
+  solution to one group by choice, "solved again" posts, badges, and Solutions as its own tab.
+- **Tests:** see M22; the PRD's privacy scenario for analysis (scenario 9) is covered by the
+  journey and `e2e/analysis.spec.ts`.
+
+## Phase 3 summary
 
 Done when "supported accepted submissions sync once without exposing source to groups; failures
 do not corrupt progress":
@@ -1159,3 +1201,11 @@ approval.
 - Sign-up is open to anyone who finds the deployed URL (they see nothing without an invite).
   Acceptable for the soft launch; revisit before a wider one.
 - Neon Free keeps 6 hours of restore history; backups are manual `pg_dump`s (see `docs/DEPLOY.md`).
+- Only Python solutions are analyzed; others are kept and marked "not analyzed yet".
+- Estimates come from reading the code, not running it: library calls of unknown cost, amortized
+  costs, and inputs the type hints don't describe can be misread. They're labelled with a
+  confidence and their limits, and each misread found becomes an evaluation case.
+- The daily job runs once a day (Vercel Hobby), so an analysis missed right after a sync, an
+  expired waiting submission, or a changed Google photo can wait up to a day.
+- Suggestions come only from Branch's catalog and skip premium problems; a topic with no unsolved
+  free problems left has no suggestions.
