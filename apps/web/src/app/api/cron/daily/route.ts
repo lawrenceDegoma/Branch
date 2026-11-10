@@ -7,6 +7,7 @@ import {
   matchWaitingSubmissions,
   purgeExpiredSubmissions,
 } from "@/modules/integrations/submissions";
+import { refreshGooglePhotos } from "@/modules/profile/google-photos";
 
 // Vercel runs this once a day (vercel.json), sending `Authorization: Bearer <CRON_SECRET>`.
 // Delivery is best effort and can repeat, so each step is idempotent and catches up on
@@ -30,8 +31,15 @@ export async function GET(request: Request) {
     // Anything not yet analyzed: new solutions the immediate run missed, and retries.
     const analysis = await runAnalysisJobs({ limit: 200 });
     const unusedResults = await deleteUnusedResults();
-    logger.info("daily job finished", { matched, purged, unusedResults, ...analysis });
-    return json({ matched, purged, unusedResults, analysis });
+    const photos = await refreshGooglePhotos();
+    logger.info("daily job finished", {
+      matched,
+      purged,
+      unusedResults,
+      ...analysis,
+      photos,
+    });
+    return json({ matched, purged, unusedResults, analysis, photos });
   } catch (error) {
     logger.error("daily job failed", errorContext(error));
     return json({ error: "failed" }, 500);

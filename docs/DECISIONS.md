@@ -1033,7 +1033,20 @@ route only). Better Auth's `user.image` is the provider photo; connecting a prov
 brings it (`updateUserInfoOnLink`), and so does every later sign-in (`overrideUserInfoOnSignIn`,
 added the same day, so a changed Google or GitHub photo shows on the next sign-in; with both
 connected, the last one used wins). A user-update hook (`keepChosenIdentity`) keeps only the photo
-from those callbacks: the provider never renames anyone or changes their email. Uploads are cropped to a 256px square and re-encoded (WebP, else JPEG) in the
+from those callbacks: the provider never renames anyone or changes their email.
+
+Owner decision (same day): keep Google photos current automatically rather than through a
+"refresh my photo" button. Google has no public address for someone's current photo, so Google
+sign-in asks for offline access (`accessType: "offline"`, `prompt: "consent"`, since Google issues
+a refresh token only with consent; scopes unchanged: openid, email, profile), Better Auth stores
+provider tokens encrypted (`encryptOAuthTokens`; older plain tokens stay readable), and the daily
+job's `refreshGooglePhotos` (`modules/profile/google-photos.ts`) refreshes the token and reads
+Google's userinfo `picture` for people whose photo is PROVIDER, up to 100 a run, least recently
+checked first, five at a time. It replaces only a Google photo (or none), so someone whose last
+sign-in was GitHub keeps GitHub's (`newGooglePhoto` in `photo.ts`), and only if it hasn't changed
+meanwhile. Failures (revoked access, Google down) are logged and retried the next day. GitHub
+needs nothing: `avatars.githubusercontent.com/u/<id>` follows the account. The consent screen must
+be published: in Testing, Google expires refresh tokens after 7 days. Uploads are cropped to a 256px square and re-encoded (WebP, else JPEG) in the
 browser, then checked on the server by their first bytes (JPEG, PNG, or WebP; never SVG) and size
 (200 KB), with one change a minute (a conditional update, so two uploads at once can't strand a
 photo). Replacing or switching away deletes the old upload. Storage sits behind `PhotoStorage`

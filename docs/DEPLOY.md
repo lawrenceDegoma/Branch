@@ -148,7 +148,17 @@ from starting. Redeploy after adding them.
   basic scopes only) and create an OAuth client ID of type "Web application" with the redirect
   URI `https://<your-domain>/api/auth/callback/google`. Set `GOOGLE_CLIENT_ID` and
   `GOOGLE_CLIENT_SECRET`. While the consent screen is in **Testing**, only the test users you list
-  can sign in; add your friends' Google addresses, or publish the app.
+  can sign in, and Google expires offline access after 7 days, so photos stop updating (below).
+  **Publish the app** (Audience → Publish app); with only the basic scopes, Google doesn't review
+  it.
+
+**Photos stay current:** each sign-in brings the person's current Google or GitHub photo. GitHub's
+photo address follows the account, so a new GitHub photo shows by itself. For Google, Branch asks
+for offline access (Google shows its consent screen at each sign-in) and the daily job
+(`/api/cron/daily`, which needs `CRON_SECRET`) asks Google for each person's photo, so a new one
+shows within a day. People who signed in before this change are covered from their next sign-in.
+The tokens are stored encrypted with `BETTER_AUTH_SECRET`, so changing that secret makes them
+unreadable: photos then stop updating until each person signs in again.
 
 **Accounts made with a password** keep working. They sign in with "Sign in with your password"
 under the buttons, then connect Google or GitHub on the page Branch shows them (every page shows a

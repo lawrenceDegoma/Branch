@@ -196,6 +196,11 @@ test.describe("social sign-in", () => {
       const url = new URL(page.url());
       expect(url.searchParams.get("redirect_uri")).toBe(`${baseURL}/api/auth/callback/${provider}`);
       expect(url.searchParams.get("client_id")).toBe(`e2e-${provider}-client`);
+      if (provider === "google") {
+        // Offline access, which the daily photo refresh needs; Google grants it only with consent.
+        expect(url.searchParams.get("access_type")).toBe("offline");
+        expect(url.searchParams.get("prompt")).toBe("consent");
+      }
     });
   }
 });

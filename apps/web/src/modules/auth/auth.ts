@@ -9,6 +9,8 @@ import { keepChosenIdentity } from "./link";
 const env = serverEnv();
 
 // Each sign-in refreshes the photo from the provider; the hook below keeps the name and email.
+// Google also grants offline access (asked for at each sign-in, which Google requires to issue it)
+// so the daily job can keep its photo current (modules/profile/google-photos.ts).
 const socialProviders = {
   ...(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET
     ? {
@@ -25,6 +27,8 @@ const socialProviders = {
           clientId: env.GOOGLE_CLIENT_ID,
           clientSecret: env.GOOGLE_CLIENT_SECRET,
           overrideUserInfoOnSignIn: true,
+          accessType: "offline" as const,
+          prompt: "consent" as const,
         },
       }
     : {}),
@@ -63,6 +67,9 @@ export const auth = betterAuth({
     // joins an unverified password account by email; Better Auth refuses that.)
     // Connecting one also brings its photo (the name and email stay; see the hook below).
     accountLinking: { enabled: true, allowDifferentEmails: true, updateUserInfoOnLink: true },
+    // Provider tokens are stored encrypted with BETTER_AUTH_SECRET (ones stored before stay
+    // readable).
+    encryptOAuthTokens: true,
   },
   databaseHooks: {
     user: {

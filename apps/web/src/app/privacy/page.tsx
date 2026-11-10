@@ -53,7 +53,9 @@ export default function PrivacyPage() {
             <strong>A photo, if you upload one:</strong> Branch shrinks it to a small square in your
             browser and stores it with Vercel Blob, under an address that can&apos;t be guessed.
             Otherwise the photo from Google or GitHub is shown, loaded from them and updated each
-            time you sign in.
+            time you sign in. If you sign in with Google, Branch keeps the sign-in token Google
+            gives it, encrypted, and uses it only to fetch your current photo once a day while you
+            show it. You can revoke it in your Google account at any time.
           </li>
           <li>
             <strong>Sign-in sessions:</strong> a session cookie, and the IP address and browser

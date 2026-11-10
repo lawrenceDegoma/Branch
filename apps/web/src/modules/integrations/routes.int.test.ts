@@ -1,5 +1,5 @@
 import { prisma } from "@branch/database";
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { DELETE, GET } from "@/app/api/extension/connection/route";
 import { POST } from "@/app/api/extension/submissions/route";
 import { GET as runDaily } from "@/app/api/cron/daily/route";
@@ -8,9 +8,14 @@ import { createConnection } from "./connections";
 
 // The extension's HTTP contract, end to end through the route handlers.
 
-const CRON_SECRET = "test-cron-secret-0123456789";
-beforeAll(() => {
-  process.env.CRON_SECRET = CRON_SECRET;
+// Set before the routes load: the server environment is read once, when the auth module loads.
+// Without Google sign-in, the daily job has no photos to check.
+const CRON_SECRET = vi.hoisted(() => {
+  const secret = "test-cron-secret-0123456789";
+  process.env.CRON_SECRET = secret;
+  delete process.env.GOOGLE_CLIENT_ID;
+  delete process.env.GOOGLE_CLIENT_SECRET;
+  return secret;
 });
 
 const body = (overrides: Record<string, unknown> = {}) => ({
@@ -131,12 +136,13 @@ describe("GET /api/cron/daily", () => {
     expect((await run("Bearer wrong")).status).toBe(401);
     const response = await run(`Bearer ${CRON_SECRET}`);
     expect(response.status).toBe(200);
-    // No analyzer is configured in tests, so analysis reports null.
+    // No analyzer or Google sign-in is configured in tests, so those steps report null.
     expect(await response.json()).toEqual({
       matched: 0,
       purged: 0,
       unusedResults: 0,
       analysis: null,
+      photos: null,
     });
   });
 });

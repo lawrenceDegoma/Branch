@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { shownPhoto, sniffPhotoType } from "./photo";
+import { newGooglePhoto, shownPhoto, sniffPhotoType } from "./photo";
 
 const bytes = (...values: number[]) => new Uint8Array(values);
 
@@ -40,5 +40,26 @@ describe("shownPhoto", () => {
       expect(shownPhoto({ image, profile: null })).toBeNull();
     }
     expect(shownPhoto({ image: null, profile: null })).toBeNull();
+  });
+});
+
+describe("newGooglePhoto", () => {
+  const old = "https://lh3.googleusercontent.com/a/old=s96-c";
+  const latest = "https://lh3.googleusercontent.com/a/new=s96-c";
+
+  it("replaces a Google photo, or none, with Google's new one", () => {
+    expect(newGooglePhoto(old, latest)).toBe(latest);
+    expect(newGooglePhoto(null, latest)).toBe(latest);
+  });
+
+  it("leaves a photo from GitHub alone", () => {
+    expect(newGooglePhoto("https://avatars.githubusercontent.com/u/1?v=4", latest)).toBeNull();
+  });
+
+  it("changes nothing when Google's photo is the same, missing, or not https", () => {
+    expect(newGooglePhoto(old, old)).toBeNull();
+    expect(newGooglePhoto(old, null)).toBeNull();
+    expect(newGooglePhoto(old, "http://lh3.googleusercontent.com/a/new")).toBeNull();
+    expect(newGooglePhoto(old, `https://lh3.googleusercontent.com/${"a".repeat(2048)}`)).toBeNull();
   });
 });

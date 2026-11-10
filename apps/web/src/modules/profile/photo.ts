@@ -54,3 +54,25 @@ export function shownPhoto(user: {
   if (choice === "UPLOAD") return user.profile?.photoUrl ?? null;
   return user.image?.startsWith("https://") ? user.image : null;
 }
+
+const MAX_PHOTO_URL_LENGTH = 2048;
+
+function isGooglePhoto(url: string) {
+  try {
+    return new URL(url).hostname.endsWith(".googleusercontent.com");
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * What the daily check stores as someone's provider photo, given the one Branch has and the one
+ * Google has now; null leaves it as it is. Only a photo that came from Google (or none) is
+ * replaced, so someone who last signed in with GitHub keeps GitHub's, and only by a different
+ * https address.
+ */
+export function newGooglePhoto(current: string | null, latest: string | null): string | null {
+  if (current !== null && !isGooglePhoto(current)) return null;
+  if (!latest || latest === current || latest.length > MAX_PHOTO_URL_LENGTH) return null;
+  return latest.startsWith("https://") ? latest : null;
+}
