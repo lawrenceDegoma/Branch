@@ -1091,7 +1091,28 @@ plan before it starts:
   /privacy, and `docs/CHROME-WEB-STORE.md` change together, the version is bumped, and the store
   reviews it again.
 - **Personal statistics:** private by default, like reviews. A setting lets groups see weekly
-  study-time totals only; never per-problem times or weak topics, and no rankings.
+  study-time totals only; never per-problem times or weak topics, and no rankings. (Changed the
+  same day, below: groups see study sessions one at a time, shared by choice.)
+
+### Plan for the additions approved (2026-11-09)
+
+The owner approved `docs/PLAN-ADDITIONS.md` (M23 solutions on solve posts, M24 study sessions, M25
+the extension's problem timer, M26 stats, M27 journeys and docs) with these decisions:
+
+- **Code on posts follows the setting at read time:** turning it off takes the code off past solve
+  posts too; deleting a solution takes it off its post.
+- **The study timer is an orange button above "Your week" on Home.** Owner exception to the rule
+  that orange is never used for buttons, for this button only; its text still holds 4.5:1 (dark
+  text on orange). No indicator elsewhere.
+- **Sessions stop counting at 4 hours** ("stopped automatically"), can be deleted, not edited, and
+  are tied to no group or problem.
+- **Study sessions reach groups one at a time, by choice:** stopping offers "Share to a group"
+  (group, optional note) with "Remember my decision" (always that group, or never), changeable in
+  Settings. This replaces the weekly totals. A session that stopped automatically is never shared
+  without asking.
+- **The problem timer counts visible time** in the problem's tab until accepted; **one optional
+  budget**, set in the popup, turns the toolbar button to a warning colour; nothing else alerts.
+- **Stats at `/stats`**, linked from Home and Review, no new tab; the owner may move it later.
 
 ## Phase 4 summary
 

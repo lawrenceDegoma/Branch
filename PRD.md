@@ -42,7 +42,7 @@ Users need to: (a) see what friends are studying, (b) know what to solve this we
 
 **Explicitly out of v1:** push/email/in-app notification center, public group discovery, monetization, full in-browser coding judge, compulsory leaderboards, automatic publishing of source code, elaborate XP economy. (Owner change, 2026-11-09: a person may turn on a setting, off by default, that attaches their code as a spoiler to their own automatic solve posts.)
 
-**Owner additions (2026-11-09), after Phase 4 and before Phase 5:** solutions on solve posts (opt-in, above); a study-session timer and an extension problem timer with an optional time budget (toolbar badge and popup, never changing the coding sites' pages); private personal statistics, with an opt-in to show groups weekly study-time totals only. Details in `docs/DECISIONS.md`.
+**Owner additions (2026-11-09), after Phase 4 and before Phase 5:** solutions on solve posts (opt-in, above); a study-session timer and an extension problem timer with an optional time budget (toolbar badge and popup, never changing the coding sites' pages); private personal statistics; study sessions can be shared to a group one at a time, by the person's choice (with a remembered choice in Settings). Plan: `docs/PLAN-ADDITIONS.md`; decisions in `docs/DECISIONS.md`.
 
 ## 4. Core concepts and business rules
 
