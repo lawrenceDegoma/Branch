@@ -45,6 +45,29 @@
           <button type="button" id="retry" hidden>Retry now</button>
           <button type="button" id="disconnect">Disconnect</button>
         </div>
+
+        <h2 id="timer-heading">Problem timer</h2>
+        <p id="timer-now" class="muted">This tab isn't on a problem.</p>
+        <form id="budget-form" novalidate aria-describedby="budget-help">
+          <label for="budget">Time budget, in minutes</label>
+          <div class="row">
+            <input
+              id="budget"
+              name="budget"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              max="600"
+              placeholder="Off"
+            />
+            <button type="submit">Save</button>
+            <button type="button" id="budget-off">Turn off</button>
+          </div>
+        </form>
+        <p id="budget-help" class="muted small">
+          The toolbar button shows the minutes you've spent on the problem in a tab while it's in
+          view, and turns amber once you're past your budget.
+        </p>
       </section>
 
       <p id="message" role="status" aria-live="polite"></p>

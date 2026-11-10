@@ -75,6 +75,23 @@ describe("POST /api/extension/submissions", () => {
     expect(rows.map((r) => r.source).sort()).toEqual(["LEETCODE", "NEETCODE"]);
   });
 
+  it("keeps the time spent from extension 1.2.0, once, and none from older versions", async () => {
+    const { user, token } = await connected();
+    expect((await send(token, body({ timeSpentSeconds: 1440 }))).status).toBe(200);
+    // A retry with another time doesn't change the stored one.
+    expect((await send(token, body({ timeSpentSeconds: 99 }))).status).toBe(200);
+    expect((await send(token, body({ submissionId: "2189874572" }))).status).toBe(200);
+    const rows = await prisma.submission.findMany({
+      where: { userId: user.id },
+      orderBy: { externalId: "asc" },
+    });
+    expect(rows.map((r) => r.timeSpentSeconds)).toEqual([1440, null]);
+    // The database holds the same range.
+    await expect(
+      prisma.submission.update({ where: { id: rows[1]!.id }, data: { timeSpentSeconds: 0 } }),
+    ).rejects.toThrow(/submission_time_spent/);
+  });
+
   it("refuses requests without a working token", async () => {
     const { token } = await connected();
     // A token one character off (always a different character, so never the real one).
@@ -97,6 +114,9 @@ describe("POST /api/extension/submissions", () => {
       [body({ code: "" }), false, 400],
       [body({ extra: "field" }), false, 400],
       [body({ submittedAt: "yesterday" }), false, 400],
+      [body({ timeSpentSeconds: 0 }), false, 400],
+      [body({ timeSpentSeconds: 86_401 }), false, 400],
+      [body({ timeSpentSeconds: 12.5 }), false, 400],
       [body({ code: "x".repeat(300_000) }), false, 413],
     ];
     for (const [payload, raw, status] of cases) {

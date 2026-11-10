@@ -75,8 +75,15 @@ export default function PrivacyPage() {
           <li>
             <strong>Sent to Branch</strong> for each accepted submission: which site it was made on
             (leetcode.com or neetcode.io), the site&apos;s ID for it (LeetCode&apos;s submission ID,
-            or the time neetcode.io judged it), the problem, the language, your code, and when it
-            was judged.
+            or the time neetcode.io judged it), the problem, the language, your code, when it was
+            judged, and how long the problem&apos;s page was open and in view before it was accepted
+            (from extension version 1.2.0).
+          </li>
+          <li>
+            <strong>Read for the problem timer:</strong> which problem a leetcode.com or neetcode.io
+            tab is on (from its address) and whether the tab is in view. The minutes show on the
+            extension&apos;s toolbar button and are sent only with an accepted submission. Your
+            times are shown only to you in Branch.
           </li>
           <li>
             <strong>Read on neetcode.io to tell which problem it is:</strong> the name of the
@@ -85,13 +92,14 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Not read or sent:</strong> your username or profile on either site, other pages
-            you visit, your browsing history, your cookies or passwords, and submissions that
-            aren&apos;t accepted.
+            you visit (only whether a page is a problem, and which), your browsing history, your
+            cookies or passwords, and submissions that aren&apos;t accepted.
           </li>
           <li>
             <strong>Stored in your browser only:</strong> the key that connects the extension to
-            your Branch account, up to 50 accepted submissions waiting to be sent, and the
-            popup&apos;s last-sync status. Disconnecting deletes them.
+            your Branch account, up to 50 accepted submissions waiting to be sent, the popup&apos;s
+            last-sync status, your time budget, and each open tab&apos;s problem timer (kept until
+            the browser closes). Disconnecting deletes them, except the budget.
           </li>
         </ul>
         <p>

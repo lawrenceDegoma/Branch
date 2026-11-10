@@ -1168,6 +1168,36 @@ the extension's problem timer, M26 stats, M27 journeys and docs) with these deci
   asking again from Settings, a timer left running, a mistaken start, axe in both themes with
   the dialog open).
 
+### M25 — The extension's problem timer (complete; 1.2.0 awaits store review)
+
+- **Counting** (`apps/extension/src/timer.ts`, pure, unit-tested with a fake clock): one timer per
+  tab, keyed by the problem in the address (`/problems/<slug>` on both sites). It counts while
+  the tab is in view (owner decision 5): the site relay reports every 15 s while visible, on
+  visibility changes, and within 2 s of moving to another page; each report adds at most 45 s, so
+  a sleeping computer or a stopped service worker doesn't add hours. Leaving problem pages
+  pauses it; another problem starts a new one; a reload keeps counting, except after an accepted
+  submission, when a reload starts over (to solve it again). Accepted, it stops and reports whole
+  seconds (at least 1). Timers live in `storage.session` (gone when the browser closes), only
+  while connected, and are cleared on disconnect and when a tab closes.
+- **Badge and budget** (owner decision 6): the toolbar badge shows the tab's minutes (neutral
+  grey `#5f6368`, amber `#b45309` past the budget, white text, 6:1 and 5:1). One budget, 1–600
+  minutes, set or turned off in the popup's new "Problem timer" section, which also says the
+  current tab's time. No new permissions: the badge needs none, and the popup finds its tab
+  without `tabs`.
+- **Sending:** an accepted submission from a timed tab carries `timeSpentSeconds` (optional in the
+  shared contract, 1–86400; on LeetCode only if the timer's problem is the submission's). The
+  background always replaces whatever the page's script sent. Branch stores it once (a retry
+  keeps the first; migration `submission_time_spent`, CHECK) and shows "about 24 min on it" on
+  Solutions, to the owner only; never to groups. Older extensions send none and keep working.
+- **Disclosure:** `EXTENSION_DISCLOSURE` now says the extension notes how long each problem page
+  is open and in view and sends it with accepted submissions; `/privacy`, the welcome page, and
+  `docs/CHROME-WEB-STORE.md` (listing, single purpose, storage and host justifications, **Web
+  browsing activity** now ticked, test instructions, step 9) changed together. Version 1.2.0.
+- **Tests:** unit (`timer.test.ts`: page addresses, counting, pausing, the sleep cap, new
+  problems, reloads, accepting, the badge), integration (route: the field's range, stored once,
+  none from old versions, the CHECK), and the real-extension E2E (both sites' submissions carry a
+  time, Solutions shows it, the popup's budget).
+
 ### Changelog: "What's new" (2026-11-09)
 
 Owner decisions: an in-app, plain-language changelog, built before M24; a dismissible card on Home

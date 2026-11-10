@@ -169,7 +169,9 @@ and `ANALYZER_SECRET` in `.env` to use it locally). It needs [uv](https://docs.a
 
 `apps/extension` is a Manifest V3 extension built with WXT. It watches only the traffic the
 LeetCode and neetcode.io pages already make, never calls either site itself, and sends accepted
-submissions to the Branch origin it was built for (production by default). How it detects a
+submissions to the Branch origin it was built for (production by default), with how long the
+problem's page was open and in view (1.2.0; the toolbar button shows the minutes, and turns amber
+past an optional budget set in the popup). How it detects a
 submission is in [docs/LEETCODE-SPIKE.md](docs/LEETCODE-SPIKE.md) and
 [docs/NEETCODE-SPIKE.md](docs/NEETCODE-SPIKE.md).
 

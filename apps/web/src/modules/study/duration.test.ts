@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { formatElapsed, formatStudyTime, isExpired, MAX_SESSION_MS, sessionEnd } from "./duration";
+import {
+  formatElapsed,
+  formatStudyTime,
+  formatTimeSpent,
+  isExpired,
+  MAX_SESSION_MS,
+  sessionEnd,
+} from "./duration";
 
 const START = new Date("2026-11-10T12:00:00Z");
 const after = (ms: number) => new Date(START.getTime() + ms);
@@ -31,5 +38,8 @@ describe("the study timer", () => {
     expect(formatElapsed(42 * 60_000 + 5_000)).toBe("42:05");
     expect(formatElapsed(62 * 60_000 + 5_000)).toBe("1:02:05");
     expect(formatElapsed(-5)).toBe("0:00");
+    expect(formatTimeSpent(42)).toBe("under a minute");
+    expect(formatTimeSpent(24 * 60 + 30)).toBe("about 24 min");
+    expect(formatTimeSpent(65 * 60)).toBe("about 1 h 5 min");
   });
 });

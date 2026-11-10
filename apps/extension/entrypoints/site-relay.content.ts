@@ -3,11 +3,14 @@ import { browser } from "wxt/browser";
 import { defineContentScript } from "wxt/utils/define-content-script";
 import { LEETCODE_ORIGIN, NEETCODE_ORIGIN, SITE_BY_ORIGIN } from "@/src/config";
 import { OBSERVER_MESSAGE, type ExtensionMessage } from "@/src/messages";
+import { problemPage, TICK_MS } from "@/src/timer";
 
 // The isolated half on leetcode.com and neetcode.io: takes what the page script saw, checks it,
 // and passes it to the background. Accepted submissions are checked against the shared contract
 // and must come from the site they name; everything else is reduced to a stage and a problem
-// slug, for the popup's "Last seen".
+// slug, for the popup's "Last seen". It also tells the background which problem page the tab is on
+// and whether it's in view, for the problem timer (the background ignores this while
+// disconnected).
 
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const STAGES = new Set(["submitted", "not-accepted", "unidentified"]);
@@ -44,5 +47,28 @@ export default defineContentScript({
       // to reload the tab.
       if (message) browser.runtime.sendMessage(message).catch(() => {});
     });
+
+    let loaded = true;
+    let lastPage: string | null = null;
+    const report = () => {
+      const page = problemPage(window.location.pathname);
+      // Nothing to say on pages that aren't problems, unless the tab just left one.
+      if (page === null && lastPage === null && !loaded) return;
+      const visible = document.visibilityState === "visible";
+      const message: ExtensionMessage = { type: "page", report: { site, page, visible, loaded } };
+      browser.runtime.sendMessage(message).catch(() => {});
+      lastPage = page;
+      loaded = false;
+    };
+    report();
+    document.addEventListener("visibilitychange", report);
+    // In view, report regularly so the time adds up; and notice moves to another page (both
+    // sites change pages without reloading) within a couple of seconds.
+    setInterval(() => {
+      if (document.visibilityState === "visible") report();
+    }, TICK_MS);
+    setInterval(() => {
+      if (problemPage(window.location.pathname) !== lastPage) report();
+    }, 2000);
   },
 });

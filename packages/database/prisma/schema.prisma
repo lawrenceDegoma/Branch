@@ -698,27 +698,30 @@ enum SubmissionSource {
 /// groups. Counts as a completion once its problem is in the catalog; until then `problemId` is
 /// null, and an unmatched submission is deleted 30 days after it arrived.
 model Submission {
-  id          String           @id @default(uuid(7)) @db.Uuid
-  userId      String
-  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  source      SubmissionSource
+  id               String           @id @default(uuid(7)) @db.Uuid
+  userId           String
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  source           SubmissionSource
   /// The site's ID for it (digits; CHECK): LeetCode's submission ID, or neetcode.io's judging
   /// time in Unix milliseconds. Unique per user and source, so retries are no-ops. Null exactly
   /// for pasted solutions (CHECK).
-  externalId  String?
+  externalId       String?
   /// The LeetCode problem's slug, as on Problem (CHECK), whichever site it was solved on.
-  problemSlug String
-  problemId   String?          @db.Uuid
-  problem     Problem?         @relation(fields: [problemId], references: [id], onDelete: SetNull)
+  problemSlug      String
+  problemId        String?          @db.Uuid
+  problem          Problem?         @relation(fields: [problemId], references: [id], onDelete: SetNull)
   /// LeetCode's language slug, e.g. python3 (1-40 characters; CHECK).
-  language    String
+  language         String
   /// The solution, 1-100000 characters (CHECK). Kept until the user deletes the submission.
-  code        String
+  code             String
   /// When the site judged it.
-  submittedAt DateTime
-  receivedAt  DateTime         @default(now())
-  analysis    AnalysisJob?
-  posts       Post[]
+  submittedAt      DateTime
+  /// How long the problem's page was open and in view before it was accepted, in seconds, from
+  /// extension 1.2.0's timer (1 to 86400; CHECK). Approximate; private like the rest.
+  timeSpentSeconds Int?
+  receivedAt       DateTime         @default(now())
+  analysis         AnalysisJob?
+  posts            Post[]
 
   @@unique([userId, source, externalId])
   @@unique([id, userId])

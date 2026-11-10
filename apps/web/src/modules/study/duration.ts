@@ -25,6 +25,11 @@ export function formatStudyTime(ms: number): string {
   return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
 }
 
+/** Time on a problem from the extension's timer (approximate): "under a minute", "about 24 min". */
+export function formatTimeSpent(seconds: number): string {
+  return seconds < 60 ? "under a minute" : `about ${formatStudyTime(seconds * 1000)}`;
+}
+
 /** The running timer: "4:05", "42:05", "1:02:05". */
 export function formatElapsed(ms: number): string {
   const seconds = Math.max(0, Math.floor(ms / 1000));

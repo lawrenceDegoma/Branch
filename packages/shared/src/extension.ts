@@ -8,6 +8,9 @@ export const SUBMISSION_CODE_MAX = 100_000;
 /** Request bodies above this are refused before parsing (code plus a little JSON). */
 export const SUBMISSION_BODY_MAX_BYTES = 256_000;
 
+/** The most time on a problem the extension reports (a day), in seconds. */
+export const TIME_SPENT_MAX_SECONDS = 86_400;
+
 /** Where a submission was made. */
 export const SUBMISSION_SITES = ["LEETCODE", "NEETCODE"] as const;
 export type SubmissionSite = (typeof SUBMISSION_SITES)[number];
@@ -32,6 +35,11 @@ export const submissionPayloadSchema = z
     code: z.string().min(1).max(SUBMISSION_CODE_MAX),
     /** When it was judged, in Unix seconds. */
     submittedAt: z.number().int().positive(),
+    /**
+     * Time the problem's page was open and in view before this was accepted, in seconds
+     * (extension 1.2.0 and later; approximate).
+     */
+    timeSpentSeconds: z.number().int().min(1).max(TIME_SPENT_MAX_SECONDS).optional(),
   })
   .strict();
 export type SubmissionPayload = z.infer<typeof submissionPayloadSchema>;

@@ -1,7 +1,7 @@
 # Publishing Branch for LeetCode to the Chrome Web Store
 
 Everything the Chrome Web Store developer dashboard asks for, ready to paste, and the order to do
-it in. Checked against Google's documentation on 2026-11-05 (neetcode.io added 2026-11-07); if a field has moved or been renamed,
+it in. Checked against Google's documentation on 2026-11-05 (neetcode.io added 2026-11-07, the problem timer 2026-11-09); if a field has moved or been renamed,
 the content still applies.
 
 ## Before you start
@@ -39,7 +39,7 @@ the content still applies.
    ```
 
    The upload file is `apps/extension/.output/branch-for-leetcode-<version>-chrome.zip` (1.1.0 adds
-   neetcode.io). It points at production (`https://branch-omega-vert.vercel.app`).
+   neetcode.io, 1.2.0 the problem timer). It points at production (`https://branch-omega-vert.vercel.app`).
 
 6. **Images** are in `apps/extension/store/` (regenerate with the command at the top of
    `apps/web/e2e/store-assets.spec.ts`).
@@ -70,14 +70,19 @@ the content still applies.
   > • Submit on leetcode.com or neetcode.io as usual. When your submission is accepted, Branch
   > records the problem as solved within a few seconds.
   > • The popup shows what it last saw and synced, and anything waiting to send.
+  > • A problem timer: the toolbar button shows how many minutes you've spent on the problem in
+  > the current tab while it's in view, and turns amber past an optional time budget you set in
+  > the popup.
   >
   > Private by design
   > • Nothing is collected until you connect, and nothing after you disconnect.
-  > • For each accepted submission, it sends Branch the problem, the language, your code, and the
-  > time. On neetcode.io it also reads the name of the problem you open, to tell which LeetCode
-  > problem it is. Nothing else on either site is read or sent.
+  > • For each accepted submission, it sends Branch the problem, the language, your code, the
+  > time, and how long the problem's page was open and in view. For the timer it reads which
+  > problem a tab is on and whether the tab is in view. On neetcode.io it also reads the name of
+  > the problem you open, to tell which LeetCode problem it is. Nothing else on either site is
+  > read or sent.
   > • Your code is visible only to you in Branch unless you choose to share it, and you can
-  > delete it at any time.
+  > delete it at any time. Your times are shown only to you.
   > • Your groups see a solve only if you turn on "Share my solves".
   > • The extension never makes requests to LeetCode or neetcode.io; it only reads the results of
   > submissions you make.
@@ -100,20 +105,23 @@ the content still applies.
 - **Single purpose:**
 
   > Records the LeetCode problems you solve in Branch: when a submission you make on leetcode.com
-  > or neetcode.io is accepted, the extension sends it to your Branch account so the problem counts
-  > as solved in your groups and roadmaps.
+  > or neetcode.io is accepted, the extension sends it to your Branch account, with how long you
+  > spent on the problem, so the problem counts as solved in your groups and roadmaps and you can
+  > see your own solving times.
 
 - **Permission justifications:**
   - **storage:** "Keeps the key that connects the extension to the user's Branch account, a short
-    queue of accepted submissions waiting to be sent, and the popup's status, in the browser's
-    local extension storage."
+    queue of accepted submissions waiting to be sent, the popup's status, and the user's time
+    budget in the browser's local extension storage, and each open problem tab's timer in session
+    storage (cleared when the browser closes)."
   - **alarms:** "Retries sending a submission later when Branch is unreachable or rate-limits the
     request, so accepted submissions aren't lost while offline."
   - **Host permissions** (this covers `https://branch-omega-vert.vercel.app/*` and the content
     scripts on `https://leetcode.com/*` and `https://neetcode.io/*`): "leetcode.com and
     neetcode.io: content scripts observe the results of submissions the user makes, to detect when
-    one is accepted (on neetcode.io also the name of the problem opened, to identify it); they
-    never make requests to either site. branch-omega-vert.vercel.app: the extension sends accepted
+    one is accepted (on neetcode.io also the name of the problem opened, to identify it), and
+    which problem page a tab is on and whether it's in view, to time how long the problem takes;
+    they never make requests to either site or change their pages. branch-omega-vert.vercel.app: the extension sends accepted
     submissions to the user's Branch account there, and a content script on Branch's Settings page
     receives the connection key when the user chooses Connect."
 - **Remote code:** "No, I am not using remote code."
@@ -123,12 +131,12 @@ the content still applies.
   - **User-generated content:** the solution code the user wrote.
   - **Authentication information:** the Branch connection key the extension stores and sends
     with each request.
+  - **Web browsing activity** (from 1.2.0): which problem pages the user had open, and for how
+    long, sent as the time spent with each accepted submission.
 
   Leave the others unticked: no personally identifiable information is collected by the extension
-  (it reads the user's Branch name for the popup but doesn't collect it), and no browsing history,
-  form data, personal communications, location, health, or financial information. If you'd rather
-  be conservative, also ticking **Web browsing activity** (which LeetCode problems you solved) is
-  harmless.
+  (it reads the user's Branch name for the popup but doesn't collect it), and no form data,
+  personal communications, location, health, or financial information.
 
 - **Certifications:** tick each statement. They certify that data isn't sold, isn't used or
   transferred for anything unrelated to the single purpose, and complies with the Limited Use
@@ -195,3 +203,22 @@ for changes, tell me what they said and I'll make them.
    Duplicate shows as solved in Branch."
 7. Submit for review. Because neetcode.io is a new site, Chrome turns the extension off for
    existing users until they accept the new permission (a prompt on the extensions menu).
+
+### 9. Updating to 1.2.0 (the problem timer)
+
+1. Production first: apply the `submission_time_spent` migration
+   (`DATABASE_URL="$PROD_DIRECT_URL" pnpm db:deploy`), then push, so Branch accepts and shows the
+   time before any extension sends it. 1.0.0 and 1.1.0 keep working throughout (the field is
+   optional).
+2. `pnpm --filter @branch/extension zip` makes `branch-for-leetcode-1.2.0-chrome.zip`.
+3. On the item's **Package** tab, upload it.
+4. **Store listing:** paste the updated description above (the timer bullet, and the "Private by
+   design" bullets).
+5. **Privacy:** paste the updated single purpose and the storage and host-permission
+   justifications above. Under data usage, also tick **Web browsing activity**. No permissions
+   change: the toolbar badge needs none, so Chrome doesn't ask existing users to accept anything.
+6. **Test instructions:** add: "The problem timer: open https://leetcode.com/problems/two-sum/
+   while connected; the toolbar button shows 0m, then counts minutes while the tab is in view and
+   pauses in other tabs. Set a 1-minute budget in the popup and the button turns amber after a
+   minute. Submit a correct solution: the Solutions tab in Branch shows about how long it took."
+7. Submit for review.

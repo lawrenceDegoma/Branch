@@ -61,6 +61,7 @@ export async function ingestSubmission(
         code: payload.code,
         submittedAt,
         receivedAt: now,
+        timeSpentSeconds: payload.timeSpentSeconds ?? null,
       },
     ],
     skipDuplicates: true,
@@ -166,6 +167,7 @@ export async function listSubmissions(
       code: true,
       submittedAt: true,
       receivedAt: true,
+      timeSpentSeconds: true,
       problem: { select: { title: true, difficulty: true } },
       analysis: {
         select: {

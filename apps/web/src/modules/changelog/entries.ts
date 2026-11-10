@@ -13,6 +13,19 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    id: "2026-11-09-problem-timer",
+    date: "2026-11-09",
+    title: "A problem timer in the extension",
+    summary: "The extension times each problem you work on, with an optional time budget.",
+    details: `Version 1.2.0 of the extension counts the minutes you spend on a problem in each tab, on leetcode.com or neetcode.io, while the tab is in view. The toolbar button shows them.
+
+- Set a time budget in the extension's popup, and the button turns amber once you're past it. There's no sound or pop-up.
+- When your submission is accepted, the time goes to Branch with it. Your Solutions tab shows about how long each one took; only you see it.
+- Time with the tab in the background, or the computer asleep, doesn't count.
+
+It arrives once Chrome updates the extension, after the Chrome Web Store reviews it.`,
+  },
+  {
     id: "2026-11-09-study-timer",
     date: "2026-11-09",
     title: "A study timer",

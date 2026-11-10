@@ -25,6 +25,7 @@ import {
   WAITING_DAYS,
   type SubmissionItem,
 } from "@/modules/integrations/submissions";
+import { formatTimeSpent } from "@/modules/study/duration";
 
 export const metadata = { title: "Solutions" };
 
@@ -201,6 +202,7 @@ function SubmissionCard({
             >
               {formatDate(item.submittedAt, timeZone, true)}
             </time>
+            {item.timeSpentSeconds ? <> · {formatTimeSpent(item.timeSpentSeconds)} on it</> : null}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-1">

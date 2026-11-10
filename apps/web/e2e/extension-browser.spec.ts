@@ -222,8 +222,11 @@ test.describe("the Chrome extension", () => {
           externalId: String(SUBMISSION_ID),
           problemSlug: "two-sum",
           code: CODE,
+          // The problem timer ran while the page was open and in view.
+          timeSpentSeconds: expect.any(Number),
         },
       ]);
+      expect(submissions[0]!.timeSpentSeconds).toBeGreaterThanOrEqual(1);
 
       // neetcode.io: a Run never syncs; an accepted Submit counts as the LeetCode problem its
       // title names, with only the code that was submitted.
@@ -253,6 +256,18 @@ test.describe("the Chrome extension", () => {
           },
         ]);
       expect(await prisma.submission.count({ where: { userId: account.id } })).toBe(2);
+      expect(
+        (
+          await prisma.submission.findFirstOrThrow({
+            where: { userId: account.id, source: "NEETCODE" },
+          })
+        ).timeSpentSeconds,
+      ).toBeGreaterThanOrEqual(1);
+      // Branch shows the time on the solution, only to its owner.
+      await page.goto("/solutions");
+      await expect(page.getByRole("article", { name: /Two Sum/ })).toContainText(
+        "under a minute on it",
+      );
       // The completion is written just after the submission, so wait for it too.
       await expect
         .poll(() => prisma.problemCompletion.count({ where: { userId: account.id } }))
@@ -266,6 +281,14 @@ test.describe("the Chrome extension", () => {
       await expect(popup.locator("#last-seen")).toContainText(
         "contains-duplicate on neetcode.io, accepted",
       );
+      // The problem timer's budget, set in the popup (this tab, the popup's own, isn't a problem).
+      await expect(popup.locator("#timer-now")).toHaveText("This tab isn't on a problem.");
+      await popup.getByLabel("Time budget, in minutes").fill("30");
+      await popup.getByRole("button", { name: "Save" }).click();
+      await expect(popup.getByRole("status")).toHaveText("Budget set to 30 minutes.");
+      await popup.getByRole("button", { name: "Turn off" }).click();
+      await expect(popup.getByRole("status")).toHaveText("Budget off.");
+      await expect(popup.getByLabel("Time budget, in minutes")).toBeFocused();
       await expectAccessible(popup);
       if (process.env.SHOT_DIR)
         await popup.screenshot({ path: `${process.env.SHOT_DIR}/popup-connected.png` });
