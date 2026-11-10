@@ -26,7 +26,8 @@ not affiliated with LeetCode or NeetCode.
   opens it.
 - **Sharing solves:** with "Share my solves" on (Settings; off by default), marking a problem
   solved posts it to groups whose plan includes it, along with finished weeks and plans;
-  unmarking takes the post down, and you can hide any single one.
+  unmarking takes the post down, and you can hide any single one. With "Add my code to my solve
+  posts" also on, a solve the extension synced shows its code, folded as a spoiler.
 - **Reactions and comments:** react to posts with kudos, impressive, helpful, or same here, and
   discuss it in a comment thread that opens inside the post (spoilers work there too).
 - **LeetCode extension:** install it from the Chrome Web Store, connect it in Settings, and

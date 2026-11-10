@@ -25,7 +25,10 @@ export const profileUpdateSchema = z.object({
   timezone: timeZoneSchema,
 });
 
-export const sharingSchema = z.object({ shareSolves: checkboxSchema });
+export const sharingSchema = z.object({
+  shareSolves: checkboxSchema,
+  attachSolutions: checkboxSchema,
+});
 
 export const analysisSchema = z.object({ analyzeSolutions: checkboxSchema });
 

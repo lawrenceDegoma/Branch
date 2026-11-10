@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ingestSubmission } from "@/modules/integrations/submissions";
 import { createPlan } from "@/modules/plans/service";
 import { setCompletion } from "@/modules/progress/service";
-import { setShareSolves } from "@/modules/profile/service";
+import { setSharing } from "@/modules/profile/service";
 import { createPublishedRoadmap, createTestGroup, createTestUser } from "@/test/factories";
 import { listFeed } from "./service";
 
@@ -53,7 +53,7 @@ async function setup() {
     },
     NOW,
   );
-  await setShareSolves(grace.id, true);
+  await setSharing(grace.id, { shareSolves: true, attachSolutions: false });
   return { ada, grace, group };
 }
 
@@ -104,12 +104,12 @@ describe("re-solve posts", () => {
   it("need sharing on and a plan that assigns the problem, and count manual solves as the first", async () => {
     const { grace } = await setup();
     const twoSum = await prisma.problem.findUniqueOrThrow({ where: { leetcodeSlug: "two-sum" } });
-    await setShareSolves(grace.id, false);
+    await setSharing(grace.id, { shareSolves: false, attachSolutions: false });
     await setCompletion(grace.id, twoSum.id, true, NOW);
     await ingestSubmission(grace.id, accepted("two-sum", days(8)), days(8));
     expect(await posts(grace.id)).toEqual([]);
 
-    await setShareSolves(grace.id, true);
+    await setSharing(grace.id, { shareSolves: true, attachSolutions: false });
     await ingestSubmission(grace.id, accepted("two-sum", days(9)), days(9));
     expect((await posts(grace.id)).map((p) => p.kind)).toEqual(["RESOLVE"]);
     // min-stack isn't in the plan: no post either way.

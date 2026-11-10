@@ -25,15 +25,17 @@ const problemNotFound = () => new NotFoundError("We couldn't find that problem."
  * from two tabs) leaves exactly one completion, and `changed` is true only for the request that
  * actually changed something. Only that request updates the user's automatic posts, in the same
  * transaction, so a repeated solve never posts again. `origin` records how a new completion was
- * made (the extension passes its source and the submission's language); an existing completion
- * keeps its own.
+ * made (the extension passes its source, the submission's language, and the submission, which a
+ * solve post may carry); an existing completion keeps its own.
  */
 export async function setCompletion(
   userId: string,
   problemId: string,
   solved: boolean,
   now = new Date(),
-  origin: { source: "MANUAL" | "EXTENSION"; language?: string } = { source: "MANUAL" },
+  origin: { source: "MANUAL" | "EXTENSION"; language?: string; submissionId?: string } = {
+    source: "MANUAL",
+  },
 ): Promise<{ changed: boolean }> {
   if (!problemIdSchema.safeParse(problemId).success) throw problemNotFound();
   if (!solved) {
@@ -64,7 +66,7 @@ export async function setCompletion(
         skipDuplicates: true,
       });
       if (count > 0) {
-        await syncAutomaticPosts(tx, userId, problemId, true, now);
+        await syncAutomaticPosts(tx, userId, problemId, true, now, origin.submissionId);
         await startReviews(tx, userId, problemId, now);
       }
       return { changed: count > 0 };

@@ -1,5 +1,5 @@
 import "server-only";
-import { prisma } from "@branch/database";
+import { prisma, type Prisma } from "@branch/database";
 import { DomainError, NotFoundError } from "@/lib/errors";
 import { announceResolve } from "@/modules/feed/automatic";
 import { setCompletion } from "@/modules/progress/service";
@@ -8,7 +8,7 @@ import { pastedSolutionSchema, submissionIdSchema, type SubmissionPayload } from
 // Submissions the extension synced. Private to their author. A submission counts as a completion
 // once its problem is in Branch's catalog; until then it waits, and a waiting submission is
 // deleted 30 days after it arrived (owner decision). Completions never depend on a submission
-// staying: deleting one leaves the problem solved.
+// staying: deleting one leaves the problem solved, and takes its code off any solve post showing it.
 
 const SUBMISSIONS_PER_MINUTE = 20;
 export const WAITING_DAYS = 30;
@@ -66,13 +66,18 @@ export async function ingestSubmission(
     skipDuplicates: true,
   });
   if (problem) {
+    const stored = await prisma.submission.findFirst({
+      where: { userId, source: payload.source, externalId: payload.submissionId },
+      select: { id: true },
+    });
     const { changed } = await setCompletion(userId, problem.id, true, now, {
       source: "EXTENSION",
       language: payload.language,
+      submissionId: stored?.id,
     });
     // Already solved, and this is a new accepted submission: a re-solve.
     if (!changed && count > 0) {
-      await prisma.$transaction((tx) => announceResolve(tx, userId, problem.id, now));
+      await prisma.$transaction((tx) => announceResolve(tx, userId, problem.id, now, stored?.id));
     }
   }
   return { stored: count > 0 ? "new" : "duplicate", counted: problem !== null };
@@ -114,18 +119,28 @@ export async function matchWaitingSubmissions(
     await setCompletion(submission.userId, problemId, true, now, {
       source: "EXTENSION",
       language: submission.language,
+      submissionId: submission.id,
     });
     matched++;
   }
   return matched;
 }
 
+/**
+ * Deletes submissions, first taking their code off any solve post showing it (the database refuses
+ * to delete a submission a post still links).
+ */
+async function deleteSubmissions(where: Prisma.SubmissionWhereInput): Promise<number> {
+  return prisma.$transaction(async (tx) => {
+    await tx.post.updateMany({ where: { submission: where }, data: { submissionId: null } });
+    const { count } = await tx.submission.deleteMany({ where });
+    return count;
+  });
+}
+
 /** Deletes waiting submissions older than 30 days. Idempotent; the daily job runs it. */
 export async function purgeExpiredSubmissions(now = new Date()): Promise<number> {
-  const { count } = await prisma.submission.deleteMany({
-    where: { problemId: null, receivedAt: { lt: waitingCutoff(now) } },
-  });
-  return count;
+  return deleteSubmissions({ problemId: null, receivedAt: { lt: waitingCutoff(now) } });
 }
 
 /** The viewer's own submissions, newest first, paged by ID. Expired waiting ones never show. */
@@ -236,13 +251,12 @@ export async function listSolvedProblems(userId: string) {
 /** Deletes one of the viewer's submissions and its code. The completion, if any, stays. */
 export async function deleteSubmission(userId: string, submissionId: string) {
   if (!submissionIdSchema.safeParse(submissionId).success) throw submissionNotFound();
-  const { count } = await prisma.submission.deleteMany({ where: { id: submissionId, userId } });
+  const count = await deleteSubmissions({ id: submissionId, userId });
   if (count === 0) throw submissionNotFound();
 }
 
 export async function deleteAllSubmissions(userId: string) {
-  const { count } = await prisma.submission.deleteMany({ where: { userId } });
-  return count;
+  return deleteSubmissions({ userId });
 }
 
 const submissionNotFound = () => new NotFoundError("We couldn't find that submission.");

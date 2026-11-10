@@ -1,34 +1,62 @@
 import "server-only";
 import type { Prisma } from "@branch/database";
+import { POST_BODY_MAX } from "./schemas";
 
 // Automatic posts follow the author's completions. Solving a problem, with "Share my solves" on,
 // posts to each group whose active plan assigns it, plus "finished week N" or "finished the plan"
 // when that solve completes one. Each post exists at most once per author (partial unique
 // indexes), so repeated or racing solves never post twice. Undoing the solve withdraws the posts
 // it made true; redoing it restores them in their original place rather than celebrating again.
-// A post the author hid stays hidden either way.
+// A post the author hid stays hidden either way. A solve the extension synced can carry its code,
+// if the author chose that in Settings ("Add my code to my solve posts").
 
 type Tx = Prisma.TransactionClient;
 type Announcement = Prisma.PostCreateManyInput & { kind: "SOLVE" | "WEEK_DONE" | "PLAN_DONE" };
 
-/** Runs inside the completion's transaction, only when the completion actually changed. */
+/**
+ * The synced submission to attach to a solve post: only with the author's setting on, and only
+ * code that fits in a post (longer code stays on Solutions, to share by hand).
+ */
+async function attachable(
+  tx: Tx,
+  profile: { attachSolutions: boolean },
+  submissionId: string | undefined,
+): Promise<string | undefined> {
+  if (!profile.attachSolutions || !submissionId) return undefined;
+  const [row] = await tx.$queryRaw<{ fits: boolean }[]>`
+    SELECT length("code") <= ${POST_BODY_MAX} AS "fits" FROM "submission" WHERE "id" = ${submissionId}::uuid`;
+  return row?.fits ? submissionId : undefined;
+}
+
+/**
+ * Runs inside the completion's transaction, only when the completion actually changed.
+ * `submissionId` is the synced submission behind the solve, if any.
+ */
 export async function syncAutomaticPosts(
   tx: Tx,
   userId: string,
   problemId: string,
   solved: boolean,
   now: Date,
+  submissionId?: string,
 ) {
-  if (solved) await announce(tx, userId, problemId, now);
+  if (solved) await announce(tx, userId, problemId, now, submissionId);
   else await withdraw(tx, userId, problemId, now);
 }
 
-async function announce(tx: Tx, userId: string, problemId: string, now: Date) {
+async function announce(
+  tx: Tx,
+  userId: string,
+  problemId: string,
+  now: Date,
+  submissionId: string | undefined,
+) {
   const profile = await tx.profile.findUnique({
     where: { userId },
-    select: { shareSolves: true },
+    select: { shareSolves: true, attachSolutions: true },
   });
   if (!profile?.shareSolves) return;
+  const solution = await attachable(tx, profile, submissionId);
 
   const plans = await tx.groupRoadmapPlan.findMany({
     where: {
@@ -63,7 +91,7 @@ async function announce(tx: Tx, userId: string, problemId: string, now: Date) {
   const restoreOnly: Announcement[] = [];
   for (const plan of plans) {
     const base = { groupId: plan.groupId, authorId: userId, createdAt: now };
-    announcements.push({ ...base, kind: "SOLVE", problemId });
+    announcements.push({ ...base, kind: "SOLVE", problemId, submissionId: solution });
     // A problem appears once per roadmap version, so it sits in exactly one week of the plan.
     const week = plan.assignments.find((a) => a.roadmapItem.problemId === problemId)!.weekNumber;
     const weekDone: Announcement = {
@@ -140,8 +168,17 @@ export const RESOLVE_GAP_DAYS = 7;
  * unless they posted about this problem in the last week. Serialized per author and problem, so
  * two submissions syncing at once can't both post.
  */
-export async function announceResolve(tx: Tx, userId: string, problemId: string, now: Date) {
-  const profile = await tx.profile.findUnique({ where: { userId }, select: { shareSolves: true } });
+export async function announceResolve(
+  tx: Tx,
+  userId: string,
+  problemId: string,
+  now: Date,
+  submissionId?: string,
+) {
+  const profile = await tx.profile.findUnique({
+    where: { userId },
+    select: { shareSolves: true, attachSolutions: true },
+  });
   if (!profile?.shareSolves) return;
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`resolve:${userId}:${problemId}`}))`;
   const since = new Date(now.getTime() - RESOLVE_GAP_DAYS * 24 * 60 * 60 * 1000);
@@ -167,12 +204,14 @@ export async function announceResolve(tx: Tx, userId: string, problemId: string,
   const posted = new Set(recent.map((p) => p.groupId));
   const fresh = plans.filter((p) => !posted.has(p.groupId));
   if (fresh.length === 0) return;
+  const solution = await attachable(tx, profile, submissionId);
   await tx.post.createMany({
     data: fresh.map((p) => ({
       groupId: p.groupId,
       authorId: userId,
       kind: "RESOLVE" as const,
       problemId,
+      submissionId: solution,
       createdAt: now,
     })),
   });

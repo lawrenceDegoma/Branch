@@ -2,6 +2,7 @@ import "server-only";
 import { prisma } from "@branch/database";
 import { DomainError, ForbiddenError, NotFoundError } from "@/lib/errors";
 import { requireMembership } from "@/modules/groups/access";
+import { codeFence, languageLabel } from "@/modules/integrations/languages";
 import { shownPhoto } from "@/modules/profile/photo";
 import {
   FEED_PAGE_SIZE,
@@ -26,7 +27,7 @@ const postInclude = {
       id: true,
       name: true,
       image: true,
-      profile: { select: { username: true, photo: true, photoUrl: true } },
+      profile: { select: { username: true, photo: true, photoUrl: true, attachSolutions: true } },
     },
   },
   group: { select: { id: true, name: true } },
@@ -34,6 +35,7 @@ const postInclude = {
   plan: {
     select: { roadmapVersion: { select: { roadmap: { select: { id: true, title: true } } } } },
   },
+  submission: { select: { code: true, language: true } },
   _count: { select: { comments: true } },
 } as const;
 
@@ -114,6 +116,17 @@ function toFeedItem(
     problem: post.problem,
     roadmap: post.plan?.roadmapVersion.roadmap ?? null,
     weekNumber: post.weekNumber,
+    /**
+     * The author's code on a solve post, as a Markdown fence: only while their setting is still on
+     * (turning it off hides it from every post at once).
+     */
+    solution:
+      post.submission && post.author.profile?.attachSolutions
+        ? {
+            language: languageLabel(post.submission.language),
+            markdown: codeFence(post.submission.code, post.submission.language),
+          }
+        : null,
     reactions,
     commentCount: post._count.comments,
     canEdit: written && isAuthor,

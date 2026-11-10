@@ -140,6 +140,9 @@ model Profile {
   /// Post automatically when solving a problem a group's plan assigns, finishing a week, or
   /// finishing a plan. Off by default: completion never implies sharing.
   shareSolves          Boolean     @default(false)
+  /// Attach the synced code to automatic solve posts, folded as a spoiler. Off by default, and
+  /// only on while shareSolves is; read when the post is shown, so turning it off hides the code.
+  attachSolutions      Boolean     @default(false)
   /// Estimate the complexity of the person's solutions (privately). On by default; turning it
   /// off deletes their estimates.
   analyzeSolutions     Boolean     @default(true)
@@ -560,36 +563,42 @@ enum PostKind {
 /// Which columns each kind uses is enforced by CHECK constraints in the migration, and each
 /// automatic post exists at most once per author (partial unique indexes).
 model Post {
-  id          String            @id @default(uuid(7)) @db.Uuid
-  groupId     String            @db.Uuid
-  group       Group             @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  authorId    String
-  author      User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  kind        PostKind          @default(TEXT)
+  id           String            @id @default(uuid(7)) @db.Uuid
+  groupId      String            @db.Uuid
+  group        Group             @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  authorId     String
+  author       User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  kind         PostKind          @default(TEXT)
   /// Markdown source, 1-5000 characters, for TEXT posts only (CHECK). Rendered without raw HTML.
-  body        String?
+  body         String?
   /// The problem the post is about, if any; the solved problem for SOLVE.
-  problemId   String?           @db.Uuid
-  problem     Problem?          @relation(fields: [problemId], references: [id], onDelete: Restrict)
+  problemId    String?           @db.Uuid
+  problem      Problem?          @relation(fields: [problemId], references: [id], onDelete: Restrict)
   /// The plan a milestone belongs to; always a plan of the post's own group (trigger).
-  planId      String?           @db.Uuid
-  plan        GroupRoadmapPlan? @relation(fields: [planId], references: [id], onDelete: Cascade)
+  planId       String?           @db.Uuid
+  plan         GroupRoadmapPlan? @relation(fields: [planId], references: [id], onDelete: Cascade)
   /// The finished week, for WEEK_DONE (1-based).
-  weekNumber  Int?
+  weekNumber   Int?
   /// The author marked the post as containing spoilers: its code blocks render folded.
-  spoiler     Boolean           @default(false)
-  createdAt   DateTime          @default(now())
-  editedAt    DateTime?
+  spoiler      Boolean           @default(false)
+  createdAt    DateTime          @default(now())
+  editedAt     DateTime?
   /// The author hid this automatic post. It stays hidden and is never posted again.
-  hiddenAt    DateTime?
+  hiddenAt     DateTime?
   /// The solve behind this automatic post was undone. Cleared if it is redone with sharing on.
-  withdrawnAt DateTime?
-  reactions   Reaction[]
-  comments    Comment[]
+  withdrawnAt  DateTime?
+  /// The author's synced solution shown on a SOLVE or RESOLVE post (CHECK), attached only with
+  /// profile.attachSolutions on. The composite key means a post can only link its own author's
+  /// submission; deleting a submission unlinks it first (modules/integrations/submissions.ts).
+  submissionId String?           @db.Uuid
+  submission   Submission?       @relation(fields: [submissionId, authorId], references: [id, userId], onDelete: NoAction)
+  reactions    Reaction[]
+  comments     Comment[]
 
   @@index([groupId, id(sort: Desc)])
   @@index([authorId, createdAt])
   @@index([problemId])
+  @@index([submissionId])
   @@map("post")
 }
 
@@ -690,6 +699,7 @@ model Submission {
   submittedAt DateTime
   receivedAt  DateTime         @default(now())
   analysis    AnalysisJob?
+  posts       Post[]
 
   @@unique([userId, source, externalId])
   @@unique([id, userId])

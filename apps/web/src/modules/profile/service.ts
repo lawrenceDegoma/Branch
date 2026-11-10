@@ -50,9 +50,18 @@ export async function setAppearance(userId: string, appearance: AppearanceValue)
   await prisma.profile.update({ where: { userId }, data: { appearance } });
 }
 
-/** Turning sharing off stops new automatic posts; earlier ones stay until the author hides them. */
-export async function setShareSolves(userId: string, shareSolves: boolean): Promise<void> {
-  await prisma.profile.update({ where: { userId }, data: { shareSolves } });
+/**
+ * Turning sharing off stops new automatic posts; earlier ones stay until the author hides them.
+ * Code goes on solve posts only while they're shared at all (CHECK), so turning sharing off turns
+ * that off too, which takes the code off earlier posts at once.
+ */
+export async function setSharing(
+  userId: string,
+  { shareSolves, attachSolutions }: { shareSolves: boolean; attachSolutions: boolean },
+): Promise<{ shareSolves: boolean; attachSolutions: boolean }> {
+  const saved = { shareSolves, attachSolutions: shareSolves && attachSolutions };
+  await prisma.profile.update({ where: { userId }, data: saved });
+  return saved;
 }
 
 const PHOTO_COOLDOWN_MS = 60_000;

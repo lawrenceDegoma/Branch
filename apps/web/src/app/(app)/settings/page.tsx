@@ -80,9 +80,9 @@ export default async function SettingsPage({
       <SettingsSection
         id="sharing"
         title="Sharing"
-        description="Solving a problem never posts anything unless you turn this on. Automatic posts never include your code or its analysis."
+        description="Solving a problem never posts anything unless you turn this on. Automatic posts include your code only if you add it below, and never its analysis."
       >
-        <SharingForm shareSolves={profile.shareSolves} />
+        <SharingForm shareSolves={profile.shareSolves} attachSolutions={profile.attachSolutions} />
       </SettingsSection>
       <SettingsSection
         id="analysis"

@@ -3,7 +3,7 @@ import { syncCatalog } from "@branch/database/catalog-import";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createPlan } from "@/modules/plans/service";
 import { setCompletion } from "@/modules/progress/service";
-import { setShareSolves } from "@/modules/profile/service";
+import { setSharing } from "@/modules/profile/service";
 import {
   createPublishedRoadmap,
   createTestGroup,
@@ -74,7 +74,7 @@ describe("badges", () => {
     const [twoSum] = await ids(["two-sum"]);
     for (const user of [ada, grace]) await setCompletion(user.id, twoSum!, true, NOW);
     await prisma.badgeAward.create({ data: { userId: grace.id, kind: "REVIEWS_25" } });
-    await setShareSolves(grace.id, true);
+    await setSharing(grace.id, { shareSolves: true, attachSolutions: false });
     const shown = await badgesForGroup([{ userId: ada.id }, { userId: grace.id }]);
     expect(shown.get(ada.id)).toBeUndefined();
     expect(shown.get(grace.id)).toEqual(["First solve"]);

@@ -98,6 +98,12 @@ export function PostCard({
         ) : (
           <>
             <AutomaticPostBody post={post} />
+            {post.solution ? (
+              <div className="flex flex-col gap-1">
+                <p className="text-xs text-ink-muted">{post.solution.language} code</p>
+                <Markdown spoiler>{post.solution.markdown}</Markdown>
+              </div>
+            ) : null}
             <div className="-mb-1 flex flex-wrap items-center gap-1">
               {footer}
               {post.canHide ? (

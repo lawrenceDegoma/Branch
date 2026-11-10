@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ForbiddenError, NotFoundError } from "@/lib/errors";
 import { createPlan } from "@/modules/plans/service";
 import { setCompletion } from "@/modules/progress/service";
-import { setShareSolves } from "@/modules/profile/service";
+import { setSharing } from "@/modules/profile/service";
 import {
   createPublishedRoadmap,
   createTestGroup,
@@ -94,7 +94,7 @@ describe("automatic posts", () => {
 
   it("posts a solve only to groups whose plan assigns the problem", async () => {
     const { ada, grace, olu, study, ids } = await setup();
-    await setShareSolves(grace.id, true);
+    await setSharing(grace.id, { shareSolves: true, attachSolutions: false });
     await setCompletion(grace.id, ids.twoSum, true, NOW);
     const posts = await prisma.post.findMany();
     expect(posts).toMatchObject([
@@ -106,7 +106,7 @@ describe("automatic posts", () => {
 
   it("never posts the same solve twice, even when requests race", async () => {
     const { grace, ids } = await setup();
-    await setShareSolves(grace.id, true);
+    await setSharing(grace.id, { shareSolves: true, attachSolutions: false });
     await Promise.all(
       Array.from({ length: 5 }, () => setCompletion(grace.id, ids.twoSum, true, NOW)),
     );
@@ -116,7 +116,7 @@ describe("automatic posts", () => {
 
   it("withdraws a post when the solve is undone and restores the same post when redone", async () => {
     const { ada, grace, ids } = await setup();
-    await setShareSolves(grace.id, true);
+    await setSharing(grace.id, { shareSolves: true, attachSolutions: false });
     await setCompletion(grace.id, ids.twoSum, true, NOW);
     const [original] = await prisma.post.findMany();
 
@@ -132,10 +132,10 @@ describe("automatic posts", () => {
 
   it("stops new posts when sharing is turned off, and keeps earlier ones", async () => {
     const { ada, grace, ids } = await setup();
-    await setShareSolves(grace.id, true);
+    await setSharing(grace.id, { shareSolves: true, attachSolutions: false });
     await setCompletion(grace.id, ids.twoSum, true, NOW);
     await setCompletion(grace.id, ids.validParentheses, true, NOW);
-    await setShareSolves(grace.id, false);
+    await setSharing(grace.id, { shareSolves: false, attachSolutions: false });
     // Valid Anagram would finish week 1 and the plan; with sharing off, nothing is posted.
     await setCompletion(grace.id, ids.validAnagram, true, later(1));
     expect(sorted(await seenBy(ada.id))).toEqual([
@@ -154,7 +154,7 @@ describe("automatic posts", () => {
 
   it("keeps a hidden post hidden through undo and redo", async () => {
     const { ada, grace, ids } = await setup();
-    await setShareSolves(grace.id, true);
+    await setSharing(grace.id, { shareSolves: true, attachSolutions: false });
     await setCompletion(grace.id, ids.twoSum, true, NOW);
     const [post] = await prisma.post.findMany();
     await hidePost(grace.id, post!.id, later(1));
@@ -171,7 +171,7 @@ describe("automatic posts", () => {
 
   it("celebrates a finished week, then the finished plan instead of its last week", async () => {
     const { ada, grace, ids } = await setup();
-    await setShareSolves(grace.id, true);
+    await setSharing(grace.id, { shareSolves: true, attachSolutions: false });
     await setCompletion(grace.id, ids.twoSum, true, NOW);
     await setCompletion(grace.id, ids.validAnagram, true, later(1));
     await setCompletion(grace.id, ids.validParentheses, true, later(2));
@@ -197,7 +197,7 @@ describe("automatic posts", () => {
 
   it("lets only the author hide an automatic post, and nobody edit or delete one", async () => {
     const { ada, grace, olu, study, ids } = await setup();
-    await setShareSolves(grace.id, true);
+    await setSharing(grace.id, { shareSolves: true, attachSolutions: false });
     await setCompletion(grace.id, ids.twoSum, true, NOW);
     const [solve] = await prisma.post.findMany();
 

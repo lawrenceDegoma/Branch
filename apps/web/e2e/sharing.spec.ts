@@ -78,7 +78,7 @@ test.describe("automatic posts", () => {
     await page.getByRole("checkbox", { name: "Share my solves" }).check();
     await page.getByRole("button", { name: "Save sharing" }).click();
     await expect(page.getByRole("main").getByRole("status")).toContainText(
-      "Your solves will be shared.",
+      "Your solves will be shared, without your code.",
     );
 
     await page.goto(`/groups/${group.id}`);
@@ -150,6 +150,69 @@ test.describe("automatic posts", () => {
     }
     await friend.page.goto("/home");
     await expect(solvePost(friend.page, "Two Sum")).toHaveCount(1);
+    await friend.context.close();
+  });
+});
+
+test.describe("code on solve posts", () => {
+  test("a synced solve shows its code folded, only while the setting is on", async ({
+    page,
+    viewer,
+    browser,
+    baseURL,
+    request,
+  }) => {
+    const friend = await anotherUser(browser, baseURL!);
+    const group = await createGroupInDb(viewer.id, "Code crew", [friend.account.id]);
+    await createPlanInDb(group.id, viewer.id, mondayWeeksAgo(0));
+
+    // Both settings are off until chosen.
+    await page.goto("/settings");
+    await ready(page);
+    const sharing = page.locator("#sharing");
+    const attach = sharing.getByRole("checkbox", { name: "Add my code to my solve posts" });
+    await expect(attach).not.toBeChecked();
+    await sharing.getByRole("checkbox", { name: "Share my solves" }).check();
+    await attach.check();
+    await sharing.getByRole("button", { name: "Save sharing" }).click();
+    await expect(sharing.getByRole("status")).toContainText(
+      "Your solves will be shared, with your code folded as a spoiler.",
+    );
+
+    await page.locator("#extension").getByRole("button", { name: "Connect a browser" }).click();
+    const key = await page.locator("#extension").getByLabel("Extension key").inputValue();
+    const response = await request.post("/api/extension/submissions", {
+      headers: { authorization: `Bearer ${key}` },
+      data: {
+        verdict: "ACCEPTED",
+        submissionId: "5001",
+        problemSlug: "two-sum",
+        language: "python3",
+        code: "class Solution:\n    def twoSum(self, nums, target):\n        seen = {}",
+        submittedAt: Math.floor(Date.now() / 1000),
+      },
+    });
+    expect(response.ok()).toBe(true);
+
+    // The groupmate sees the code only after opening it.
+    await friend.page.goto(`/groups/${group.id}`);
+    const post = solvePost(friend.page, "Two Sum");
+    await expect(post).toContainText("Python 3 code");
+    const code = post.locator("pre");
+    await expect(code).toBeHidden();
+    await post.getByText("Show spoiler code").click();
+    await expect(code).toContainText("seen = {}");
+
+    // Turning it off takes the code off the post.
+    await attach.uncheck();
+    await sharing.getByRole("button", { name: "Save sharing" }).click();
+    await expect(sharing.getByRole("status")).toContainText(
+      "Your solves will be shared, without your code.",
+    );
+    await friend.page.reload();
+    await expect(post).toBeVisible();
+    await expect(post).not.toContainText("Python 3 code");
+    await expect(post.locator("pre")).toHaveCount(0);
     await friend.context.close();
   });
 });

@@ -117,8 +117,11 @@ export default function PrivacyPage() {
           <li>
             <strong>Your code is visible only to you</strong> unless you share a solution to a group
             yourself (Solutions → Share). Then that group&apos;s members see what you chose to
-            include: its estimate, a note, and your code only if you ticked it. Nothing about your
-            code is ever posted automatically.
+            include: its estimate, a note, and your code only if you ticked it. Your code goes on
+            your automatic solve posts only if you turn on &quot;Add my code to my solve posts&quot;
+            (Settings → Sharing; off unless you choose it): then that solve&apos;s group sees the
+            code, folded until opened, and turning it off takes it off every post at once. Its
+            analysis is never posted automatically.
           </li>
           <li>Your reviews and how they went are visible only to you.</li>
           <li>

@@ -23,7 +23,7 @@ import {
   createProfile,
   getProfile,
   setAppearance,
-  setShareSolves,
+  setSharing,
   updateProfile,
   uploadPhoto,
 } from "./service";
@@ -91,14 +91,20 @@ export async function updateSharingAction(
   formData: FormData,
 ): Promise<FormState> {
   const { user } = await requireViewer();
-  const values = formValues(formData, ["shareSolves"]);
-  const { shareSolves } = sharingSchema.parse(values);
-  await setShareSolves(user.id, shareSolves);
-  revalidatePath("/settings");
+  const values = formValues(formData, ["shareSolves", "attachSolutions"]);
+  const saved = await setSharing(user.id, sharingSchema.parse(values));
+  revalidatePath("/", "layout");
   return {
     status: "success",
-    message: shareSolves ? "Your solves will be shared." : "Your solves won't be shared.",
-    values,
+    message: !saved.shareSolves
+      ? "Your solves won't be shared, and neither will your code."
+      : saved.attachSolutions
+        ? "Your solves will be shared, with your code folded as a spoiler."
+        : "Your solves will be shared, without your code.",
+    values: {
+      shareSolves: saved.shareSolves ? "on" : "",
+      attachSolutions: saved.attachSolutions ? "on" : "",
+    },
   };
 }
 

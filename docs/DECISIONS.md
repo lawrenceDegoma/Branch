@@ -1114,6 +1114,32 @@ the extension's problem timer, M26 stats, M27 journeys and docs) with these deci
   budget**, set in the popup, turns the toolbar button to a warning colour; nothing else alerts.
 - **Stats at `/stats`**, linked from Home and Review, no new tab; the owner may move it later.
 
+### M23 — Solutions on solve posts (complete)
+
+- **Setting:** `profile.attachSolutions` ("Add my code to my solve posts", Settings → Sharing),
+  off by default. A CHECK keeps it on only while `shareSolves` is, and `setSharing` saves both
+  together, so turning sharing off also takes code off past posts.
+- **Linking:** a SOLVE post made by a sync (`ingestSubmission`, or `matchWaitingSubmissions` once
+  the problem arrives) links that submission, and a RESOLVE post its new one, through
+  `setCompletion`'s `origin.submissionId`. Only with the setting on at that moment and code of at
+  most `POST_BODY_MAX` (5,000) characters; manual solves have none. Turning the setting on never
+  adds code to earlier posts.
+- **Showing:** the feed shows the code only while the author's setting is on (decision 1), folded
+  as a spoiler under "Python 3 code"; `toFeedItem` builds it on the server, so a hidden one never
+  reaches the browser.
+- **Database:** `post.submissionId` has a composite foreign key to the author's own submission
+  (`(submissionId, authorId)` → `submission(id, userId)`), `ON DELETE NO ACTION` since a
+  column-list SET NULL can't be declared in Prisma; every delete goes through
+  `deleteSubmissions`, which unlinks posts first. CHECKs: only SOLVE and RESOLVE posts carry code;
+  `attachSolutions` implies `shareSolves`. Migration `solve_post_code`.
+- **Privacy:** `/privacy`, the Settings text, and README say so; the extension's disclosure
+  ("visible only to you unless you choose to share it") was already accurate, so the extension is
+  unchanged.
+- **Tests:** `src/modules/feed/solution-posts.int.test.ts` (off by default; linking on sync,
+  re-solve, and match; manual and too-long attach nothing; the setting read at show time; deletes
+  unlink; outsiders 404; the foreign key and CHECKs; account deletion still works) and an E2E in
+  `e2e/sharing.spec.ts` (Settings, sync, the groupmate opens the spoiler, then it's gone).
+
 ## Phase 4 summary
 
 Done when "a user receives useful private review suggestions; analysis is asynchronous, bounded,
