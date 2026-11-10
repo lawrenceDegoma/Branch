@@ -1,6 +1,7 @@
 # Plan: the owner's additions before Phase 5
 
-**Status: approved by the owner (2026-11-09), with the decisions below.** The decisions are also
+**Status: complete (M23–M27, 2026-11-09); summary in `docs/DECISIONS.md`. Approved by the owner
+the same day, with the decisions below.** The decisions are also
 recorded in `docs/DECISIONS.md` ("Plan for the additions approved").
 
 The owner asked for three things on 2026-11-09 (`docs/DECISIONS.md`, "Owner requests"): solutions

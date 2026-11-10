@@ -197,5 +197,7 @@ submission is in [docs/LEETCODE-SPIKE.md](docs/LEETCODE-SPIKE.md) and
 ## Status
 
 Phases 1 (Foundation), 2 (the social feed), 3 (the LeetCode extension, published on the Chrome
-Web Store), and 4 (review and analysis) are complete. Next, before Phase 5 (chat): solutions on
-solve posts as an opt-in setting, study and problem timers, and personal statistics. See [docs/DECISIONS.md](docs/DECISIONS.md) for the milestone log and known limitations.
+Web Store), and 4 (review and analysis) are complete, and so are the additions after it: code on
+solve posts (opt-in), the study timer, the extension's problem timer (1.2.0, pending Chrome Web
+Store review), personal stats, and the What's new changelog. Phase 5 (chat) is next, once
+approved. See [docs/DECISIONS.md](docs/DECISIONS.md) for the milestone log and known limitations.

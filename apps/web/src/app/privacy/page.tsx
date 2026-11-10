@@ -64,8 +64,9 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>What you do in Branch:</strong> groups and invites, roadmaps, the problems you
-            mark solved, your reviews and how they went, solutions you paste, and posts, comments,
-            and reactions.
+            mark solved, your reviews and how they went, solutions you paste, study sessions (when
+            each started and stopped), the time the extension measured on each solution, and posts,
+            comments, and reactions.
           </li>
         </ul>
 
@@ -173,6 +174,10 @@ export default function PrivacyPage() {
             analysis off.
           </li>
           <li>
+            Study sessions stay until you delete them (Your stats). Deleting one also deletes the
+            posts that shared it.
+          </li>
+          <li>
             A synced submission for a problem that isn&apos;t in Branch is deleted after 30 days
             unless the problem is added.
           </li>
@@ -189,6 +194,11 @@ export default function PrivacyPage() {
           <li>Turn code analysis off or on in Settings → Code analysis.</li>
           <li>Upload a photo, use the one from Google or GitHub, or show initials, in Settings.</li>
           <li>Turn sharing on or off, and delete your posts and comments, whenever you like.</li>
+          <li>
+            Choose in Settings → Sharing whether your code goes on your solve posts, and what
+            happens to a study session when it ends: ask each time, always share to one group, or
+            never.
+          </li>
           <li>
             To delete your account and everything in it, or for any question about your data,{" "}
             {contactLine}.

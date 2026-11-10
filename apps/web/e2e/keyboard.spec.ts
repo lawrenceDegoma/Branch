@@ -100,6 +100,48 @@ test.describe("keyboard", () => {
     await expect(page.getByRole("heading", { name: "Solutions", exact: true })).toBeFocused();
   });
 
+  test("the study timer works from the keyboard and never announces its ticking", async ({
+    page,
+    viewer,
+  }) => {
+    await createGroupInDb(viewer.id, "Quiet timer crew");
+    await page.goto("/home");
+    await ready(page);
+    const summary = page.getByRole("complementary", { name: "Weekly summary" });
+    const timer = summary.getByRole("button", { name: "Start studying" });
+    await timer.focus();
+    await page.keyboard.press("Enter");
+    const stop = summary.getByRole("button", { name: "Stop studying" });
+    await expect(stop).toBeFocused();
+    const status = summary.getByRole("status");
+    await expect(status).toHaveText("Timer started.");
+
+    // The time ticks on screen, hidden from screen readers; the live region stays as it was.
+    const elapsed = summary.locator("[data-elapsed]");
+    await expect(elapsed).toHaveAttribute("aria-hidden", "true");
+    const before = await elapsed.textContent();
+    await expect(elapsed).not.toHaveText(before ?? "", { timeout: 3000 });
+    await expect(status).toHaveText("Timer started.");
+    await expect(summary.getByText(/^Studying since /)).toHaveCount(1);
+
+    // Stopping asks about sharing; Escape closes it without sharing, and focus comes back.
+    await prisma.studySession.updateMany({
+      where: { userId: viewer.id, endedAt: null },
+      data: { startedAt: new Date(Date.now() - 10 * 60_000) },
+    });
+    await page.reload();
+    await ready(page);
+    await summary.getByRole("button", { name: "Stop studying" }).focus();
+    await page.keyboard.press("Enter");
+    const dialog = page.getByRole("alertdialog", { name: "Share this session?" });
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await expect(status).toHaveText("Not shared.");
+    await expect(summary.getByRole("button", { name: "Start studying" })).toBeFocused();
+    expect(await prisma.post.count({ where: { authorId: viewer.id } })).toBe(0);
+  });
+
   test("posts, reactions, and comments work from the keyboard and keep focus", async ({
     page,
     viewer,

@@ -1225,6 +1225,24 @@ the extension's problem timer, M26 stats, M27 journeys and docs) with these deci
   E2E (`e2e/stats.spec.ts`: from Home and Review, figures, table view, deleting a session from
   the keyboard, privacy between two people, axe in both themes with data, 320px, text spacing).
 
+### M27 — The additions' journeys, accessibility, and docs (complete)
+
+- **Journey** (`e2e/additions-journey.spec.ts`): Settings (share solves with code), a study
+  session shared with a note, an extension sync with its measured time, then the groupmate's
+  view (the session, the solve with its code folded until opened, and no time spent or stats)
+  and the person's own (the time on Solutions, and Your stats); the groupmate's stats are their
+  own. The extension's timer itself is covered by the real-extension test (M25).
+- **Accessibility:** the study timer from the keyboard, with focus kept on the button as it
+  flips; the ticking time is `aria-hidden` and the live region doesn't change while it ticks;
+  Escape closes the share dialog without sharing and returns focus to the timer. Every new page
+  (`/stats`, `/changelog` and an entry) is in the axe scans and the 320px reflow list; the stats
+  page is also checked in both themes with data and with text spacing (M26), and the timer and
+  its dialog in both themes (M24).
+- **Docs:** `/privacy` now lists study sessions and measured times among what's stored, how long
+  sessions are kept (until deleted; deleting one deletes the posts that shared it), and the
+  sharing choices in Settings. README, CLAUDE.md, and `docs/PLAN-ADDITIONS.md` say the additions
+  are complete. `docs/DEPLOY.md` needed nothing: no new services or variables.
+
 ### Changelog: "What's new" (2026-11-09)
 
 Owner decisions: an in-app, plain-language changelog, built before M24; a dismissible card on Home
@@ -1245,6 +1263,29 @@ backfilled.
 - **Tests:** unit (entries, `unseenEntries`), integration (dismissing, joined-after, the CHECK),
   E2E `e2e/changelog.spec.ts` (card, read more, keyboard dismiss and focus, new accounts don't see
   it, public pages, 404), and both pages in the axe scans and 320px reflow.
+
+## Additions summary (M23–M27)
+
+The owner's requests of 2026-11-09, built after Phase 4 and before Phase 5 (plan:
+`docs/PLAN-ADDITIONS.md`; decisions above):
+
+- **Code on solve posts (M23):** opt-in, off by default, folded as a spoiler, shown only while
+  the setting is on; the database lets a post link only its author's own submission.
+- **Study sessions (M24):** an orange timer above "Your week" (the one exception to the
+  no-orange-buttons rule, contrast-checked); one session at a time, at most 4 hours; shared to a
+  group only by the person's choice, each time or remembered.
+- **The extension's problem timer (M25):** visible time per tab, a badge with an optional budget,
+  sent with accepted submissions and shown only to their owner; extension 1.2.0 with an updated
+  disclosure, awaiting the owner's store submission.
+- **Your stats (M26):** a private page, derived on read, with charts that each have a table.
+- **What's new (between M23 and M24):** a public changelog and a dismissible Home card after an
+  update.
+- **Hosting:** nothing new; Vercel and Neon free plans as before.
+- **Migrations** (each applied to production by the owner before its push): `solve_post_code`,
+  `profile_changelog_seen`, `study_post_kind`, `study_sessions`, `submission_time_spent`.
+- **Checks at the end:** `pnpm check` (unit: web 135, extension 38, shared 24; integration 248;
+  analyzer 87), `pnpm build`, and `pnpm test:e2e` (337 passed; 9 skipped by design: desktop-only
+  keyboard, shell, and extension tests on mobile, and the store images).
 
 ## Phase 4 summary
 
