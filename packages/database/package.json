@@ -19,7 +19,8 @@
     "postinstall": "prisma generate",
     "seed": "tsx --env-file-if-exists=../../.env prisma/seed.ts",
     "import-curated": "tsx --env-file-if-exists=../../.env prisma/import-curated.ts",
-    "reset-link": "tsx --env-file-if-exists=../../.env prisma/reset-link.ts"
+    "reset-link": "tsx --env-file-if-exists=../../.env prisma/reset-link.ts",
+    "errors": "tsx --env-file-if-exists=../../.env prisma/errors.ts"
   },
   "dependencies": {
     "@branch/shared": "workspace:*",

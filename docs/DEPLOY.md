@@ -112,6 +112,19 @@ store's **Browser** if that ever matters.
 environment variables, so they fail to start. That's intended: it keeps them away from production
 data. Turn previews off under **Settings → Git** if the failed builds bother you.
 
+**Errors and request IDs:** unexpected server errors land in the `server_error` table (14 days;
+the daily job prunes it) with the request ID every response carries and the error code the error
+page shows. From your machine, `DATABASE_URL="$PROD_DIRECT_URL" pnpm errors` lists the latest,
+and `pnpm errors -- <code>` the records behind a code someone quotes. Vercel's own logs keep an
+hour; search them by the same request ID while they last.
+
+**Headers:** every page gets a Content Security Policy with a per-request nonce (scripts run only
+from Branch's bundles), `Strict-Transport-Security`, and the other security headers. Before a
+release, `E2E_SERVER=start pnpm test:e2e` runs the browser tests against a production build, so a
+page that would break under the policy is caught here rather than live. (That run sets
+`AUTH_RATE_LIMIT_OFF=true` for itself, since it signs up an account per test; never set it in
+Vercel.)
+
 ## 4. Smoke test
 
 1. Open `https://<your-domain>/api/health`. It should return `{"status":"ok"}`, which means the settings are valid and the database answers.

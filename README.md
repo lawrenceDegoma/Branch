@@ -118,6 +118,7 @@ is server-only.
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | No (set both or neither)  | Enables "Continue with Google" (redirect URI `<BETTER_AUTH_URL>/api/auth/callback/google`).                     |
 | `BLOB_READ_WRITE_TOKEN`                     | No                        | Vercel Blob, for uploaded profile photos. Unset locally: photos are kept in `apps/web/.photos/`.                |
 | `PASSWORD_SIGN_UP`                          | No                        | `"true"` keeps password sign-up open next to Google or GitHub: local development and tests only.                |
+| `AUTH_RATE_LIMIT_OFF`                       | No                        | `"true"` turns the sign-in rate limiter off: only the browser tests against a production build set it.          |
 
 The server validates its environment at startup and reports invalid variable names without echoing
 their values.
@@ -191,6 +192,20 @@ submission is in [docs/LEETCODE-SPIKE.md](docs/LEETCODE-SPIKE.md) and
   Web Store.
 - **Tests:** unit tests for detection and the sync queue (`pnpm test`), and an E2E test that loads
   the built extension into Chromium against a fake LeetCode page (`e2e/extension-browser.spec.ts`).
+
+## Finding errors and keeping pages fast
+
+- Every response carries an `x-request-id`; log lines and error records quote it. Unexpected
+  server errors are recorded in the database (where and what, never request contents) for 14
+  days, since Vercel's free plan keeps logs for an hour. The error page shows an error code a
+  person can quote; `pnpm errors` lists recent records and `pnpm errors -- <code>` the ones
+  behind a code (with `DATABASE_URL` pointed at production to read the live table).
+- `pnpm build` ends with a client JavaScript budget (`apps/web/scripts/bundle-budget.mjs`), and
+  the integration tests include query budgets for the heaviest reads
+  (`apps/web/src/test/query-budget.int.test.ts`). Raise either on purpose, in the same commit as
+  the feature that needs it.
+- `E2E_SERVER=start pnpm test:e2e` runs the browser tests against a production build, with its
+  stricter Content Security Policy; the default dev server allows `eval` for hot reloading.
 
 ## Health check
 

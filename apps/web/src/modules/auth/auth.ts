@@ -88,6 +88,9 @@ export const auth = betterAuth({
   // Enabled in production by Better Auth's default. Stored in Postgres so limits hold across
   // serverless instances.
   rateLimit: {
+    // On in production by Better Auth's default; AUTH_RATE_LIMIT_OFF is for the browser tests
+    // against a production build, never for a deployment.
+    ...(env.AUTH_RATE_LIMIT_OFF ? { enabled: false } : {}),
     storage: "database",
     customRules: {
       "/sign-in/email": { window: 60, max: 5 },

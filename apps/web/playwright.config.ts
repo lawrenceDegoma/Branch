@@ -39,7 +39,11 @@ export default defineConfig({
       env: { ANALYZER_SECRET: analyzerSecret },
     },
     {
-      command: `pnpm next dev --port ${port}`,
+      // E2E_SERVER=start runs the suite against a production build (its stricter CSP included).
+      command:
+        process.env.E2E_SERVER === "start"
+          ? `pnpm next build && pnpm next start --port ${port}`
+          : `pnpm next dev --port ${port}`,
       url: baseURL,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
@@ -54,6 +58,7 @@ export default defineConfig({
         EXTENSION_STORE_URL: "https://chromewebstore.google.com/detail/branch-for-leetcode/e2e",
         // The fixtures create accounts with passwords; the pages still show only Google and GitHub.
         PASSWORD_SIGN_UP: "true",
+        AUTH_RATE_LIMIT_OFF: "true",
         ANALYZER_URL: `http://localhost:${analyzerPort}`,
         ANALYZER_SECRET: analyzerSecret,
       },

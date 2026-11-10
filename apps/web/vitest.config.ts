@@ -31,7 +31,8 @@ export default defineConfig({
           setupFiles: ["./src/test/integration-setup.ts"],
           // Tests share one database; run files one at a time.
           fileParallelism: false,
-          env: { DATABASE_URL: process.env.TEST_DATABASE_URL ?? "" },
+          // Query events on, so src/test/query-budget.int.test.ts can count queries per read.
+          env: { DATABASE_URL: process.env.TEST_DATABASE_URL ?? "", PRISMA_LOG_QUERIES: "1" },
         },
       },
     ],

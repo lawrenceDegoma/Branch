@@ -925,3 +925,38 @@ model UserBlock {
   @@index([blockedId])
   @@map("user_block")
 }
+
+/// A fixed-window counter for rate limits that no table's own rows can count (reactions toggle
+/// rows away, completions are idempotent): one row per key and window, incremented atomically
+/// (modules/limits). The daily job deletes old windows.
+model RateLimitBucket {
+  key         String
+  windowStart DateTime
+  count       Int      @default(0)
+
+  @@id([key, windowStart])
+  @@index([windowStart])
+  @@map("rate_limit_bucket")
+}
+
+/// An unexpected server error, recorded by src/instrumentation.ts (owner decision, 2026-11-10:
+/// a small table, no hosted service). Never a request body, code, or message text: only where
+/// and what. Read with `pnpm errors`; deleted after 14 days by the daily job.
+model ServerError {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  at        DateTime @default(now())
+  /// From the x-request-id the proxy gives every request, so a log line and a row match.
+  requestId String?
+  /// Next's error digest, shown on the error page so a person can quote it.
+  digest    String?
+  path      String
+  method    String
+  routeType String
+  name      String
+  message   String
+  stack     String?
+
+  @@index([at])
+  @@index([digest])
+  @@map("server_error")
+}

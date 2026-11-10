@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@branch/database";
 import { isUniqueViolation } from "@/lib/db-errors";
+import { takeToken } from "@/lib/limits";
 import { DomainError, NotFoundError } from "@/lib/errors";
 import { findMembership, requireMembership } from "@/modules/groups/access";
 import { isExpired, MIN_SESSION_MS, sessionEnd } from "./duration";
@@ -13,6 +14,7 @@ import { sessionIdSchema, type StudyDecision, type StudySharingChoice } from "./
 // is never shared without asking.
 
 const notFound = () => new NotFoundError("We couldn't find that session.");
+const STARTS_PER_HOUR = 30;
 
 /** The running session, if any, and whether it already stopped counting. */
 export async function runningSession(userId: string, now = new Date()) {
@@ -42,6 +44,15 @@ export async function startSession(userId: string, now = new Date()) {
   const running = await runningSession(userId, now);
   if (running && !running.expired) return running;
   if (running) await closeRunning(userId, now);
+  await takeToken(
+    {
+      key: `study:${userId}`,
+      limit: STARTS_PER_HOUR,
+      windowSeconds: 60 * 60,
+      message: "That's a lot of sessions in an hour. Try again later.",
+    },
+    now,
+  );
   try {
     const session = await prisma.studySession.create({
       data: { userId, startedAt: now },

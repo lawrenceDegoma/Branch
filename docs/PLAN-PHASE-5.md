@@ -1,6 +1,6 @@
 # Plan: Phase 5 — chat, reporting and blocking, and hardening
 
-**Status (2026-11-10): M29 done, with decisions 3 and 4 answered (below).
+**Status (2026-11-10): M29 and M30 done, with decisions 3, 4, and 5 answered (below).
 M28 (chat) is on hold while the owner works out the database side; decisions 1, 2, and 5 are
 still open.** Answered decisions are also in `docs/DECISIONS.md`.
 
@@ -65,7 +65,8 @@ Each has a recommendation; the milestones assume it.
    your comments (they're told the person isn't taking replies, without saying why). It doesn't
    remove anyone from a group, and both of you still see group progress, which the shared plan
    needs. Unblock any time in Settings. _Alternative:_ hiding only, with no limits on replies.
-5. **Error tracking (M30).** _Recommended: no new service._ Unexpected server errors are kept in
+5. **Error tracking (M30).** _Owner's answer: as recommended, a small table._ Recommended: no new
+   service. Unexpected server errors are kept in
    a small table (when, where, the request ID, the error's name and message; never request bodies,
    code, or messages), deleted after 14 days by the daily job, and read with a command. Vercel
    Hobby keeps runtime logs for only an hour, so this is what makes errors findable.

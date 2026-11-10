@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@branch/database";
 import { DomainError, NotFoundError } from "@/lib/errors";
+import { takeToken } from "@/lib/limits";
 import { photoSelect, shownPhoto } from "@/modules/profile/photo";
 import { userIdSchema } from "./schemas";
 
@@ -10,6 +11,7 @@ import { userIdSchema } from "./schemas";
 // group progress stays visible to both: the shared plan needs it.
 
 const notFound = () => new NotFoundError("We couldn't find that person.");
+const BLOCKS_PER_DAY = 30;
 
 /** The people `viewerId` has blocked; one indexed lookup, used by every read that shows content. */
 export async function blockedIds(viewerId: string): Promise<ReadonlySet<string>> {
@@ -39,6 +41,12 @@ export async function blockUser(blockerId: string, blockedId: string) {
     select: { userId: true },
   });
   if (!shared) throw notFound();
+  await takeToken({
+    key: `block:${blockerId}`,
+    limit: BLOCKS_PER_DAY,
+    windowSeconds: 24 * 60 * 60,
+    message: "That's a lot of blocks today. Try again tomorrow.",
+  });
   await prisma.userBlock.createMany({ data: [{ blockerId, blockedId }], skipDuplicates: true });
 }
 

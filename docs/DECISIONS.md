@@ -1313,6 +1313,66 @@ to their comments; nobody leaves a group.
   unblock from Settings; axe with the dialog, the reports list, and folded content).
 - **Not yet:** chat messages can't be reported until chat exists (M28, on hold).
 
+### M30 — Hardening (complete)
+
+Owner decision (2026-11-10): a full audit first, then fixes; errors in a small table rather than a
+hosted service (decision 5).
+
+- **Audit findings:** every server action already started from `requireViewer()` before any work
+  (now enforced by `src/test/authorization.test.ts`, 62 actions; the five sign-in actions are the
+  exceptions); no raw SQL, no `dangerouslySetInnerHTML`, no environment variables reaching the
+  browser, no outbound fetch of a user-supplied URL (the LeetCode lookup only parses the URL), the
+  local photo route checks names against a strict pattern, invite tokens are hashed, the Markdown
+  allow-list excludes images and HTML, the extension and cron routes use bearer secrets with no
+  cookies (so no CSRF surface), and Better Auth checks origins on its own routes. One dependency
+  finding: `@vercel/blob`'s chain resolved a zod below 4.6.6 (memory exhaustion on oversized
+  collections); pinned with a root `pnpm.overrides` entry, and `pnpm audit --prod` is clean.
+- **Rate limits** where there were none, through one fixed-window counter in Postgres
+  (`lib/limits.ts`, `rate_limit_bucket`, atomic upsert, pruned daily): reactions 60/min,
+  completion toggles 60/min (closing the known limitation), group creation 20/day, roadmap
+  creation 20/day, study starts 30/hour, blocks 30/day. Writes that leave rows keep counting them.
+- **Errors:** `src/instrumentation.ts` (`onRequestError`, Node runtime only) records unexpected
+  errors in `server_error`: request ID, Next's digest, path without query string, method, route
+  type, name, message, and a trimmed stack; never a body, code, or message text; lengths bounded
+  by a CHECK; 14 days, pruned daily. The error page shows the digest as an error code to quote;
+  `pnpm errors [-- <code>]` reads the table. Request IDs: `src/proxy.ts` gives every request and
+  response an `x-request-id` (incoming ones replaced; API routes included in the matcher now).
+- **Headers:** a per-request Content Security Policy (`lib/csp.ts`): scripts only by nonce with
+  `strict-dynamic` (`unsafe-eval` added in development for hot reloading), inline styles allowed
+  (server-rendered style attributes), images from Branch, `data:` (the select chevron), Vercel
+  Blob, Google, and GitHub avatars, `form-action` including the two sign-in providers (Chrome
+  applies it to the redirect after a form submission), `frame-ancestors 'none'`,
+  `object-src 'none'`, `upgrade-insecure-requests` in production; next-themes' inline script gets
+  the nonce via `ThemeProvider`. `Strict-Transport-Security` (two years, subdomains) joins the
+  existing headers. `E2E_SERVER=start pnpm test:e2e` runs the whole browser suite against a
+  production build so the strict policy is tested, not just the development one. That run turns
+  Better Auth's sign-in rate limiter off for itself (`AUTH_RATE_LIMIT_OFF=true`, a test-only
+  flag like `PASSWORD_SIGN_UP`; without it, the account-per-test sign-ups from one address hit the
+  limiter's 5 a minute and 281 tests failed), which is also the first time the limiter was seen
+  working against a real production build. The two photo-upload tests skip themselves in that
+  run: production has no upload storage without Vercel Blob, so the control isn't there.
+- **Performance:** the heaviest reads measured by query count with a full page of data
+  (`src/test/query-budget.int.test.ts`, query events on in the integration config): feed 20, Home
+  13, group 14, stats 15, solutions 4, review 15, all fixed per read because Prisma batches each
+  included relation (a 5-post page costs the feed the same 20), so there's no N+1 to fix. Prisma's
+  `relationLoadStrategy: "join"` would cut the feed to a few round trips but needs the
+  `relationJoins` preview feature; not adopted. Client JavaScript: 434 KB shared, 1,276 KB in all,
+  with budgets of 480 and 1,400 KB checked after every build (`scripts/bundle-budget.mjs`).
+- **Accessibility:** no new findings; every page added since M22 is in the axe scans and the 320px
+  list, the moderation dialogs and folded content were scanned in M29, and the full suite runs
+  again here. (Chat's screen-reader read-through waits for M28.)
+- **Not done, on purpose:** no changelog entry (the only visible change is the error code on the
+  error page); the health route stays unauthenticated (it reveals only up/down); Better Auth's
+  cookies keep their defaults (httpOnly, SameSite Lax, Secure under https).
+- **Tests:** unit (`lib/limits.test.ts`, `lib/csp.test.ts`, the authorization audit), integration
+  (`lib/limits.int.test.ts`, `modules/errors/service.int.test.ts`, the query budgets), and E2E
+  (`e2e/hardening.spec.ts`: the headers and a fresh request ID per response that a client can't
+  choose; the main pages and the theme switch without a CSP violation).
+- **Checks at the end:** `pnpm check` (unit: web 201, extension 38, shared 24; integration 265;
+  analyzer 87), `pnpm build` (434 KB shared, 1,276 KB in all, within budget), `pnpm test:e2e`
+  against the dev server (347 passed, 9 skipped by design) and against a production build
+  (343 passed, the 4 upload cases skipped by design, no CSP violation).
+
 ## Additions summary (M23–M27)
 
 The owner's requests of 2026-11-09, built after Phase 4 and before Phase 5 (plan:
@@ -1427,9 +1487,10 @@ approval.
 - Other people's profile pages don't exist yet; members see each other's name and username in the
   group's member list only.
 - ESLint 9 is end-of-life upstream (see dependency choices).
-- No CI pipeline yet; checks run locally.
-- Marking problems solved is not rate-limited; each toggle is one small idempotent write (plus
-  its automatic posts, in the same transaction).
+- No CI pipeline yet; checks run locally (including the bundle and query budgets, and the
+  production-build browser run before a release).
+- Marking problems solved is limited to 60 toggles a minute (M30); each toggle is one small
+  idempotent write (plus its automatic posts, in the same transaction).
 - Two different problems solved at the same instant that together finish a week can both miss the
   milestone (each transaction may not see the other's completion); unmarking and re-marking one
   of them posts it. Rare with manual toggles.

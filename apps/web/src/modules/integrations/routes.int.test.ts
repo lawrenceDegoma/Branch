@@ -163,6 +163,8 @@ describe("GET /api/cron/daily", () => {
       unusedResults: 0,
       analysis: null,
       photos: null,
+      oldErrors: 0,
+      oldLimits: 0,
     });
   });
 });

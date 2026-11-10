@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma, type GroupRole } from "@branch/database";
+import { takeToken } from "@/lib/limits";
 import { isUniqueViolation } from "@/lib/db-errors";
 import { DomainError, ForbiddenError, NotFoundError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
@@ -18,6 +19,7 @@ import type { GroupDetailsInput, InviteOptionsInput } from "./schemas";
 // Every function takes the acting user's ID from the session and authorizes it here.
 
 const INVITES_PER_HOUR = 20;
+const GROUPS_PER_DAY = 20;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 // ---------------------------------------------------------------------------------------------
@@ -152,6 +154,12 @@ export async function createGroup(
   userId: string,
   input: GroupDetailsInput,
 ): Promise<{ id: string }> {
+  await takeToken({
+    key: `group:${userId}`,
+    limit: GROUPS_PER_DAY,
+    windowSeconds: 24 * 60 * 60,
+    message: "That's a lot of groups today. Try again tomorrow.",
+  });
   return prisma.group.create({
     data: {
       ...input,

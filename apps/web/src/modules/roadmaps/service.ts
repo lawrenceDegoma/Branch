@@ -1,6 +1,7 @@
 import "server-only";
 import { randomBytes } from "node:crypto";
 import { prisma, type Difficulty, type Prisma, type Roadmap } from "@branch/database";
+import { takeToken } from "@/lib/limits";
 import { isForeignKeyViolation, isUniqueViolation } from "@/lib/db-errors";
 import { DomainError, ForbiddenError, NotFoundError } from "@/lib/errors";
 import { parseLeetCodeSlug } from "./leetcode";
@@ -15,6 +16,7 @@ import {
 // to members of a group whose plan uses one of its versions. Drafts are visible only to the owner.
 
 const USER_PROBLEMS_PER_DAY = 50;
+const ROADMAPS_PER_DAY = 20;
 const notFound = () => new NotFoundError("We couldn't find that roadmap.");
 
 type Db = typeof prisma | Prisma.TransactionClient;
@@ -219,6 +221,12 @@ export async function createCustomRoadmap(
   userId: string,
   details: RoadmapDetailsInput,
 ): Promise<{ id: string }> {
+  await takeToken({
+    key: `roadmap:${userId}`,
+    limit: ROADMAPS_PER_DAY,
+    windowSeconds: 24 * 60 * 60,
+    message: "That's a lot of roadmaps today. Try again tomorrow.",
+  });
   return prisma.roadmap.create({
     data: { ...details, kind: "CUSTOM", ownerId: userId, versions: { create: { number: 1 } } },
     select: { id: true },

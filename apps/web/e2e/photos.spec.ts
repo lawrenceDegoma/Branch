@@ -9,12 +9,16 @@ const PNG = Buffer.from(
 );
 
 test.describe("profile photos", () => {
+  // Uploads need Vercel Blob in production; the run against a production build has none.
+  const uploadsOff = process.env.E2E_SERVER === "start";
+
   test("an uploaded photo shows to the group, and initials can replace it", async ({
     page,
     viewer,
     browser,
     baseURL,
   }) => {
+    test.skip(uploadsOff, "Uploads are off in production without Vercel Blob.");
     const friend = await anotherUser(browser, baseURL!);
     const group = await createGroupInDb(viewer.id, "Photo crew", [friend.account.id]);
     await page.goto("/settings");
@@ -77,6 +81,7 @@ test.describe("profile photos", () => {
   });
 
   test("a file that isn't an image is refused before it's sent", async ({ page, viewer }) => {
+    test.skip(uploadsOff, "Uploads are off in production without Vercel Blob.");
     await page.goto("/settings");
     await page.waitForFunction(() => document.readyState === "complete");
     const section = page.locator("#profile");
