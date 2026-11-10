@@ -44,6 +44,10 @@ model User {
   extensionLinks   ExtensionConnection[]
   submissions      Submission[]
   studySessions    StudySession[]
+  reportsMade      Report[]              @relation("ReportsMade")
+  reportsResolved  Report[]              @relation("ReportsResolved")
+  blocking         UserBlock[]           @relation("Blocking")
+  blockedBy        UserBlock[]           @relation("BlockedBy")
   reviewAttempts   ReviewAttempt[]
   analysisJobs     AnalysisJob[]
   badges           BadgeAward[]
@@ -200,6 +204,7 @@ model Group {
   posts        Post[]
   /// Profiles that share every finished study session here ("Remember my decision").
   studySharers Profile[]
+  reports      Report[]
 
   @@map("group")
 }
@@ -250,6 +255,8 @@ enum GroupAuditAction {
   PLAN_CHANGED
   POST_REMOVED
   COMMENT_REMOVED
+  /// The admin dismissed the reports about a post or comment, leaving it up.
+  REPORT_DISMISSED
 }
 
 /// Record of sensitive group administration actions (PRD §7).
@@ -601,17 +608,18 @@ model Post {
   hiddenAt       DateTime?
   /// The solve behind this automatic post was undone. Cleared if it is redone with sharing on.
   withdrawnAt    DateTime?
-  /// The author's synced solution shown on a SOLVE or RESOLVE post (CHECK), attached only with
-  /// profile.attachSolutions on. The composite key means a post can only link its own author's
-  /// submission; deleting a submission unlinks it first (modules/integrations/submissions.ts).
   /// The shared study session of a STUDY post (exactly then; CHECK); only the author's own, and
   /// the post goes with it.
   studySessionId String?           @db.Uuid
   studySession   StudySession?     @relation(fields: [studySessionId, authorId], references: [id, userId], onDelete: Cascade)
+  /// The author's synced solution shown on a SOLVE or RESOLVE post (CHECK), attached only with
+  /// profile.attachSolutions on. The composite key means a post can only link its own author's
+  /// submission; deleting a submission unlinks it first (modules/integrations/submissions.ts).
   submissionId   String?           @db.Uuid
   submission     Submission?       @relation(fields: [submissionId, authorId], references: [id, userId], onDelete: NoAction)
   reactions      Reaction[]
   comments       Comment[]
+  reports        Report[]
 
   @@unique([studySessionId, groupId])
   @@index([groupId, id(sort: Desc)])
@@ -654,6 +662,7 @@ model Comment {
   parentId  String?   @db.Uuid
   parent    Comment?  @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
   replies   Comment[] @relation("Replies")
+  reports   Report[]
   /// Markdown, 1-2000 characters (CHECK).
   body      String
   /// Code blocks render folded, as on posts.
@@ -855,4 +864,64 @@ model StudySession {
   @@unique([id, userId])
   @@index([userId, startedAt])
   @@map("study_session")
+}
+
+enum ReportReason {
+  SPAM
+  HARASSMENT
+  SPOILER
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  DISMISSED
+}
+
+/// A member reports someone else's post or comment to the group's admin (owner decision,
+/// 2026-11-09), who removes it (the existing audited delete, which takes its reports with it) or
+/// dismisses the reports. Exactly one target (CHECK), in the report's own group (trigger); one
+/// report per person and target, so a dismissed report can't be filed again. The reporter is never
+/// shown to anyone.
+model Report {
+  id           String       @id @default(uuid(7)) @db.Uuid
+  reporterId   String
+  reporter     User         @relation("ReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
+  groupId      String       @db.Uuid
+  group        Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  postId       String?      @db.Uuid
+  post         Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId    String?      @db.Uuid
+  comment      Comment?     @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  reason       ReportReason
+  /// Optional, 1-500 characters (CHECK).
+  note         String?
+  status       ReportStatus @default(OPEN)
+  createdAt    DateTime     @default(now())
+  /// Set exactly when dismissed (CHECK).
+  resolvedAt   DateTime?
+  resolvedById String?
+  resolvedBy   User?        @relation("ReportsResolved", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  @@unique([reporterId, postId])
+  @@unique([reporterId, commentId])
+  @@index([groupId, status])
+  @@index([postId])
+  @@index([commentId])
+  @@map("report")
+}
+
+/// Personal and silent (owner decision, 2026-11-09): the blocker no longer sees the blocked
+/// person's posts, comments, or reactions (folded, with Show), and the blocked person can't
+/// comment on the blocker's posts or reply to their comments.
+model UserBlock {
+  blockerId String
+  blocker   User     @relation("Blocking", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("BlockedBy", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
+  @@map("user_block")
 }

@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { ConfirmAction } from "@/components/forms/confirm-action";
 import { ExtensionPanel } from "@/components/integrations/extension-panel";
 import { Badges } from "@/components/settings/badges";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { PageHeader } from "@/components/shell/page-header";
 import { ThemeSelect } from "@/components/theme/theme-select";
 import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/user/avatar";
 import { serverEnv } from "@/lib/env";
 import { hasPasswordAccount, signInMethods } from "@/modules/auth/accounts";
 import { enabledSocialProviders } from "@/modules/auth/auth";
@@ -12,6 +14,8 @@ import { signOutAction } from "@/modules/auth/actions";
 import { requireViewer } from "@/modules/auth/session";
 import { syncBadges } from "@/modules/badges/service";
 import { listConnections } from "@/modules/integrations/connections";
+import { unblockAction } from "@/modules/moderation/actions";
+import { listBlocked } from "@/modules/moderation/blocks";
 import { listTimeZones } from "@/modules/profile/timezone";
 import { shownPhoto } from "@/modules/profile/photo";
 import { photoStorage } from "@/modules/profile/photo-storage";
@@ -39,10 +43,11 @@ export default async function SettingsPage({
   const providerPhotoLabel = shownPhoto({ image: user.image ?? null, profile: null })
     ? `Use my ${methods.providers.length === 1 ? PROVIDER_LABEL[methods.providers[0]!] : "Google or GitHub"} photo`
     : null;
-  const [connections, badges, studySharing] = await Promise.all([
+  const [connections, badges, studySharing, blocked] = await Promise.all([
     listConnections(user.id),
     syncBadges([user.id]),
     studySharingView(user.id),
+    listBlocked(user.id),
   ]);
 
   return (
@@ -87,6 +92,38 @@ export default async function SettingsPage({
       >
         <SharingForm shareSolves={profile.shareSolves} attachSolutions={profile.attachSolutions} />
         <StudySharingForm value={studySharing.value} groups={studySharing.groups} />
+      </SettingsSection>
+      <SettingsSection
+        id="blocked"
+        title="Blocked people"
+        description="Their posts, comments, and reactions are hidden for you, and they can't comment on your posts or reply to you. They aren't told."
+      >
+        {blocked.length === 0 ? (
+          <p className="text-ink-muted">
+            You haven&apos;t blocked anyone. To block someone, use the ⋯ menu on one of their posts
+            or comments.
+          </p>
+        ) : (
+          <ul aria-label="People you blocked" className="flex flex-col divide-y divide-line">
+            {blocked.map((person) => (
+              <li key={person.id} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
+                <Avatar userId={person.id} name={person.name} photo={person.photo} size="sm" />
+                <span className="min-w-0 flex-1 truncate font-medium">{person.name}</span>
+                <ConfirmAction
+                  action={unblockAction}
+                  fields={{ userId: person.id }}
+                  focusAfterRemoval="blocked-heading"
+                  trigger="Unblock"
+                  triggerName={`Unblock ${person.name}`}
+                  title={`Unblock ${person.name}?`}
+                  description="Their posts, comments, and reactions show again, and they can reply to you."
+                  confirmLabel="Unblock"
+                  pendingLabel="Unblocking…"
+                />
+              </li>
+            ))}
+          </ul>
+        )}
       </SettingsSection>
       <SettingsSection
         id="analysis"

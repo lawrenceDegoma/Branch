@@ -14,6 +14,7 @@ import { listComposerGroups, listFeed } from "@/modules/feed/service";
 import { leaveGroupAction } from "@/modules/groups/actions";
 import { badgesForGroup } from "@/modules/badges/service";
 import { getGroupOverview } from "@/modules/groups/service";
+import { countOpenReports } from "@/modules/moderation/reports";
 import { getGroupProgress } from "@/modules/progress/service";
 
 type Params = { params: Promise<{ groupId: string }> };
@@ -35,6 +36,7 @@ export default async function GroupPage({ params, searchParams }: Params & Searc
     listComposerGroups(user.id),
   ]);
   const isAdmin = group.viewerRole === "ADMIN";
+  const openReports = isAdmin ? await countOpenReports(group.id) : 0;
 
   const badges = await badgesForGroup(group.members);
   const withBadges = group.members.map((m) => ({ ...m, badges: badges.get(m.userId) ?? [] }));
@@ -47,6 +49,14 @@ export default async function GroupPage({ params, searchParams }: Params & Searc
         actions={
           isAdmin ? (
             <>
+              {openReports > 0 ? (
+                <Link
+                  href={`/groups/${group.id}/settings#reports`}
+                  className={buttonVariants({ variant: "outline" })}
+                >
+                  {pluralize(openReports, "open report")}
+                </Link>
+              ) : null}
               <Link href={`/groups/${group.id}/settings#invites`} className={buttonVariants()}>
                 <UserPlus aria-hidden="true" />
                 Invite

@@ -1,5 +1,7 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { BlockedFold } from "@/components/moderation/blocked-fold";
+import { ContentMenu } from "@/components/moderation/content-menu";
 import { buttonVariants } from "@/components/ui/button";
 import { Avatar } from "@/components/user/avatar";
 import { formatDateTime, formatRelative } from "@/lib/format";
@@ -146,18 +148,29 @@ function Comment({
             </time>
             {comment.editedAt ? <span> · edited</span> : null}
           </span>
+          <span className="ml-auto">
+            <ContentMenu
+              target={{ commentId: comment.id }}
+              authorId={comment.author.id}
+              authorName={comment.author.name}
+              canReport={comment.canReport}
+              canBlock={comment.canBlock}
+            />
+          </span>
         </p>
-        <EditableBody
-          target="comment"
-          id={comment.id}
-          body={comment.body}
-          spoiler={comment.spoiler}
-          canEdit={comment.canEdit}
-          canDelete={comment.canDelete}
-          focusAfterRemoval={commentsToggleId(postId)}
-        >
-          <Markdown spoiler={comment.spoiler}>{comment.body}</Markdown>
-        </EditableBody>
+        <BlockedFold blocked={comment.blocked} name={comment.author.name}>
+          <EditableBody
+            target="comment"
+            id={comment.id}
+            body={comment.body}
+            spoiler={comment.spoiler}
+            canEdit={comment.canEdit}
+            canDelete={comment.canDelete}
+            focusAfterRemoval={commentsToggleId(postId)}
+          >
+            <Markdown spoiler={comment.spoiler}>{comment.body}</Markdown>
+          </EditableBody>
+        </BlockedFold>
       </div>
     </article>
   );

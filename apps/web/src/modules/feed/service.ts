@@ -3,6 +3,7 @@ import { prisma } from "@branch/database";
 import { DomainError, ForbiddenError, NotFoundError } from "@/lib/errors";
 import { requireMembership } from "@/modules/groups/access";
 import { codeFence, languageLabel } from "@/modules/integrations/languages";
+import { blockedIds } from "@/modules/moderation/blocks";
 import { shownPhoto } from "@/modules/profile/photo";
 import {
   FEED_PAGE_SIZE,
@@ -67,12 +68,19 @@ export async function requireVisiblePost(viewerId: string, postId: string) {
 
 export type ReactionSummary = { kind: ReactionKindValue; count: number; mine: boolean }[];
 
-/** Counts of each reaction on each post, and which ones the viewer gave. Two queries per page. */
-async function reactionSummaries(viewerId: string, postIds: string[]) {
+/**
+ * Counts of each reaction on each post, and which ones the viewer gave. Two queries per page.
+ * Reactions from people the viewer blocked aren't counted for them.
+ */
+async function reactionSummaries(
+  viewerId: string,
+  postIds: string[],
+  blocked: ReadonlySet<string> = new Set(),
+) {
   const [counts, mine] = await Promise.all([
     prisma.reaction.groupBy({
       by: ["postId", "kind"],
-      where: { postId: { in: postIds } },
+      where: { postId: { in: postIds }, userId: { notIn: [...blocked] } },
       _count: { _all: true },
     }),
     prisma.reaction.findMany({
@@ -96,6 +104,7 @@ function toFeedItem(
   viewerId: string,
   adminGroupIds: ReadonlySet<string>,
   reactions: ReactionSummary,
+  blocked: ReadonlySet<string>,
 ) {
   const isAuthor = post.authorId === viewerId;
   const written = post.kind === "TEXT";
@@ -139,6 +148,11 @@ function toFeedItem(
     commentCount: post._count.comments,
     /** The viewer wrote or shared it. */
     mine: isAuthor,
+    /** The viewer blocked its author: shown folded. */
+    blocked: blocked.has(post.authorId),
+    /** Someone else's written post or shared session; the admin removes rather than reports. */
+    canReport: chosen && !isAuthor && !adminGroupIds.has(post.groupId),
+    canBlock: !isAuthor,
     canEdit: written && isAuthor,
     // Automatic posts hold no member-written text to moderate; the author hides them instead.
     canDelete: chosen && (isAuthor || adminGroupIds.has(post.groupId)),
@@ -188,14 +202,16 @@ export async function listFeed(
   });
   const admin = new Set(memberships.filter((m) => m.role === "ADMIN").map((m) => m.groupId));
   const page = posts.slice(0, limit);
+  const blocked = await blockedIds(viewerId);
   const reactionsOf = await reactionSummaries(
     viewerId,
     page.map((post) => post.id),
+    blocked,
   );
   return {
     items: page.map((post) => ({
-      ...toFeedItem(post, viewerId, admin, reactionsOf(post.id)),
-      threads: post.comments.map((c) => toThread(c, viewerId, admin.has(post.groupId))),
+      ...toFeedItem(post, viewerId, admin, reactionsOf(post.id), blocked),
+      threads: post.comments.map((c) => toThread(c, viewerId, admin.has(post.groupId), blocked)),
     })),
     nextCursor: posts.length > limit ? page.at(-1)!.id : null,
   };
@@ -205,8 +221,9 @@ export async function listFeed(
 export async function getPost(viewerId: string, postId: string): Promise<FeedItem> {
   const { post, membership } = await requireVisiblePost(viewerId, postId);
   const admin = new Set(membership.role === "ADMIN" ? [post.groupId] : []);
-  const reactionsOf = await reactionSummaries(viewerId, [post.id]);
-  return toFeedItem(post, viewerId, admin, reactionsOf(post.id));
+  const blocked = await blockedIds(viewerId);
+  const reactionsOf = await reactionSummaries(viewerId, [post.id], blocked);
+  return toFeedItem(post, viewerId, admin, reactionsOf(post.id), blocked);
 }
 
 /** Groups the viewer can post to, each with the problems its active plan assigns. */

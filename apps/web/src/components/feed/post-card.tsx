@@ -1,6 +1,8 @@
 import { CircleCheck, Flag, RotateCw, Timer } from "lucide-react";
 import Link from "next/link";
 import { ConfirmAction } from "@/components/forms/confirm-action";
+import { BlockedFold } from "@/components/moderation/blocked-fold";
+import { ContentMenu } from "@/components/moderation/content-menu";
 import { DifficultyPill } from "@/components/roadmaps/difficulty-pill";
 import { Avatar } from "@/components/user/avatar";
 import { formatDateTime, formatRelative } from "@/lib/format";
@@ -74,76 +76,85 @@ export function PostCard({
               {post.editedAt ? <span> · edited</span> : null}
             </p>
           </div>
+          <ContentMenu
+            target={{ postId: post.id }}
+            authorId={post.author.id}
+            authorName={post.author.name}
+            canReport={post.canReport}
+            canBlock={post.canBlock}
+          />
         </header>
-        {post.kind === "TEXT" ? (
-          <>
-            {post.problem ? (
-              <p className="flex flex-wrap items-center gap-2 text-ink-muted">
-                <span>About</span>
-                <ProblemLink problem={post.problem} />
-              </p>
-            ) : null}
-            <EditableBody
-              target="post"
-              id={post.id}
-              body={post.body ?? ""}
-              spoiler={post.spoiler}
-              canEdit={post.canEdit}
-              canDelete={post.canDelete}
-              footer={footer}
-              returnTo={returnTo}
-            >
-              <Markdown spoiler={post.spoiler}>{post.body ?? ""}</Markdown>
-            </EditableBody>
-          </>
-        ) : (
-          <>
-            <AutomaticPostBody post={post} />
-            {post.kind === "STUDY" && post.body ? <Markdown>{post.body}</Markdown> : null}
-            {post.solution ? (
-              <div className="flex flex-col gap-1">
-                <p className="text-xs text-ink-muted">{post.solution.language} code</p>
-                <Markdown spoiler>{post.solution.markdown}</Markdown>
+        <BlockedFold blocked={post.blocked} name={post.author.name}>
+          {post.kind === "TEXT" ? (
+            <>
+              {post.problem ? (
+                <p className="flex flex-wrap items-center gap-2 text-ink-muted">
+                  <span>About</span>
+                  <ProblemLink problem={post.problem} />
+                </p>
+              ) : null}
+              <EditableBody
+                target="post"
+                id={post.id}
+                body={post.body ?? ""}
+                spoiler={post.spoiler}
+                canEdit={post.canEdit}
+                canDelete={post.canDelete}
+                footer={footer}
+                returnTo={returnTo}
+              >
+                <Markdown spoiler={post.spoiler}>{post.body ?? ""}</Markdown>
+              </EditableBody>
+            </>
+          ) : (
+            <>
+              <AutomaticPostBody post={post} />
+              {post.kind === "STUDY" && post.body ? <Markdown>{post.body}</Markdown> : null}
+              {post.solution ? (
+                <div className="flex flex-col gap-1">
+                  <p className="text-xs text-ink-muted">{post.solution.language} code</p>
+                  <Markdown spoiler>{post.solution.markdown}</Markdown>
+                </div>
+              ) : null}
+              <div className="-mb-1 flex flex-wrap items-center gap-1">
+                {footer}
+                {post.kind === "STUDY" && post.canDelete ? (
+                  <div className="ml-auto">
+                    <ConfirmAction
+                      action={deletePostAction}
+                      fields={{ postId: post.id, ...(returnTo ? { returnTo } : {}) }}
+                      focusAfterRemoval="activity-heading"
+                      trigger="Delete"
+                      title="Delete this post?"
+                      description={
+                        post.mine
+                          ? "It disappears from the group's feed, with its comments. The session itself stays in your study time."
+                          : "You're removing a member's post as the group admin. It disappears from the group's feed and the removal is recorded in the group's activity log."
+                      }
+                      confirmLabel="Delete post"
+                      pendingLabel="Deleting…"
+                      destructive
+                    />
+                  </div>
+                ) : null}
+                {post.canHide ? (
+                  <div className="ml-auto">
+                    <ConfirmAction
+                      action={hidePostAction}
+                      fields={{ postId: post.id, ...(returnTo ? { returnTo } : {}) }}
+                      focusAfterRemoval="activity-heading"
+                      trigger="Hide"
+                      title="Hide this post?"
+                      description="It disappears from the group's feed for everyone and won't be posted again. Your progress doesn't change."
+                      confirmLabel="Hide post"
+                      pendingLabel="Hiding…"
+                    />
+                  </div>
+                ) : null}
               </div>
-            ) : null}
-            <div className="-mb-1 flex flex-wrap items-center gap-1">
-              {footer}
-              {post.kind === "STUDY" && post.canDelete ? (
-                <div className="ml-auto">
-                  <ConfirmAction
-                    action={deletePostAction}
-                    fields={{ postId: post.id, ...(returnTo ? { returnTo } : {}) }}
-                    focusAfterRemoval="activity-heading"
-                    trigger="Delete"
-                    title="Delete this post?"
-                    description={
-                      post.mine
-                        ? "It disappears from the group's feed, with its comments. The session itself stays in your study time."
-                        : "You're removing a member's post as the group admin. It disappears from the group's feed and the removal is recorded in the group's activity log."
-                    }
-                    confirmLabel="Delete post"
-                    pendingLabel="Deleting…"
-                    destructive
-                  />
-                </div>
-              ) : null}
-              {post.canHide ? (
-                <div className="ml-auto">
-                  <ConfirmAction
-                    action={hidePostAction}
-                    fields={{ postId: post.id, ...(returnTo ? { returnTo } : {}) }}
-                    focusAfterRemoval="activity-heading"
-                    trigger="Hide"
-                    title="Hide this post?"
-                    description="It disappears from the group's feed for everyone and won't be posted again. Your progress doesn't change."
-                    confirmLabel="Hide post"
-                    pendingLabel="Hiding…"
-                  />
-                </div>
-              ) : null}
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </BlockedFold>
         <CommentsPanel postId={post.id}>
           {comments ?? (
             <PostComments

@@ -50,6 +50,9 @@ not affiliated with LeetCode or NeetCode.
   ("Studied for 45 min") or keep it to yourself, and remember the choice if you like.
 - **Your stats:** a private page of solves per week and by difficulty, study time, typical time
   per problem, topics, and recent reviews and study sessions. No streaks or rankings.
+- **Reporting and blocking:** report a post or comment to the group's admin (who removes it or
+  keeps it up, never seeing who reported), or block someone so their writing is hidden for you
+  and they can't reply to you.
 - **What's new:** after an update, Home shows a card saying what changed, with a link to its
   details; every update is listed at `/changelog` (also linked from Settings).
 

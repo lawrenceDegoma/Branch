@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@branch/database";
 import { DomainError, ForbiddenError, NotFoundError } from "@/lib/errors";
+import { blockedIds, hasBlocked } from "@/modules/moderation/blocks";
 import {
   COMMENT_PAGE_SIZE,
   commentIdSchema,
@@ -23,6 +24,7 @@ export async function listComments(
 ): Promise<{ items: CommentThread[]; nextCursor: string | null }> {
   const { membership } = await requireVisiblePost(viewerId, postId);
   const isAdmin = membership.role === "ADMIN";
+  const blocked = await blockedIds(viewerId);
   const limit = options.limit ?? COMMENT_PAGE_SIZE;
   const rows = await prisma.comment.findMany({
     where: { postId, parentId: null, ...(options.after ? { id: { gt: options.after } } : {}) },
@@ -32,14 +34,15 @@ export async function listComments(
   });
   const page = rows.slice(0, limit);
   return {
-    items: page.map((row) => toThread(row, viewerId, isAdmin)),
+    items: page.map((row) => toThread(row, viewerId, isAdmin, blocked)),
     nextCursor: rows.length > limit ? page.at(-1)!.id : null,
   };
 }
 
 export async function createComment(authorId: string, input: CreateCommentInput, now = new Date()) {
-  await requireVisiblePost(authorId, input.postId);
+  const { post } = await requireVisiblePost(authorId, input.postId);
   let parentId: string | null = null;
+  let repliedTo: string | null = null;
   if (input.parentId) {
     const parent = await prisma.comment.findUnique({ where: { id: input.parentId } });
     if (!parent || parent.postId !== input.postId) {
@@ -47,6 +50,16 @@ export async function createComment(authorId: string, input: CreateCommentInput,
     }
     // Two levels: a reply to a reply joins the same thread.
     parentId = parent.parentId ?? parent.id;
+    repliedTo = parent.authorId;
+  }
+  // Someone who blocked the commenter takes no comments on their posts and no replies to their
+  // comments. The message doesn't say why (blocking is silent).
+  const [onBlockersPost, toBlocker] = await Promise.all([
+    hasBlocked(post.authorId, authorId),
+    repliedTo ? hasBlocked(repliedTo, authorId) : Promise.resolve(false),
+  ]);
+  if (onBlockersPost || toBlocker) {
+    throw new DomainError("NOT_TAKING_REPLIES", "This person isn't taking replies.");
   }
   const recent = await prisma.comment.count({
     where: { authorId, createdAt: { gt: new Date(now.getTime() - 60_000) } },
@@ -70,7 +83,7 @@ export async function createComment(authorId: string, input: CreateCommentInput,
 }
 
 /** A live comment with its post's visibility and the viewer's membership checked. */
-async function requireVisibleComment(viewerId: string, commentId: string) {
+export async function requireVisibleComment(viewerId: string, commentId: string) {
   if (!commentIdSchema.safeParse(commentId).success) {
     throw new NotFoundError("We couldn't find that comment.");
   }

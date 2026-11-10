@@ -17,7 +17,8 @@ export function SettingsSection({
       className="grid scroll-mt-20 gap-4 border-b border-line py-8 first:pt-0 last:border-b-0 md:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] md:gap-10"
     >
       <div>
-        <h2 id={`${id}-heading`} className="text-base font-medium">
+        {/* Focusable, so focus can land here after an item in the section is removed. */}
+        <h2 id={`${id}-heading`} tabIndex={-1} className="text-base font-medium">
           {title}
         </h2>
         <p className="mt-1 break-words text-ink-muted">{description}</p>

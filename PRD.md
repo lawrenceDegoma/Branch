@@ -38,7 +38,7 @@ Users need to: (a) see what friends are studying, (b) know what to solve this we
 
 **MVP definition:** Phases 1–2 create the first social, usable release. The complete product vision includes phases 3–5. Do not block the MVP on LeetCode integration or AI analysis.
 
-**Owner changes (2026-11-04):** image uploads dropped from posts; reporting and blocking deferred to a later phase. The phase order is unchanged: the extension (phase 3) comes before review, because it is how solution code reaches the analyzer.
+**Owner changes (2026-11-04):** image uploads dropped from posts; reporting and blocking deferred to a later phase (owner, 2026-11-09: they're part of Phase 5). The phase order is unchanged: the extension (phase 3) comes before review, because it is how solution code reaches the analyzer.
 
 **Explicitly out of v1:** push/email/in-app notification center, public group discovery, monetization, full in-browser coding judge, compulsory leaderboards, automatic publishing of source code, elaborate XP economy. (Owner change, 2026-11-09: a person may turn on a setting, off by default, that attaches their code as a spoiler to their own automatic solve posts.)
 
@@ -175,4 +175,4 @@ Design decisions:
 - Manual completion verification policy (trust-based initially, label source internally).
 - Storage/realtime/queue provider selection after free-tier and terms review.
 - LeetCode extension feasibility, privacy UX, and code-analysis accuracy evaluation.
-- Moderation/reporting scope before opening groups beyond invite-only (reporting and blocking deferred by the owner, 2026-11-04).
+- Moderation/reporting scope before opening groups beyond invite-only (reporting and blocking deferred by the owner, 2026-11-04; part of Phase 5 since 2026-11-09, plan in `docs/PLAN-PHASE-5.md`).

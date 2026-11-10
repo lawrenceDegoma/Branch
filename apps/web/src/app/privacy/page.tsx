@@ -8,7 +8,7 @@ export const metadata = {
   description: "What Branch and the Branch for LeetCode extension collect, and why.",
 };
 
-const EFFECTIVE = "November 9, 2026";
+const EFFECTIVE = "November 10, 2026";
 
 /** Public: linked from the Chrome Web Store listing, the extension, and Branch's own pages. */
 export default function PrivacyPage() {
@@ -65,8 +65,8 @@ export default function PrivacyPage() {
           <li>
             <strong>What you do in Branch:</strong> groups and invites, roadmaps, the problems you
             mark solved, your reviews and how they went, solutions you paste, study sessions (when
-            each started and stopped), the time the extension measured on each solution, and posts,
-            comments, and reactions.
+            each started and stopped), the time the extension measured on each solution, posts,
+            comments, and reactions, reports you make, and the people you block.
           </li>
         </ul>
 
@@ -135,6 +135,11 @@ export default function PrivacyPage() {
           </li>
           <li>Your reviews and how they went are visible only to you, and so is Your stats.</li>
           <li>
+            When you report a post or comment, the group&apos;s admin sees the reason and any note,
+            but not that it was you; nobody else sees reports. When you block someone, they
+            aren&apos;t told, and only you see the difference.
+          </li>
+          <li>
             Your study sessions (when each started and stopped) are visible only to you, unless you
             share one to a group when it ends, or choose in Settings → Sharing to share them all to
             one group. Then that group sees how long you studied and any note you added.
@@ -194,6 +199,10 @@ export default function PrivacyPage() {
           <li>Turn code analysis off or on in Settings → Code analysis.</li>
           <li>Upload a photo, use the one from Google or GitHub, or show initials, in Settings.</li>
           <li>Turn sharing on or off, and delete your posts and comments, whenever you like.</li>
+          <li>
+            Report a post or comment to its group&apos;s admin, and block or unblock people
+            (Settings → Blocked people).
+          </li>
           <li>
             Choose in Settings → Sharing whether your code goes on your solve posts, and what
             happens to a study session when it ends: ask each time, always share to one group, or

@@ -1264,6 +1264,55 @@ backfilled.
   E2E `e2e/changelog.spec.ts` (card, read more, keyboard dismiss and focus, new accounts don't see
   it, public pages, 404), and both pages in the axe scans and 320px reflow.
 
+## Chat, reporting and blocking, and hardening (Phase 5)
+
+Owner decision (2026-11-09): reporting and blocking, deferred since 2026-11-04, are part of
+Phase 5. The plan (M28 chat, M29 reporting and blocking, M30 hardening, M31 rollout readiness) is
+in `docs/PLAN-PHASE-5.md`.
+
+Owner decisions (2026-11-09): start with M29; M28 (chat) waits while the owner works out the
+database side (decisions 1, 2, and 5 are open). Reports go to the group's admin, who removes the
+content or dismisses the report; that includes reports about the admin's own content (the owner
+accepted that an admin can dismiss those). Blocking is personal and silent: it hides the blocked
+person's content from the blocker and stops them commenting on the blocker's posts or replying
+to their comments; nobody leaves a group.
+
+### M29 — Reporting and blocking (complete)
+
+- **Reporting:** the ⋯ menu on someone else's written post, shared study session, or comment
+  offers "Report…": a reason (spam, harassment or abuse, an unmarked spoiler, something else) and
+  an optional note up to 500 characters. Not your own writing, not as the group's admin (who
+  removes directly), not automatic posts (hidden by their author instead); at most 10 a day, and
+  once per target (a dismissed report can't be refiled). The group's settings get **Reports**:
+  one row per reported item with an excerpt, the reasons and notes, a link to it in context,
+  **Remove** (the existing audited delete, which takes its reports with it) and **Dismiss**
+  (audited as `REPORT_DISMISSED`). The admin's group page shows "N open reports". The reporter
+  is never shown, to the admin or anyone. Per the owner, reports about the admin's own writing go
+  to the admin too.
+- **Blocking:** "Block …" in the same menu, between people who share a group. The blocker's feed,
+  post pages, and comments fold the blocked person's posts and comments ("Hidden: you blocked …
+  Show") and leave their reactions out of the counts; the blocked person can't comment on the
+  blocker's posts or reply to the blocker's comments ("This person isn't taking replies."). Nobody
+  leaves a group; progress stays visible. Settings → **Blocked people** lists them, with Unblock.
+- **Database:** migrations `report_audit_action` (the enum value, on its own) and
+  `reports_and_blocks`: `report` (CHECK one target, CHECK note, CHECK dismissed exactly when
+  resolved; a trigger keeping it in its target's group, which skips rows the one-target CHECK will
+  refuse, since triggers run before CHECKs; unique per reporter and target) and `user_block`
+  (CHECK not yourself).
+- **UI pieces:** a Base UI menu wrapper (`components/ui/menu.tsx`); dialogs opened from it return
+  focus to the menu button (`finalFocus`); `SettingsSection` headings are now focusable, so focus
+  can land there after an item is removed.
+  The menu's wrapper is an inline `<span>`: it sits in a comment's author line, a paragraph, and a
+  `<div>` there made the server and browser HTML differ (React hydration errors in the full E2E
+  run, now gone).
+- **Tests:** integration (`moderation/moderation.int.test.ts`: who can report what, once, the
+  daily limit, the admin's list without reporters, removal and dismissal with their audit, the
+  database rules, folding and reaction counts for the blocker only, refused comments and replies,
+  unblocking, blocking only within shared groups) and E2E (`e2e/moderation.spec.ts`: report by
+  keyboard, the admin removes it; the admin keeps one up; block, fold and Show, a refused comment,
+  unblock from Settings; axe with the dialog, the reports list, and folded content).
+- **Not yet:** chat messages can't be reported until chat exists (M28, on hold).
+
 ## Additions summary (M23–M27)
 
 The owner's requests of 2026-11-09, built after Phase 4 and before Phase 5 (plan:

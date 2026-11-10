@@ -5,6 +5,7 @@ import { DeleteGroupForm } from "@/components/groups/delete-group-form";
 import { GroupDetailsForm } from "@/components/groups/group-details-form";
 import { InviteCreator } from "@/components/groups/invite-panel";
 import { MemberList } from "@/components/groups/member-list";
+import { ReportList } from "@/components/moderation/report-list";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { PageHeader } from "@/components/shell/page-header";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -17,6 +18,7 @@ import {
   updateGroupAction,
 } from "@/modules/groups/actions";
 import { getGroupOverview, listActiveInvites, listAuditEvents } from "@/modules/groups/service";
+import { listOpenReports } from "@/modules/moderation/reports";
 import { listTimeZones } from "@/modules/profile/timezone";
 
 export const metadata = { title: "Group settings" };
@@ -45,6 +47,8 @@ function describeEvent(action: GroupAuditAction, actor: string, subject: string)
       return `${actor} removed a post by ${subject}`;
     case "COMMENT_REMOVED":
       return `${actor} removed a comment by ${subject}`;
+    case "REPORT_DISMISSED":
+      return `${actor} kept up reported writing by ${subject}`;
   }
 }
 
@@ -56,9 +60,10 @@ export default async function GroupSettingsPage({
   const { user, profile } = await requireViewer();
   const { groupId } = await params;
   // Admin-only reads first: members who open this URL get a 404.
-  const [invites, events] = await Promise.all([
+  const [invites, events, reports] = await Promise.all([
     orNotFound(listActiveInvites(user.id, groupId)),
     orNotFound(listAuditEvents(user.id, groupId)),
+    orNotFound(listOpenReports(user.id, groupId)),
   ]);
   const group = await getGroupOverview(user.id, groupId);
   const tz = profile.timezone;
@@ -76,6 +81,14 @@ export default async function GroupSettingsPage({
           </Link>
         }
       />
+
+      <SettingsSection
+        id="reports"
+        title="Reports"
+        description="Posts and comments members reported to you. Remove one, or dismiss its reports to keep it up. Members can't see who reported what, and neither can you."
+      >
+        <ReportList groupId={group.id} items={reports} timeZone={profile.timezone} />
+      </SettingsSection>
 
       <SettingsSection
         id="details"

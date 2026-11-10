@@ -13,6 +13,18 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    id: "2026-11-10-reporting-and-blocking",
+    date: "2026-11-10",
+    title: "Reporting and blocking",
+    summary: "Report a post or comment to your group's admin, or block someone.",
+    details: `Use the ⋯ menu on someone else's post or comment.
+
+- **Report** it to the group's admin, with a reason and an optional note. The admin can remove it or keep it up; nobody sees that the report was yours.
+- **Block** its author. Their posts, comments, and reactions are hidden for you (you can still look), and they can't comment on your posts or reply to you. They aren't told, and you both stay in your groups.
+
+Group admins find reports in the group's settings. Unblock people in Settings → Blocked people.`,
+  },
+  {
     id: "2026-11-09-your-stats",
     date: "2026-11-09",
     title: "Your stats",
