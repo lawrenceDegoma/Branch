@@ -12,7 +12,6 @@
     "test:watch": "vitest --project unit",
     "test:e2e": "playwright test",
     "test:integration": "vitest run --project integration",
-    "postbuild": "node scripts/bundle-budget.mjs",
     "budget": "node scripts/bundle-budget.mjs"
   },
   "dependencies": {

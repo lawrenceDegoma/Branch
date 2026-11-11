@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "pnpm --filter @branch/web dev",
-    "build": "pnpm --filter @branch/web build",
+    "build": "pnpm --filter @branch/web build && pnpm --filter @branch/web budget",
     "start": "pnpm --filter @branch/web start",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",

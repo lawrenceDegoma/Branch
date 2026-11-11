@@ -1357,7 +1357,11 @@ hosted service (decision 5).
   included relation (a 5-post page costs the feed the same 20), so there's no N+1 to fix. Prisma's
   `relationLoadStrategy: "join"` would cut the feed to a few round trips but needs the
   `relationJoins` preview feature; not adopted. Client JavaScript: 434 KB shared, 1,276 KB in all,
-  with budgets of 480 and 1,400 KB checked after every build (`scripts/bundle-budget.mjs`).
+  with budgets of 480 and 1,400 KB checked by the repository's `pnpm build`
+  (`scripts/bundle-budget.mjs`). It was first hooked into the app's own build (npm's
+  `postbuild`), which Vercel runs too: Vercel's build has no `.next/static/chunks` where the
+  script looked, so the first M30 deploy failed (the previous deployment stayed live). Fixed by
+  running it from the root script only; a measurement never blocks a deploy.
 - **Accessibility:** no new findings; every page added since M22 is in the axe scans and the 320px
   list, the moderation dialogs and folded content were scanned in M29, and the full suite runs
   again here. (Chat's screen-reader read-through waits for M28.)
