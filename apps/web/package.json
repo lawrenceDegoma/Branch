@@ -15,7 +15,8 @@
     "test:watch": "vitest --project unit",
     "test:e2e": "playwright test",
     "test:integration": "vitest run --project integration",
-    "budget": "node scripts/bundle-budget.mjs"
+    "budget": "node scripts/bundle-budget.mjs",
+    "test:acceptance": "node scripts/acceptance.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

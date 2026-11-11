@@ -4,7 +4,9 @@ import { DomainError, ForbiddenError, NotFoundError } from "@/lib/errors";
 import { createComment, deleteComment, listComments } from "@/modules/feed/comments";
 import { setReaction } from "@/modules/feed/reactions";
 import { createPost, deletePost, getPost, listFeed } from "@/modules/feed/service";
-import { createTestGroup, createTestUser } from "@/test/factories";
+import { createPlan } from "@/modules/plans/service";
+import { getGroupProgress } from "@/modules/progress/service";
+import { createPublishedRoadmap, createTestGroup, createTestUser } from "@/test/factories";
 import { blockUser, listBlocked, unblockUser } from "./blocks";
 import { countOpenReports, dismissReports, listOpenReports, reportContent } from "./reports";
 
@@ -232,6 +234,29 @@ describe("blocking", () => {
       spoiler: false,
     });
     await deleteComment(linus.id, onAdas.id);
+  });
+
+  it("leaves group progress alone: both still see each other there", async () => {
+    const { ada, grace, linus, group } = await setup();
+    const version = await createPublishedRoadmap();
+    await createPlan(
+      ada.id,
+      group.id,
+      {
+        roadmapVersionId: version.id,
+        startDate: "2026-11-09",
+        pacing: { mode: "PER_WEEK", problemsPerWeek: 2 },
+      },
+      NOW,
+    );
+    await blockUser(grace.id, linus.id);
+    for (const [viewer, other] of [
+      [grace, linus],
+      [linus, grace],
+    ] as const) {
+      const { members } = await getGroupProgress(viewer.id, group.id, NOW);
+      expect(members.map((m) => m.userId)).toContain(other.id);
+    }
   });
 
   it("only works between people who share a group, never yourself", async () => {

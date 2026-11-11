@@ -195,6 +195,24 @@ pg_dump "$PROD_DIRECT_URL" --format=custom --file="branch-$(date +%F).dump"
 
 Store the dumps outside the repository: they contain password hashes.
 
+## Before a release
+
+Run `pnpm release:check` from your machine (with `nvm use` and `pnpm db:up` first, and
+`PROD_DIRECT_URL` set). It checks the Node version, runs `pnpm check`, the production build and its
+JavaScript budget, and the browser tests against a production build, then lists any migrations
+production doesn't have yet. It changes nothing in production: apply those migrations with
+`DATABASE_URL="$PROD_DIRECT_URL" pnpm db:deploy` before pushing, as always. It ends with what it
+can't check:
+
+- Vercel: Node.js version 26.x; `CRON_SECRET` set; never `AUTH_RATE_LIMIT_OFF` or
+  `PASSWORD_SIGN_UP` in Production.
+- The Google consent screen is published (offline access lasts 7 days while it's in Testing).
+- A `pg_dump` backup (below) before a migration that changes or deletes data.
+- An extension change: bump `apps/extension`'s version and follow `docs/CHROME-WEB-STORE.md`.
+
+After the deploy, `pnpm errors` (against production) should stay quiet. `docs/SCALING.md` says
+what to watch each month as use grows, and the next step at each free limit.
+
 ## Before anything beyond friends
 
 Anyone who finds the URL can create an account. They can't see any group without an invite, but

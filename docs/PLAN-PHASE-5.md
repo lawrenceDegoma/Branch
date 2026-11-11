@@ -1,6 +1,6 @@
 # Plan: Phase 5 — chat, reporting and blocking, and hardening
 
-**Status (2026-11-10): M29 and M30 done, with decisions 3, 4, and 5 answered (below).
+**Status (2026-11-10): M29, M30, and M31 done, with decisions 3, 4, and 5 answered (below).
 M28 (chat) is on hold while the owner works out the database side; decisions 1, 2, and 5 are
 still open.** Answered decisions are also in `docs/DECISIONS.md`.
 

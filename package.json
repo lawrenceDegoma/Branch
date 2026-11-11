@@ -32,7 +32,9 @@
     "build:extension": "pnpm --filter @branch/extension build",
     "test:analyzer": "uv run --directory services/analyzer pytest -q",
     "analyzer:dev": "uv run --directory services/analyzer --env-file ../../.env uvicorn app:app --port 8787 --reload",
-    "errors": "pnpm --filter @branch/database errors"
+    "errors": "pnpm --filter @branch/database errors",
+    "test:acceptance": "pnpm --filter @branch/web test:acceptance",
+    "release:check": "node scripts/release-check.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

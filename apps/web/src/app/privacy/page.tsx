@@ -63,6 +63,16 @@ export default function PrivacyPage() {
             details of each session, used to keep you signed in and to protect your account.
           </li>
           <li>
+            <strong>When something breaks:</strong> for an unexpected error, when and where it
+            happened (the page&apos;s address without its query, and a request ID) and the
+            error&apos;s technical description, used only to fix it. These records are tied to the
+            request, not your account, and never include what you wrote or your code.
+          </li>
+          <li>
+            <strong>Rate limits:</strong> counts of recent actions (reactions, marking problems
+            solved, and a few others) per account, to stop runaway use.
+          </li>
+          <li>
             <strong>What you do in Branch:</strong> groups and invites, roadmaps, the problems you
             mark solved, your reviews and how they went, solutions you paste, study sessions (when
             each started and stopped), the time the extension measured on each solution, posts,
@@ -190,6 +200,7 @@ export default function PrivacyPage() {
             Deleted posts, comments, and submissions are removed at once. The database host keeps
             short-lived backups for recovery, which expire on their own.
           </li>
+          <li>Error records are deleted after 14 days, and rate-limit counts after a day.</li>
         </ul>
 
         <h2>Your choices</h2>

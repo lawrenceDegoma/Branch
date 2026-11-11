@@ -1398,6 +1398,36 @@ hosted service (decision 5).
   against the dev server (347 passed, 9 skipped by design) and against a production build
   (343 passed, the 4 upload cases skipped by design, no CSP violation).
 
+### M31 — Rollout readiness (complete, except chat's parts)
+
+- **`pnpm release:check`** (`scripts/release-check.mjs`): Node matches `.nvmrc`, `pnpm check`, the
+  root build with its JavaScript budget, the browser suite against a production build, and, with
+  `PROD_DIRECT_URL` set, Prisma's read-only `migrate status` against production, listing what
+  must be applied before pushing (it applies nothing). It warns on uncommitted changes and ends
+  with the items it can't check (docs/DEPLOY.md, "Before a release").
+- **`docs/SCALING.md`**: what to watch monthly and when to act, what each free limit does when
+  reached, and the next step for each, with prices checked on 2026-11-10 from the providers' own
+  pages: Neon Launch ($0.106 per CU-hour, $0.35 per GB-month, no minimum), Vercel Pro ($20 a seat
+  with $20 of usage, then from $0.60 per million invocations, $0.128 per CPU-hour, $0.15 per GB
+  past 1 TB), Blob on Pro (regional; $0.023 per GB-month, $5 per million uploads, $0.05 per GB in
+  Washington, D.C.). Hobby can't buy extra usage: past a limit the feature pauses.
+- **`docs/ACCEPTANCE.md`**: PRD scenarios 1–11, plus reporting and blocking (12) and hardening
+  (13), each mapped to the browser tests that prove it; `pnpm test:acceptance` runs exactly those;
+  `src/test/acceptance-map.test.ts` fails if a mapped test is renamed or removed. Every scenario
+  already had tests, several annotated when written; nothing new was needed for 1–11.
+- **A gap closed:** blocking leaves group progress alone (owner decision 4) had no test; now an
+  integration test checks both people still see each other in the group's progress.
+- **`/privacy`**: error records (when, where without the query, a request ID, the technical
+  description; tied to the request, never content; 14 days) and rate-limit counts (a day), both
+  added in M30 without a privacy update.
+- **A Phase 5 journey** across chat, reporting, and blocking waits for chat; reporting and
+  blocking's journeys are `e2e/moderation.spec.ts`.
+- **Checks:** `pnpm release:check` on Node 26.13.0, its first full run (with `PROD_DIRECT_URL`
+  pointed at the local database, so the migration step read a schema known to be current):
+  unit 226 (web) + 38 + 24, integration 266, analyzer 87, the build within budget, 343 browser
+  tests passed against a production build (13 skipped by design), "Production has every
+  migration". `pnpm test:acceptance`: 24 tests in 13 files, 48 passed on desktop and mobile.
+
 ## Additions summary (M23–M27)
 
 The owner's requests of 2026-11-09, built after Phase 4 and before Phase 5 (plan:
