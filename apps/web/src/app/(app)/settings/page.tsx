@@ -185,6 +185,9 @@ export default async function SettingsPage({
         <Link href="/changelog" className="underline underline-offset-4 hover:text-ink">
           What&apos;s new
         </Link>
+        <Link href="/terms" className="underline underline-offset-4 hover:text-ink">
+          Terms of service
+        </Link>
         <Link href="/privacy" className="underline underline-offset-4 hover:text-ink">
           Privacy policy
         </Link>

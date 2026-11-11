@@ -13,6 +13,15 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    id: "2026-11-11-terms-of-service",
+    date: "2026-11-11",
+    title: "Terms of service",
+    summary: "Branch now has terms of service, next to the privacy policy.",
+    details: `The terms of service set out the rules for using Branch and its extension, in plain language: you must be 13 or older, you keep ownership of what you post, how to use Branch fairly, and that estimates and statistics are approximate.
+
+Find them at the bottom of the sign-in pages and Settings, next to the privacy policy. Signing up now says that continuing means agreeing to both.`,
+  },
+  {
     id: "2026-11-10-reporting-and-blocking",
     date: "2026-11-10",
     title: "Reporting and blocking",

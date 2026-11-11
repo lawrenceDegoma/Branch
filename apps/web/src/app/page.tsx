@@ -30,6 +30,9 @@ export default async function LandingPage() {
         <Link href="/changelog" className="underline underline-offset-4 hover:text-ink">
           What&apos;s new
         </Link>
+        <Link href="/terms" className="underline underline-offset-4 hover:text-ink">
+          Terms
+        </Link>
         <Link href="/privacy" className="underline underline-offset-4 hover:text-ink">
           Privacy
         </Link>

@@ -33,8 +33,9 @@ export default function PrivacyPage() {
         <p>
           Branch is a small, invite-based app for working through coding-interview problems with
           friends. It has a web app and an optional Chrome extension, Branch for LeetCode. This page
-          explains what each collects, why, who can see it, and how to remove it. Branch is
-          independent and not affiliated with LeetCode.
+          explains what each collects, why, who can see it, and how to remove it. The rules for
+          using Branch are in the <Link href="/terms">terms of service</Link>. Branch is independent
+          and not affiliated with LeetCode.
         </p>
 
         <h2>What the web app stores</h2>

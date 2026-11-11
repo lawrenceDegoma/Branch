@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { signInWithProviderAction } from "@/modules/auth/actions";
 import type { SocialProvider } from "@/modules/auth/schemas";
@@ -66,6 +67,18 @@ export function SocialSignIn({
             </SubmitButton>
           </form>
         ))}
+        {/* Shown before an account exists, so the terms bind (owner decision, 2026-11-11). */}
+        <p className="text-center text-xs text-ink-muted">
+          By continuing, you agree to Branch&apos;s{" "}
+          <Link href="/terms" className="underline underline-offset-4 hover:text-ink">
+            terms of service
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy" className="underline underline-offset-4 hover:text-ink">
+            privacy policy
+          </Link>
+          .
+        </p>
       </div>
       {divider ? (
         <div className="my-5 flex items-center gap-3 text-xs text-ink-faint" aria-hidden="true">

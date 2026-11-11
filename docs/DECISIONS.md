@@ -1428,6 +1428,31 @@ hosted service (decision 5).
   tests passed against a production build (13 skipped by design), "Production has every
   migration". `pnpm test:acceptance`: 24 tests in 13 files, 48 passed on desktop and mobile.
 
+### Terms of service (2026-11-11)
+
+Owner request: a terms of service page next to the privacy policy. Owner decisions: the terms
+name "Branch" and no person; 13 and older; governed by California law (state or federal courts in
+California, unless local law gives someone the right to sue at home); signing up says continuing
+means agreeing to both documents.
+
+- `/terms` is public, in plain language, built from what Branch actually does: accounts through
+  Google or GitHub, one per person; the extension key kept private; people keep ownership of what
+  they post and grant only what running Branch needs (ending on deletion, apart from short-lived
+  backups); no copyrighted material such as copied problem statements; fair use (no harassment,
+  spam, impersonation, probing or automated scraping beyond the extension, or breaking other
+  sites' terms through Branch); admins remove and members report; LeetCode and neetcode.io are
+  independent and their terms apply; estimates and statistics are approximate; the service is
+  free, "as is", may change or stop, liability capped at US$50, and a claim caused by someone's
+  breach is theirs; ending an account (deletion by email, as on `/privacy`); changes announced
+  by date and on What's new.
+- The consent line ("By continuing, you agree to Branch's terms of service and privacy policy")
+  sits under the Google and GitHub buttons in `SocialSignIn`, so sign-up and sign-in both show it
+  before an account exists. Terms links sit next to Privacy on the landing page, the sign-in
+  pages' footer, and Settings; `/privacy` links to `/terms`. In the axe scans and 320px list; E2E
+  in `e2e/legal.spec.ts`. Changelog entry added.
+- It's a plain-language draft for a small free app, not legal advice: have a lawyer review it
+  before any commercial or wider launch.
+
 ## Additions summary (M23–M27)
 
 The owner's requests of 2026-11-09, built after Phase 4 and before Phase 5 (plan:

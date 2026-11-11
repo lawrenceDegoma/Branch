@@ -265,6 +265,7 @@ test.describe("reflow at 320px", () => {
       "/settings",
       "/solutions",
       "/privacy",
+      "/terms",
       "/changelog",
       "/changelog/2026-11-09-code-on-solve-posts",
       "/review",
