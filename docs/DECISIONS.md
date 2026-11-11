@@ -1362,6 +1362,17 @@ hosted service (decision 5).
   `postbuild`), which Vercel runs too: Vercel's build has no `.next/static/chunks` where the
   script looked, so the first M30 deploy failed (the previous deployment stayed live). Fixed by
   running it from the root script only; a measurement never blocks a deploy.
+- **Node 26** (owner decision, 2026-11-10): Vercel had been building on Node 26 while `.nvmrc`,
+  the docs, and every test run used 22, so production ran an untested runtime. Node 22 reaches
+  end of life in April 2027 and 26 is the current LTS, so everything moved to 26: `.nvmrc`,
+  `engines.node` `26.x` in the root and in `apps/web/package.json` (Vercel follows that over its
+  dashboard setting), README, and DEPLOY.md. Next, Prisma, Vitest, and Playwright all declare
+  support. Repeated on 26.13.0 first: `pnpm check`, both builds, and the browser suite on the dev
+  server (347 passed). Against a production build, 342 passed and the roadmap accessibility scan
+  failed once; it failed 1 run in 20 on rerun, in both themes. A test race, not Node: the
+  editor's heading is the roadmap's title, so the wait after Publish passed before navigation and
+  the scan could catch the page between titles. It now waits for the published page's URL (40 of
+  40 runs pass).
 - **Server bundles** (after the first M30 deploy): the build's four "Dynamic filesystem access
   causes tracing of the whole project" warnings, all from the local photo storage (a file name
   joined onto `.photos` at runtime), meant every server bundle importing the profile service

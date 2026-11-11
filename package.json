@@ -4,7 +4,7 @@
   "description": "Branch \u2014 Grow together. Solve better.",
   "packageManager": "pnpm@10.20.0",
   "engines": {
-    "node": ">=22.12.0"
+    "node": "26.x"
   },
   "scripts": {
     "dev": "pnpm --filter @branch/web dev",

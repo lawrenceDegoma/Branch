@@ -114,6 +114,9 @@ for (const colorScheme of ["dark", "light"] as const) {
       await page.getByRole("button", { name: "Add Two Sum", exact: true }).click();
       await expectNoViolations(page);
       await page.getByRole("button", { name: "Publish" }).click();
+      // The editor's heading is the roadmap's title too, so wait for the published page itself:
+      // scanning mid-navigation can catch the document between titles.
+      await page.waitForURL(/\/roadmaps\/[^/]+$/);
       await expect(
         page.getByRole("heading", { level: 1, name: "Accessible roadmap" }),
       ).toBeVisible();

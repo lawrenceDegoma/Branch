@@ -76,7 +76,7 @@ browser to see the same week from the member's side.
 
 | Tool           | Version                                      |
 | -------------- | -------------------------------------------- |
-| Node.js        | 22.12 or newer (see `.nvmrc`)                |
+| Node.js        | 26 (see `.nvmrc`; production uses the same)  |
 | pnpm           | 10.20 (pinned via `packageManager`)          |
 | Docker Desktop | Any recent version, for the local PostgreSQL |
 

@@ -44,7 +44,9 @@ an old schema.
    `lawrenceDegoma/Branch`.
 2. Set **Root Directory** to `apps/web`. Vercel finds the pnpm workspace and installs from the
    repository root. Leave the framework (Next.js) and the build command as they are. Set the
-   Node.js version to 22.x in **Settings → Build and Deployment**.
+   Node.js version to 26.x in **Settings → Build and Deployment**. (`apps/web/package.json` pins
+   `engines.node` to `26.x`, which Vercel follows over the dashboard; keeping both on 26 avoids
+   confusion. Local development and every test run use 26 too: production runs what was tested.)
 3. Add these under **Environment Variables**, for Production only:
 
    | Name                    | Value                                                                        |
