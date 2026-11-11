@@ -1362,6 +1362,16 @@ hosted service (decision 5).
   `postbuild`), which Vercel runs too: Vercel's build has no `.next/static/chunks` where the
   script looked, so the first M30 deploy failed (the previous deployment stayed live). Fixed by
   running it from the root script only; a measurement never blocks a deploy.
+- **Server bundles** (after the first M30 deploy): the build's four "Dynamic filesystem access
+  causes tracing of the whole project" warnings, all from the local photo storage (a file name
+  joined onto `.photos` at runtime), meant every server bundle importing the profile service
+  carried the whole app: 289 source files and the 32 browser tests in each (no `.env`, keys, or
+  photos; checked in the `.nft.json` traces). `turbopackIgnore` comments on the paths silenced
+  some warnings but changed nothing traced, so they were reverted; the documented fix is
+  `outputFileTracingExcludes` (`'/*'`: source, tests, scripts, `.photos`, configs; nothing the
+  server reads at runtime), plus a `turbopack.ignoreIssue` rule for that one warning in that one
+  file. Traces: the photo route 454 → 126 files, Home 631 → 303, Settings 629 → 301, onboarding
+  594 → 266 (the group page, never affected, has 288).
 - **Accessibility:** no new findings; every page added since M22 is in the axe scans and the 320px
   list, the moderation dialogs and folded content were scanned in M29, and the full suite runs
   again here. (Chat's screen-reader read-through waits for M28.)
