@@ -1,8 +1,15 @@
 import { z } from "zod";
 import { checkboxSchema } from "@/lib/form";
+import { COMMENT_BODY_MAX, POST_BODY_MAX, REACTIONS, type ReactionKindValue } from "./limits";
 
-export const POST_BODY_MAX = 5000;
-export const FEED_PAGE_SIZE = 20;
+export {
+  COMMENT_BODY_MAX,
+  COMMENT_PAGE_SIZE,
+  FEED_PAGE_SIZE,
+  POST_BODY_MAX,
+  REACTIONS,
+  type ReactionKindValue,
+} from "./limits";
 
 export const postIdSchema = z.uuid();
 
@@ -36,23 +43,11 @@ export const feedQuerySchema = z.object({
 // Reactions and comments
 // ---------------------------------------------------------------------------------------------
 
-/** The fixed set, in display order. Emoji are decoration; the label is the accessible name. */
-export const REACTIONS = [
-  { kind: "KUDOS", emoji: "👏", label: "Kudos" },
-  { kind: "IMPRESSIVE", emoji: "🔥", label: "Impressive" },
-  { kind: "HELPFUL", emoji: "💡", label: "Helpful" },
-  { kind: "SAME_HERE", emoji: "🤝", label: "Same here" },
-] as const;
-export type ReactionKindValue = (typeof REACTIONS)[number]["kind"];
-
 export const reactionInputSchema = z.object({
   postId: postIdSchema,
   kind: z.enum(REACTIONS.map((r) => r.kind) as [ReactionKindValue, ...ReactionKindValue[]]),
   on: z.boolean(),
 });
-
-export const COMMENT_BODY_MAX = 2000;
-export const COMMENT_PAGE_SIZE = 50;
 
 const commentBody = z
   .string()

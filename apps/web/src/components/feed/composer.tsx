@@ -7,9 +7,9 @@ import { FormField } from "@/components/forms/form-field";
 import { SearchSelect } from "@/components/forms/search-select";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { NativeSelect, Textarea } from "@/components/ui/input";
-import { initialFormState } from "@/lib/form";
+import { initialFormState } from "@/lib/form-state";
 import { createPostAction } from "@/modules/feed/actions";
-import { POST_BODY_MAX } from "@/modules/feed/schemas";
+import { POST_BODY_MAX } from "@/modules/feed/limits";
 import type { ComposerGroup } from "@/modules/feed/service";
 
 const NO_PROBLEM = { value: "", label: "No problem" };

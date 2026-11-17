@@ -5,7 +5,7 @@ import { FormAlert } from "@/components/forms/form-alert";
 import { FormField } from "@/components/forms/form-field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { NativeSelect } from "@/components/ui/input";
-import { initialFormState } from "@/lib/form";
+import { initialFormState } from "@/lib/form-state";
 import { updateStudySharingAction } from "@/modules/study/actions";
 
 /** What happens when a study session ends: the choice "Remember my decision" saves. */

@@ -1,18 +1,8 @@
 import { DomainError } from "./errors";
 import { z } from "zod";
+import type { FormState } from "./form-state";
 
-/** Result returned by server actions that back forms. */
-export type FormState = {
-  status: "idle" | "error" | "success";
-  message?: string;
-  fieldErrors?: Record<string, string>;
-  /** Submitted values echoed back so a failed form keeps what the user typed. */
-  values?: Record<string, string>;
-  /** Extra result data for the form to display (for example, a newly created link). */
-  data?: Record<string, string>;
-};
-
-export const initialFormState: FormState = { status: "idle" };
+export { initialFormState, type FormState } from "./form-state";
 
 /** A checkbox field: the form sends "on" when it is ticked and nothing otherwise. */
 export const checkboxSchema = z

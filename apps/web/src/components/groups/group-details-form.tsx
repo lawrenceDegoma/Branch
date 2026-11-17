@@ -6,7 +6,7 @@ import { FormField } from "@/components/forms/form-field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { TimezoneSelect } from "@/components/forms/timezone-select";
 import { Input, Textarea } from "@/components/ui/input";
-import { initialFormState, type FormState } from "@/lib/form";
+import { initialFormState, type FormState } from "@/lib/form-state";
 
 export function GroupDetailsForm({
   action,

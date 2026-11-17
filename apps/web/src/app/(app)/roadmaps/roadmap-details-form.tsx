@@ -7,7 +7,7 @@ import { FormField } from "@/components/forms/form-field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { buttonVariants } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
-import { initialFormState } from "@/lib/form";
+import { initialFormState } from "@/lib/form-state";
 import { createRoadmapAction, updateRoadmapDetailsAction } from "@/modules/roadmaps/actions";
 
 export function RoadmapDetailsForm({

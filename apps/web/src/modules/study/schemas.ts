@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { checkboxSchema } from "@/lib/form";
+import { STUDY_NOTE_MAX } from "./limits";
 
-export const STUDY_NOTE_MAX = 500;
+export { STUDY_NOTE_MAX } from "./limits";
 
 const sessionId = z.uuid({ error: "We couldn't find that session." });
 

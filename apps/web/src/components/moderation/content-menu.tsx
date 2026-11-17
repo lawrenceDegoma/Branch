@@ -16,10 +16,10 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/input";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/ui/menu";
-import { initialFormState, type FormState } from "@/lib/form";
+import { initialFormState, type FormState } from "@/lib/form-state";
 import { cn } from "@/lib/utils";
 import { blockAction, reportAction } from "@/modules/moderation/actions";
-import { REASON_LABEL, REPORT_NOTE_MAX, REPORT_REASONS } from "@/modules/moderation/schemas";
+import { REASON_LABEL, REPORT_NOTE_MAX, REPORT_REASONS } from "@/modules/moderation/limits";
 
 /**
  * "More actions" on someone else's post or comment: report it to the group's admin, or block its

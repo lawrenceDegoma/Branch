@@ -6,9 +6,9 @@ import { FormAlert } from "@/components/forms/form-alert";
 import { FormField } from "@/components/forms/form-field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { NativeSelect } from "@/components/ui/input";
-import { initialFormState } from "@/lib/form";
+import { initialFormState } from "@/lib/form-state";
 import { createInviteAction } from "@/modules/groups/actions";
-import { INVITE_EXPIRY_DAYS, INVITE_MAX_USES } from "@/modules/groups/schemas";
+import { INVITE_EXPIRY_DAYS, INVITE_MAX_USES } from "@/modules/groups/limits";
 
 export function InviteCreator({ groupId }: { groupId: string }) {
   const [state, action] = useActionState(createInviteAction, initialFormState);

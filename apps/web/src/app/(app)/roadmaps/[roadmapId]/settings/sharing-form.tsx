@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { CopyField } from "@/components/forms/copy-field";
 import { FormAlert } from "@/components/forms/form-alert";
 import { SubmitButton } from "@/components/forms/submit-button";
-import { initialFormState } from "@/lib/form";
+import { initialFormState } from "@/lib/form-state";
 import { setLinkSharingAction } from "@/modules/roadmaps/actions";
 
 export function SharingForm({

@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { displayNameSchema } from "@/modules/profile/schemas";
+import { PASSWORD_MAX, PASSWORD_MIN } from "./limits";
+
+export { PASSWORD_MAX, PASSWORD_MIN } from "./limits";
 
 const email = z.string().trim().toLowerCase().pipe(z.email("Enter a valid email address."));
-
-export const PASSWORD_MIN = 10;
-export const PASSWORD_MAX = 128;
 
 const newPassword = z
   .string()

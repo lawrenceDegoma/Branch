@@ -1498,6 +1498,24 @@ db:load-organizations` (idempotent, never deletes), also by the seed and the E2E
   lists. Changelog entry added. Migration `20261117010000_organizations`; production also needs
   `pnpm db:load-organizations`.
 
+### Client JavaScript: Zod off the client, and budgets that measure downloads (2026-11-17)
+
+After M32 the client chunks reached 1,347 of 1,400 KB. Zod (about 107 KB raw, 27 KB compressed)
+was shipped to about 20 pages, Home and sign-in included, though no browser code uses it: client
+forms imported `initialFormState` from `lib/form.ts` and limits like `POST_BODY_MAX` from
+`schemas.ts` files, all built with Zod, and the extension's connect form `PAGE_MESSAGE` through
+`@branch/shared/extension`. Now `lib/form-state.ts` holds the form result, each module's
+`limits.ts` holds the limits and labels forms show (re-exported by its `schemas.ts`), and the
+connect form imports `@branch/shared/extension-text`. `src/test/client-bundle.test.ts` walks every
+client component's runtime imports (stopping at `"use server"` files) and fails if one reaches
+`zod`.
+
+The budget script now leaves out Next's polyfills (only very old browsers download them, about
+110 KB) and adds Home as downloaded, Brotli-compressed. Measured: 434 KB shared (budget 480),
+1,134 KB in all (budget 1,200, down from 1,400), Home 211 KB compressed (was 238; budget 230).
+Considered and left for later: loading the ⋯ menu (Base UI menu, about 15–19 KB compressed) only
+when it's first opened.
+
 ## Additions summary (M23–M27)
 
 The owner's requests of 2026-11-09, built after Phase 4 and before Phase 5 (plan:

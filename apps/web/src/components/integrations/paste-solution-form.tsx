@@ -6,7 +6,7 @@ import { FormField } from "@/components/forms/form-field";
 import { SearchSelect } from "@/components/forms/search-select";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { NativeSelect, Textarea } from "@/components/ui/input";
-import { initialFormState } from "@/lib/form";
+import { initialFormState } from "@/lib/form-state";
 import { pasteSolutionAction } from "@/modules/integrations/actions";
 
 /** Paste a solution to a problem you've solved, so it can be analyzed. */

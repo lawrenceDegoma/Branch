@@ -13,7 +13,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { initialFormState, type FormState } from "@/lib/form";
+import { initialFormState, type FormState } from "@/lib/form-state";
 
 /**
  * After a successful removal the page re-renders without the item, taking the trigger (and the

@@ -1,5 +1,8 @@
 import { z } from "zod";
 import { timeZoneSchema } from "@/modules/profile/timezone";
+import { INVITE_EXPIRY_DAYS, INVITE_MAX_USES } from "./limits";
+
+export { INVITE_EXPIRY_DAYS, INVITE_MAX_USES } from "./limits";
 
 export const groupIdSchema = z.uuid();
 
@@ -13,9 +16,6 @@ export const groupDetailsSchema = z.object({
   timezone: timeZoneSchema,
 });
 export type GroupDetailsInput = z.infer<typeof groupDetailsSchema>;
-
-export const INVITE_EXPIRY_DAYS = [1, 7, 30] as const;
-export const INVITE_MAX_USES = [1, 5, 10, 25] as const;
 
 export const inviteOptionsSchema = z.object({
   expiresInDays: z.coerce

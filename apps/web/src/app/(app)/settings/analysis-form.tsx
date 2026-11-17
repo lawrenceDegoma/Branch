@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { CheckboxField } from "@/components/forms/checkbox-field";
 import { FormAlert } from "@/components/forms/form-alert";
 import { SubmitButton } from "@/components/forms/submit-button";
-import { initialFormState } from "@/lib/form";
+import { initialFormState } from "@/lib/form-state";
 import { updateAnalysisAction } from "@/modules/profile/actions";
 
 export function AnalysisForm({ analyzeSolutions }: { analyzeSolutions: boolean }) {

@@ -6,7 +6,7 @@ import { FormField } from "@/components/forms/form-field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { TimezoneSelect } from "@/components/forms/timezone-select";
 import { Input, Textarea } from "@/components/ui/input";
-import { initialFormState } from "@/lib/form";
+import { initialFormState } from "@/lib/form-state";
 import { updateProfileAction } from "@/modules/profile/actions";
 
 export function ProfileForm({

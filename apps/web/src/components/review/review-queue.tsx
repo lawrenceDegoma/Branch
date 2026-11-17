@@ -8,7 +8,7 @@ import { focusWhenRemoved } from "@/components/forms/confirm-action";
 import { FormAlert } from "@/components/forms/form-alert";
 import { DifficultyPill } from "@/components/roadmaps/difficulty-pill";
 import { Button } from "@/components/ui/button";
-import { initialFormState, type FormState } from "@/lib/form";
+import { initialFormState, type FormState } from "@/lib/form-state";
 import { recordReviewAction } from "@/modules/review/actions";
 import type { ReviewOutcome } from "@/modules/review/schedule";
 

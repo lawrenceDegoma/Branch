@@ -203,7 +203,8 @@ submission is in [docs/LEETCODE-SPIKE.md](docs/LEETCODE-SPIKE.md) and
   person can quote; `pnpm errors` lists recent records and `pnpm errors -- <code>` the ones
   behind a code (with `DATABASE_URL` pointed at production to read the live table).
 - `pnpm build` (from the repository root) ends with a client JavaScript budget
-  (`apps/web/scripts/bundle-budget.mjs`; Vercel's build doesn't run it), and
+  (`apps/web/scripts/bundle-budget.mjs`: shared chunks, all chunks, and Home as downloaded;
+  Vercel's build doesn't run it), and
   the integration tests include query budgets for the heaviest reads
   (`apps/web/src/test/query-budget.int.test.ts`). Raise either on purpose, in the same commit as
   the feature that needs it.

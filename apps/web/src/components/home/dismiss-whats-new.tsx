@@ -3,7 +3,7 @@
 import { useActionState, useRef } from "react";
 import { focusWhenRemoved } from "@/components/forms/confirm-action";
 import { SubmitButton } from "@/components/forms/submit-button";
-import { initialFormState, type FormState } from "@/lib/form";
+import { initialFormState, type FormState } from "@/lib/form-state";
 import { dismissWhatsNewAction } from "@/modules/changelog/actions";
 
 /** Dismisses the card until the next update; focus then moves to `focusTarget`. */

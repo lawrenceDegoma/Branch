@@ -7,7 +7,7 @@ import { CheckboxField } from "@/components/forms/checkbox-field";
 import { FormAlert } from "@/components/forms/form-alert";
 import { FormField } from "@/components/forms/form-field";
 import { SubmitButton } from "@/components/forms/submit-button";
-import { initialFormState } from "@/lib/form";
+import { initialFormState } from "@/lib/form-state";
 import { updateAffiliationAction } from "@/modules/affiliations/actions";
 import type { OrganizationOption } from "@/modules/affiliations/organizations";
 

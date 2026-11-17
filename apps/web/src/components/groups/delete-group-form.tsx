@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { FormField } from "@/components/forms/form-field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Input } from "@/components/ui/input";
-import { initialFormState } from "@/lib/form";
+import { initialFormState } from "@/lib/form-state";
 import { deleteGroupAction } from "@/modules/groups/actions";
 
 export function DeleteGroupForm({ groupId, groupName }: { groupId: string; groupName: string }) {

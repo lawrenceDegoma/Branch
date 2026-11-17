@@ -14,9 +14,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { NativeSelect, Textarea } from "@/components/ui/input";
-import { initialFormState, type FormState } from "@/lib/form";
+import { initialFormState, type FormState } from "@/lib/form-state";
 import { formatElapsed, formatStudyTime, MAX_SESSION_MS } from "@/modules/study/duration";
-import { STUDY_NOTE_MAX } from "@/modules/study/schemas";
+import { STUDY_NOTE_MAX } from "@/modules/study/limits";
 import {
   decideStudyAction,
   deleteStudyAction,

@@ -9,7 +9,7 @@ import { FormField } from "@/components/forms/form-field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { buttonVariants } from "@/components/ui/button";
 import { Input, NativeSelect } from "@/components/ui/input";
-import { initialFormState } from "@/lib/form";
+import { initialFormState } from "@/lib/form-state";
 import { pluralize } from "@/lib/format";
 import { createPlanAction } from "@/modules/plans/actions";
 

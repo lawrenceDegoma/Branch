@@ -3,7 +3,7 @@
 import { useOptimistic, useState, useTransition } from "react";
 import { cn } from "@/lib/utils";
 import { setReactionAction } from "@/modules/feed/actions";
-import { REACTIONS, type ReactionKindValue } from "@/modules/feed/schemas";
+import { REACTIONS, type ReactionKindValue } from "@/modules/feed/limits";
 import type { ReactionSummary } from "@/modules/feed/service";
 
 /**

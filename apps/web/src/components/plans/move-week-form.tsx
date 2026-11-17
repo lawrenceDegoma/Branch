@@ -3,7 +3,7 @@
 import { useActionState, useId } from "react";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { NativeSelect } from "@/components/ui/input";
-import { initialFormState } from "@/lib/form";
+import { initialFormState } from "@/lib/form-state";
 import { moveAssignmentAction } from "@/modules/plans/actions";
 
 /** Admin control to move one problem to another week (explicit submit, WCAG 3.2.2). */

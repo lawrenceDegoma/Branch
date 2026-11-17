@@ -7,7 +7,7 @@ import { FormAlert } from "@/components/forms/form-alert";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/input";
-import { initialFormState } from "@/lib/form";
+import { initialFormState } from "@/lib/form-state";
 import { cn } from "@/lib/utils";
 import {
   deleteCommentAction,
@@ -15,7 +15,7 @@ import {
   editCommentAction,
   editPostAction,
 } from "@/modules/feed/actions";
-import { COMMENT_BODY_MAX, POST_BODY_MAX } from "@/modules/feed/schemas";
+import { COMMENT_BODY_MAX, POST_BODY_MAX } from "@/modules/feed/limits";
 
 const targets = {
   post: {

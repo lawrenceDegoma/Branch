@@ -1,11 +1,11 @@
 "use client";
 
-import { PAGE_MESSAGE } from "@branch/shared/extension";
+import { PAGE_MESSAGE } from "@branch/shared/extension-text";
 import { useActionState, useEffect, useState } from "react";
 import { CopyField } from "@/components/forms/copy-field";
 import { FormAlert } from "@/components/forms/form-alert";
 import { SubmitButton } from "@/components/forms/submit-button";
-import { initialFormState } from "@/lib/form";
+import { initialFormState } from "@/lib/form-state";
 import { connectExtensionAction } from "@/modules/integrations/actions";
 
 export const CONNECT_BUTTON_ID = "connect-extension";

@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { NativeSelect, Textarea } from "@/components/ui/input";
-import { initialFormState, type FormState } from "@/lib/form";
+import { initialFormState, type FormState } from "@/lib/form-state";
 import { shareSolutionAction } from "@/modules/integrations/actions";
 
 /**

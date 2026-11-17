@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { FormAlert } from "@/components/forms/form-alert";
 import { SubmitButton } from "@/components/forms/submit-button";
-import { initialFormState } from "@/lib/form";
+import { initialFormState } from "@/lib/form-state";
 import { acceptInviteAction } from "@/modules/groups/actions";
 
 export function JoinGroupForm({ token }: { token: string }) {

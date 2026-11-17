@@ -4,7 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { FormAlert } from "@/components/forms/form-alert";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/user/avatar";
-import { initialFormState, type FormState } from "@/lib/form";
+import { initialFormState, type FormState } from "@/lib/form-state";
 import { choosePhotoAction, uploadPhotoAction } from "@/modules/profile/actions";
 import { PHOTO_SIZE } from "@/modules/profile/photo";
 

@@ -1,15 +1,7 @@
 import { z } from "zod";
+import { REPORT_NOTE_MAX, REPORT_REASONS } from "./limits";
 
-export const REPORT_NOTE_MAX = 500;
-export const REPORT_REASONS = ["SPAM", "HARASSMENT", "SPOILER", "OTHER"] as const;
-export type ReportReasonValue = (typeof REPORT_REASONS)[number];
-
-export const REASON_LABEL: Record<ReportReasonValue, string> = {
-  SPAM: "Spam",
-  HARASSMENT: "Harassment or abuse",
-  SPOILER: "A spoiler that isn't marked",
-  OTHER: "Something else",
-};
+export { REASON_LABEL, REPORT_NOTE_MAX, REPORT_REASONS, type ReportReasonValue } from "./limits";
 
 /** A report of one post or one comment. */
 export const reportSchema = z
