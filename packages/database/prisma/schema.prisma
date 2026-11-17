@@ -132,46 +132,81 @@ enum PhotoChoice {
   NONE
 }
 
+enum OrganizationKind {
+  SCHOOL
+  COMPANY
+}
+
+/// A school or company people may add to their profile (M32). Loaded from
+/// prisma/data/organizations by `pnpm db:load-organizations`, which never deletes one.
+model Organization {
+  /// Permanent: `school:<web domain>` or `company:<slug>`, matching `kind` (CHECK).
+  id        String           @id
+  kind      OrganizationKind
+  name      String
+  /// ISO 3166 two-letter country code, for schools.
+  country   String?
+  /// Abbreviations people search for ("CSULB").
+  aliases   String[]         @default([])
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  students  Profile[]        @relation("ProfileSchool")
+  employees Profile[]        @relation("ProfileCompany")
+
+  @@index([kind])
+  @@map("organization")
+}
+
 model Profile {
-  userId               String       @id
-  user                 User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId               String        @id
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// Lowercase handle, 3-30 characters (CHECK constraint in migration).
-  username             String       @unique
+  username             String        @unique
   /// At most 280 characters (CHECK constraint in migration).
   bio                  String?
   /// IANA timezone name, validated by the application.
   timezone             String
-  appearance           Appearance   @default(SYSTEM)
+  appearance           Appearance    @default(SYSTEM)
   /// Post automatically when solving a problem a group's plan assigns, finishing a week, or
   /// finishing a plan. Off by default: completion never implies sharing.
-  shareSolves          Boolean      @default(false)
+  shareSolves          Boolean       @default(false)
   /// Attach the synced code to automatic solve posts, folded as a spoiler. Off by default, and
   /// only on while shareSolves is; read when the post is shown, so turning it off hides the code.
-  attachSolutions      Boolean      @default(false)
+  attachSolutions      Boolean       @default(false)
   /// Estimate the complexity of the person's solutions (privately). On by default; turning it
   /// off deletes their estimates.
-  analyzeSolutions     Boolean      @default(true)
+  analyzeSolutions     Boolean       @default(true)
   /// The person hid Home's "Get started" checklist.
-  gettingStartedHidden Boolean      @default(false)
+  gettingStartedHidden Boolean       @default(false)
   /// The newest changelog entry the person dismissed from Home's "What's new" card; entries
   /// newer than it (and newer than the day they joined) show there.
   changelogSeenId      String?
   /// What happens when a study session ends: ask, always share to studyShareGroupId, or never.
-  studySharing         StudySharing @default(ASK)
+  studySharing         StudySharing  @default(ASK)
   /// The remembered group, set only with GROUP (CHECK). If it's deleted, or the person left it,
   /// Branch asks again.
-  studyShareGroupId    String?      @db.Uuid
-  studyShareGroup      Group?       @relation(fields: [studyShareGroupId], references: [id], onDelete: SetNull)
+  studyShareGroupId    String?       @db.Uuid
+  studyShareGroup      Group?        @relation(fields: [studyShareGroupId], references: [id], onDelete: SetNull)
   /// Which photo people see: Google's or GitHub's (the default), an upload, or none (initials).
-  photo                PhotoChoice  @default(PROVIDER)
+  photo                PhotoChoice   @default(PROVIDER)
   /// The uploaded photo's address, set exactly while `photo` is UPLOAD (CHECK constraint in
   /// migration).
   photoUrl             String?
   /// When the photo last changed (uploads are limited to one a minute).
   photoChangedAt       DateTime?
-  createdAt            DateTime     @default(now())
-  updatedAt            DateTime     @updatedAt
+  /// The person's school and company (optional, private). Each counts them toward that
+  /// organization's totals on Rankings; CHECKs keep each to its kind.
+  schoolId             String?
+  school               Organization? @relation("ProfileSchool", fields: [schoolId], references: [id], onDelete: Restrict)
+  companyId            String?
+  company              Organization? @relation("ProfileCompany", fields: [companyId], references: [id], onDelete: Restrict)
+  /// Show the school and company to people in the person's groups. Off by default.
+  showAffiliation      Boolean       @default(false)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
 
+  @@index([schoolId])
+  @@index([companyId])
   @@map("profile")
 }
 

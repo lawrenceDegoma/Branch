@@ -8,6 +8,7 @@ import { catalogSchema, roadmapDefinitionSchema } from "@branch/shared/catalog";
 import { generateAssignments } from "@branch/shared/schedule";
 import { hashPassword } from "better-auth/crypto";
 import { importCuratedRoadmap, syncCatalog } from "../src/catalog-import";
+import { readOrganizationLists, syncOrganizations } from "../src/organization-import";
 import { createPrismaClient } from "../src/index";
 
 if (process.env.NODE_ENV === "production") {
@@ -53,6 +54,11 @@ async function main() {
         `Roadmap ${definition.slug}: version ${result.versionNumber}${result.created ? " (new)" : ""}`,
       );
     }
+
+    const organizations = await syncOrganizations(prisma, readOrganizationLists());
+    console.log(
+      `Organizations: ${organizations.schools} schools, ${organizations.companies} companies`,
+    );
 
     const passwordHash = await hashPassword(DEV_PASSWORD);
     for (const user of devUsers) {

@@ -7,7 +7,7 @@ export const metadata = {
   description: "The rules for using Branch and the Branch for LeetCode extension.",
 };
 
-const EFFECTIVE = "November 11, 2026";
+const EFFECTIVE = "November 17, 2026";
 
 /**
  * Public, beside the privacy policy. Owner decisions (2026-11-11): "Branch" with no person named,
@@ -87,6 +87,19 @@ export default function TermsPage() {
           Group admins can remove posts and comments in their group, and members can report them to
           the admin. We may remove content or suspend accounts that break these terms.
         </p>
+
+        <h2>Schools, companies, and rankings</h2>
+        <ul>
+          <li>
+            If you add a school or company, choose the one you actually attend or work for. Rankings
+            are built from what people choose, which Branch doesn&apos;t check, so they&apos;re for
+            fun, not a statement about any school or company.
+          </li>
+          <li>
+            School and company names identify where people study and work. Branch isn&apos;t
+            affiliated with, or endorsed by, any of them.
+          </li>
+        </ul>
 
         <h2>LeetCode, neetcode.io, and the extension</h2>
         <p>

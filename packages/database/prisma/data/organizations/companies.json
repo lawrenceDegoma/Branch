@@ -1,0 +1,617 @@
+[
+  {
+    "slug": "accenture",
+    "name": "Accenture",
+    "aliases": []
+  },
+  {
+    "slug": "activision-blizzard",
+    "name": "Activision Blizzard",
+    "aliases": ["Blizzard"]
+  },
+  {
+    "slug": "adobe",
+    "name": "Adobe",
+    "aliases": []
+  },
+  {
+    "slug": "airbnb",
+    "name": "Airbnb",
+    "aliases": []
+  },
+  {
+    "slug": "akuna-capital",
+    "name": "Akuna Capital",
+    "aliases": []
+  },
+  {
+    "slug": "amazon",
+    "name": "Amazon",
+    "aliases": ["AWS", "Amazon Web Services"]
+  },
+  {
+    "slug": "amd",
+    "name": "AMD",
+    "aliases": ["Advanced Micro Devices"]
+  },
+  {
+    "slug": "american-express",
+    "name": "American Express",
+    "aliases": ["Amex"]
+  },
+  {
+    "slug": "anthropic",
+    "name": "Anthropic",
+    "aliases": []
+  },
+  {
+    "slug": "apple",
+    "name": "Apple",
+    "aliases": []
+  },
+  {
+    "slug": "att",
+    "name": "AT&T",
+    "aliases": ["ATT"]
+  },
+  {
+    "slug": "atlassian",
+    "name": "Atlassian",
+    "aliases": ["Jira"]
+  },
+  {
+    "slug": "bank-of-america",
+    "name": "Bank of America",
+    "aliases": ["BofA"]
+  },
+  {
+    "slug": "block",
+    "name": "Block",
+    "aliases": ["Square", "Cash App"]
+  },
+  {
+    "slug": "bloomberg",
+    "name": "Bloomberg",
+    "aliases": []
+  },
+  {
+    "slug": "boeing",
+    "name": "Boeing",
+    "aliases": []
+  },
+  {
+    "slug": "booking",
+    "name": "Booking.com",
+    "aliases": ["Booking Holdings"]
+  },
+  {
+    "slug": "booz-allen",
+    "name": "Booz Allen Hamilton",
+    "aliases": ["Booz Allen"]
+  },
+  {
+    "slug": "brex",
+    "name": "Brex",
+    "aliases": []
+  },
+  {
+    "slug": "broadcom",
+    "name": "Broadcom",
+    "aliases": []
+  },
+  {
+    "slug": "bytedance",
+    "name": "ByteDance",
+    "aliases": []
+  },
+  {
+    "slug": "capital-one",
+    "name": "Capital One",
+    "aliases": []
+  },
+  {
+    "slug": "cisco",
+    "name": "Cisco",
+    "aliases": []
+  },
+  {
+    "slug": "citadel",
+    "name": "Citadel",
+    "aliases": ["Citadel Securities"]
+  },
+  {
+    "slug": "citi",
+    "name": "Citi",
+    "aliases": ["Citigroup", "Citibank"]
+  },
+  {
+    "slug": "cloudflare",
+    "name": "Cloudflare",
+    "aliases": []
+  },
+  {
+    "slug": "coinbase",
+    "name": "Coinbase",
+    "aliases": []
+  },
+  {
+    "slug": "comcast",
+    "name": "Comcast",
+    "aliases": ["NBCUniversal"]
+  },
+  {
+    "slug": "de-shaw",
+    "name": "D. E. Shaw",
+    "aliases": ["DE Shaw"]
+  },
+  {
+    "slug": "databricks",
+    "name": "Databricks",
+    "aliases": []
+  },
+  {
+    "slug": "datadog",
+    "name": "Datadog",
+    "aliases": []
+  },
+  {
+    "slug": "dell",
+    "name": "Dell Technologies",
+    "aliases": ["Dell"]
+  },
+  {
+    "slug": "deloitte",
+    "name": "Deloitte",
+    "aliases": []
+  },
+  {
+    "slug": "discord",
+    "name": "Discord",
+    "aliases": []
+  },
+  {
+    "slug": "disney",
+    "name": "Disney",
+    "aliases": ["The Walt Disney Company"]
+  },
+  {
+    "slug": "doordash",
+    "name": "DoorDash",
+    "aliases": []
+  },
+  {
+    "slug": "dropbox",
+    "name": "Dropbox",
+    "aliases": []
+  },
+  {
+    "slug": "duolingo",
+    "name": "Duolingo",
+    "aliases": []
+  },
+  {
+    "slug": "ebay",
+    "name": "eBay",
+    "aliases": []
+  },
+  {
+    "slug": "electronic-arts",
+    "name": "Electronic Arts",
+    "aliases": ["EA"]
+  },
+  {
+    "slug": "epic-games",
+    "name": "Epic Games",
+    "aliases": []
+  },
+  {
+    "slug": "expedia",
+    "name": "Expedia",
+    "aliases": []
+  },
+  {
+    "slug": "figma",
+    "name": "Figma",
+    "aliases": []
+  },
+  {
+    "slug": "ford",
+    "name": "Ford",
+    "aliases": []
+  },
+  {
+    "slug": "general-motors",
+    "name": "General Motors",
+    "aliases": ["GM", "Cruise"]
+  },
+  {
+    "slug": "github",
+    "name": "GitHub",
+    "aliases": []
+  },
+  {
+    "slug": "goldman-sachs",
+    "name": "Goldman Sachs",
+    "aliases": ["GS"]
+  },
+  {
+    "slug": "google",
+    "name": "Google",
+    "aliases": ["Alphabet"]
+  },
+  {
+    "slug": "grammarly",
+    "name": "Grammarly",
+    "aliases": []
+  },
+  {
+    "slug": "hpe",
+    "name": "Hewlett Packard Enterprise",
+    "aliases": ["HPE"]
+  },
+  {
+    "slug": "hp",
+    "name": "HP",
+    "aliases": ["Hewlett-Packard"]
+  },
+  {
+    "slug": "hudson-river-trading",
+    "name": "Hudson River Trading",
+    "aliases": ["HRT"]
+  },
+  {
+    "slug": "ibm",
+    "name": "IBM",
+    "aliases": []
+  },
+  {
+    "slug": "imc",
+    "name": "IMC Trading",
+    "aliases": ["IMC"]
+  },
+  {
+    "slug": "infosys",
+    "name": "Infosys",
+    "aliases": []
+  },
+  {
+    "slug": "instacart",
+    "name": "Instacart",
+    "aliases": []
+  },
+  {
+    "slug": "intel",
+    "name": "Intel",
+    "aliases": []
+  },
+  {
+    "slug": "intuit",
+    "name": "Intuit",
+    "aliases": ["TurboTax"]
+  },
+  {
+    "slug": "jane-street",
+    "name": "Jane Street",
+    "aliases": []
+  },
+  {
+    "slug": "jpmorgan-chase",
+    "name": "JPMorgan Chase",
+    "aliases": ["JPMorgan", "JPMC", "Chase"]
+  },
+  {
+    "slug": "jump-trading",
+    "name": "Jump Trading",
+    "aliases": []
+  },
+  {
+    "slug": "linkedin",
+    "name": "LinkedIn",
+    "aliases": []
+  },
+  {
+    "slug": "lockheed-martin",
+    "name": "Lockheed Martin",
+    "aliases": []
+  },
+  {
+    "slug": "lyft",
+    "name": "Lyft",
+    "aliases": []
+  },
+  {
+    "slug": "mastercard",
+    "name": "Mastercard",
+    "aliases": []
+  },
+  {
+    "slug": "meta",
+    "name": "Meta",
+    "aliases": ["Facebook", "Instagram", "WhatsApp"]
+  },
+  {
+    "slug": "microsoft",
+    "name": "Microsoft",
+    "aliases": ["MSFT"]
+  },
+  {
+    "slug": "mongodb",
+    "name": "MongoDB",
+    "aliases": []
+  },
+  {
+    "slug": "morgan-stanley",
+    "name": "Morgan Stanley",
+    "aliases": []
+  },
+  {
+    "slug": "netflix",
+    "name": "Netflix",
+    "aliases": []
+  },
+  {
+    "slug": "northrop-grumman",
+    "name": "Northrop Grumman",
+    "aliases": []
+  },
+  {
+    "slug": "notion",
+    "name": "Notion",
+    "aliases": []
+  },
+  {
+    "slug": "nvidia",
+    "name": "NVIDIA",
+    "aliases": []
+  },
+  {
+    "slug": "okta",
+    "name": "Okta",
+    "aliases": []
+  },
+  {
+    "slug": "openai",
+    "name": "OpenAI",
+    "aliases": []
+  },
+  {
+    "slug": "optiver",
+    "name": "Optiver",
+    "aliases": []
+  },
+  {
+    "slug": "oracle",
+    "name": "Oracle",
+    "aliases": []
+  },
+  {
+    "slug": "palantir",
+    "name": "Palantir",
+    "aliases": []
+  },
+  {
+    "slug": "paypal",
+    "name": "PayPal",
+    "aliases": ["Venmo"]
+  },
+  {
+    "slug": "pinterest",
+    "name": "Pinterest",
+    "aliases": []
+  },
+  {
+    "slug": "plaid",
+    "name": "Plaid",
+    "aliases": []
+  },
+  {
+    "slug": "qualcomm",
+    "name": "Qualcomm",
+    "aliases": []
+  },
+  {
+    "slug": "ramp",
+    "name": "Ramp",
+    "aliases": []
+  },
+  {
+    "slug": "reddit",
+    "name": "Reddit",
+    "aliases": []
+  },
+  {
+    "slug": "riot-games",
+    "name": "Riot Games",
+    "aliases": []
+  },
+  {
+    "slug": "rivian",
+    "name": "Rivian",
+    "aliases": []
+  },
+  {
+    "slug": "robinhood",
+    "name": "Robinhood",
+    "aliases": []
+  },
+  {
+    "slug": "roblox",
+    "name": "Roblox",
+    "aliases": []
+  },
+  {
+    "slug": "raytheon",
+    "name": "RTX",
+    "aliases": ["Raytheon"]
+  },
+  {
+    "slug": "salesforce",
+    "name": "Salesforce",
+    "aliases": ["Slack"]
+  },
+  {
+    "slug": "samsung",
+    "name": "Samsung",
+    "aliases": []
+  },
+  {
+    "slug": "sap",
+    "name": "SAP",
+    "aliases": []
+  },
+  {
+    "slug": "servicenow",
+    "name": "ServiceNow",
+    "aliases": []
+  },
+  {
+    "slug": "shopify",
+    "name": "Shopify",
+    "aliases": []
+  },
+  {
+    "slug": "siemens",
+    "name": "Siemens",
+    "aliases": []
+  },
+  {
+    "slug": "snap",
+    "name": "Snap",
+    "aliases": ["Snapchat"]
+  },
+  {
+    "slug": "snowflake",
+    "name": "Snowflake",
+    "aliases": []
+  },
+  {
+    "slug": "sony",
+    "name": "Sony",
+    "aliases": []
+  },
+  {
+    "slug": "spacex",
+    "name": "SpaceX",
+    "aliases": []
+  },
+  {
+    "slug": "spotify",
+    "name": "Spotify",
+    "aliases": []
+  },
+  {
+    "slug": "stripe",
+    "name": "Stripe",
+    "aliases": []
+  },
+  {
+    "slug": "sig",
+    "name": "Susquehanna",
+    "aliases": ["SIG", "Susquehanna International Group"]
+  },
+  {
+    "slug": "t-mobile",
+    "name": "T-Mobile",
+    "aliases": []
+  },
+  {
+    "slug": "target",
+    "name": "Target",
+    "aliases": []
+  },
+  {
+    "slug": "tcs",
+    "name": "Tata Consultancy Services",
+    "aliases": ["TCS"]
+  },
+  {
+    "slug": "tesla",
+    "name": "Tesla",
+    "aliases": []
+  },
+  {
+    "slug": "tiktok",
+    "name": "TikTok",
+    "aliases": []
+  },
+  {
+    "slug": "twilio",
+    "name": "Twilio",
+    "aliases": []
+  },
+  {
+    "slug": "two-sigma",
+    "name": "Two Sigma",
+    "aliases": []
+  },
+  {
+    "slug": "uber",
+    "name": "Uber",
+    "aliases": []
+  },
+  {
+    "slug": "verizon",
+    "name": "Verizon",
+    "aliases": []
+  },
+  {
+    "slug": "visa",
+    "name": "Visa",
+    "aliases": []
+  },
+  {
+    "slug": "vmware",
+    "name": "VMware",
+    "aliases": []
+  },
+  {
+    "slug": "walmart",
+    "name": "Walmart",
+    "aliases": ["Walmart Global Tech"]
+  },
+  {
+    "slug": "warner-bros-discovery",
+    "name": "Warner Bros. Discovery",
+    "aliases": []
+  },
+  {
+    "slug": "wayfair",
+    "name": "Wayfair",
+    "aliases": []
+  },
+  {
+    "slug": "waymo",
+    "name": "Waymo",
+    "aliases": []
+  },
+  {
+    "slug": "wells-fargo",
+    "name": "Wells Fargo",
+    "aliases": []
+  },
+  {
+    "slug": "wipro",
+    "name": "Wipro",
+    "aliases": []
+  },
+  {
+    "slug": "workday",
+    "name": "Workday",
+    "aliases": []
+  },
+  {
+    "slug": "x",
+    "name": "X",
+    "aliases": ["Twitter"]
+  },
+  {
+    "slug": "yelp",
+    "name": "Yelp",
+    "aliases": []
+  },
+  {
+    "slug": "zoom",
+    "name": "Zoom",
+    "aliases": []
+  }
+]

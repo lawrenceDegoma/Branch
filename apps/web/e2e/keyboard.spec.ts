@@ -270,6 +270,8 @@ test.describe("reflow at 320px", () => {
       "/changelog/2026-11-09-code-on-solve-posts",
       "/review",
       "/stats",
+      "/rankings",
+      "/rankings?kind=companies",
       "/account/move",
     ];
     for (const path of paths) {

@@ -30,9 +30,11 @@ export PROD_DIRECT_URL='postgresql://…neon.tech/neondb?sslmode=require'   # di
 
 DATABASE_URL="$PROD_DIRECT_URL" pnpm db:deploy        # applies every migration in prisma/migrations
 DATABASE_URL="$PROD_DIRECT_URL" pnpm db:load-curated  # 150 problems, Patterns 150, Essentials 75
+DATABASE_URL="$PROD_DIRECT_URL" pnpm db:load-organizations  # schools and companies for Settings
 ```
 
-Both are safe to run again. Never run `pnpm db:seed` against production: it creates dev accounts,
+All three are safe to run again. Re-run `db:load-organizations` after the school or company lists
+change (`packages/database/prisma/data/organizations/`); it never deletes one. Never run `pnpm db:seed` against production: it creates dev accounts,
 and it refuses when `NODE_ENV=production`.
 
 Re-run `db:deploy` **before** pushing any commit that adds a migration, so the new code never meets

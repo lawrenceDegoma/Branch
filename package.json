@@ -1,7 +1,7 @@
 {
   "name": "branch",
   "private": true,
-  "description": "Branch \u2014 Grow together. Solve better.",
+  "description": "Branch — Grow together. Solve better.",
   "packageManager": "pnpm@10.20.0",
   "engines": {
     "node": "26.x"
@@ -29,6 +29,7 @@
     "db:import-curated": "pnpm --filter @branch/database import-curated",
     "auth:reset-link": "pnpm --filter @branch/database reset-link",
     "db:load-curated": "pnpm db:import-curated -- --catalog prisma/data/catalog.json prisma/data/roadmaps/patterns-150.json prisma/data/roadmaps/essentials-75.json",
+    "db:load-organizations": "pnpm --filter @branch/database load-organizations",
     "build:extension": "pnpm --filter @branch/extension build",
     "test:analyzer": "uv run --directory services/analyzer pytest -q",
     "analyzer:dev": "uv run --directory services/analyzer --env-file ../../.env uvicorn app:app --port 8787 --reload",

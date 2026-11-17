@@ -25,7 +25,16 @@ const publicRoutes = [
   "/reset-password?token=example",
   "/missing-page",
 ];
-const appRoutes = ["/home", "/roadmaps", "/groups", "/review", "/settings", "/solutions", "/stats"];
+const appRoutes = [
+  "/home",
+  "/roadmaps",
+  "/groups",
+  "/review",
+  "/settings",
+  "/solutions",
+  "/stats",
+  "/rankings",
+];
 
 async function expectNoViolations(page: Page) {
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();

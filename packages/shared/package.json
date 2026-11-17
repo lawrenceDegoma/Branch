@@ -7,7 +7,8 @@
     "./calendar": "./src/schedule/calendar.ts",
     "./schedule": "./src/schedule/generate.ts",
     "./extension": "./src/extension.ts",
-    "./extension-text": "./src/extension-text.ts"
+    "./extension-text": "./src/extension-text.ts",
+    "./organizations": "./src/organizations.ts"
   },
   "scripts": {
     "typecheck": "tsc",

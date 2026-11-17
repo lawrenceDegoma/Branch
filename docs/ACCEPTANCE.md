@@ -72,6 +72,13 @@ Each test line is `` `e2e/<file>` › "<exact test title>" ``.
 - `e2e/hardening.spec.ts` › "responses carry the headers, and a fresh request ID each"
 - `e2e/hardening.spec.ts` › "the pages people use run without CSP violations"
 
+## 14. Schools and companies: rankings without names, shown to groups only by choice (M32)
+
+- `e2e/affiliations.spec.ts` › "choosing a school counts toward Rankings once 5 people have chosen it"
+- `e2e/affiliations.spec.ts` › "groups see a member's school and company only with their switch on"
+- `e2e/affiliations.spec.ts` › "the search boxes work from the keyboard"
+- `e2e/affiliations.spec.ts` › "Rankings need an account"
+
 ## Not yet
 
 - **Group chat** (M28, on hold): its scenarios join this map when it's built.

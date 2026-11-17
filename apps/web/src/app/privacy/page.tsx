@@ -8,7 +8,7 @@ export const metadata = {
   description: "What Branch and the Branch for LeetCode extension collect, and why.",
 };
 
-const EFFECTIVE = "November 10, 2026";
+const EFFECTIVE = "November 17, 2026";
 
 /** Public: linked from the Chrome Web Store listing, the extension, and Branch's own pages. */
 export default function PrivacyPage() {
@@ -50,6 +50,11 @@ export default function PrivacyPage() {
             <strong>Your profile and settings:</strong> username, optional bio, time zone,
             appearance, which photo to show, whether to share your solves, and what to do with study
             sessions.
+          </li>
+          <li>
+            <strong>Your school and company, if you add them:</strong> chosen from Branch&apos;s
+            lists, and whether your groups may see them. This is personal information, so Branch
+            treats it as private.
           </li>
           <li>
             <strong>A photo, if you upload one:</strong> Branch shrinks it to a small square in your
@@ -146,6 +151,14 @@ export default function PrivacyPage() {
           </li>
           <li>Your reviews and how they went are visible only to you, and so is Your stats.</li>
           <li>
+            <strong>Your school and company</strong> are shown to nobody unless you turn on
+            &quot;Show my school and company to my groups&quot; (Settings → School and company);
+            then members of your groups see them in the member list. Adding one counts your solves
+            toward its total on Rankings, which signed-in people see: the total, the average, and
+            how many people chose it, never who. A school or company is listed only once 5 people
+            have chosen it, so its numbers never point to one person. Choices aren&apos;t checked.
+          </li>
+          <li>
             When you report a post or comment, the group&apos;s admin sees the reason and any note,
             but not that it was you; nobody else sees reports. When you block someone, they
             aren&apos;t told, and only you see the difference.
@@ -182,6 +195,10 @@ export default function PrivacyPage() {
         <ul>
           <li>Your account and what you create stay until you delete them or your account.</li>
           <li>
+            Your school and company stay until you remove them, which deletes them at once; Rankings
+            stop counting you straight away.
+          </li>
+          <li>
             An uploaded photo is deleted as soon as you replace it or switch to another photo.
           </li>
           <li>
@@ -210,6 +227,10 @@ export default function PrivacyPage() {
           <li>Delete any solution, or all of them, from Solutions.</li>
           <li>Turn code analysis off or on in Settings → Code analysis.</li>
           <li>Upload a photo, use the one from Google or GitHub, or show initials, in Settings.</li>
+          <li>
+            Add, change, or remove your school and company, and choose whether your groups see them,
+            in Settings → School and company.
+          </li>
           <li>Turn sharing on or off, and delete your posts and comments, whenever you like.</li>
           <li>
             Report a post or comment to its group&apos;s admin, and block or unblock people

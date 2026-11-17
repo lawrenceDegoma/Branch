@@ -13,6 +13,20 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    id: "2026-11-17-schools-and-companies",
+    date: "2026-11-17",
+    title: "Schools, companies, and rankings",
+    summary: "Add your school or company, and see how they rank by problems solved this month.",
+    details: `Add the school you attend and the company you work for in **Settings → School and company**. Both are optional: search by name, abbreviation (like "CSULB"), or web address.
+
+- **Rankings** (linked from Your stats) lists schools and companies by the problems their members solved this month, with how many members each has and the average per member. Your solves count toward yours without your name. Each person's month runs in their own time zone.
+- A school or company appears once **5 people** have chosen it, so its numbers never point to one person.
+- Nobody sees your school or company unless you turn on **Show my school and company to my groups**. Then people in your groups see them in the member list.
+- Remove either one at any time; it's deleted and stops counting straight away.
+
+People are never ranked, only schools and companies. The privacy policy and terms of service have been updated to cover this.`,
+  },
+  {
     id: "2026-11-11-terms-of-service",
     date: "2026-11-11",
     title: "Terms of service",

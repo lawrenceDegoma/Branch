@@ -11,6 +11,8 @@ export type MemberRow = {
   joinedAt: Date;
   /** Milestones shown to the group (only for people sharing their solves). */
   badges?: string[];
+  /** "School · Company", only for people who show them to their groups. */
+  affiliation?: string | null;
 };
 
 export function MemberList({
@@ -50,6 +52,9 @@ export function MemberList({
               {member.username ? `@${member.username} · ` : ""}Joined{" "}
               {formatDate(member.joinedAt, timeZone)}
             </p>
+            {member.affiliation ? (
+              <p className="text-xs break-words text-ink-muted">{member.affiliation}</p>
+            ) : null}
           </div>
           {actions ? <div className="flex shrink-0 gap-1">{actions(member)}</div> : null}
         </li>

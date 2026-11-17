@@ -6,7 +6,8 @@
     ".": "./src/index.ts",
     "./catalog-import": "./src/catalog-import.ts",
     "./password-reset": "./src/password-reset.ts",
-    "./testing": "./src/testing.ts"
+    "./testing": "./src/testing.ts",
+    "./organization-import": "./src/organization-import.ts"
   },
   "scripts": {
     "generate": "prisma generate",
@@ -20,7 +21,9 @@
     "seed": "tsx --env-file-if-exists=../../.env prisma/seed.ts",
     "import-curated": "tsx --env-file-if-exists=../../.env prisma/import-curated.ts",
     "reset-link": "tsx --env-file-if-exists=../../.env prisma/reset-link.ts",
-    "errors": "tsx --env-file-if-exists=../../.env prisma/errors.ts"
+    "errors": "tsx --env-file-if-exists=../../.env prisma/errors.ts",
+    "build-schools": "tsx prisma/build-schools.ts",
+    "load-organizations": "tsx --env-file-if-exists=../../.env prisma/load-organizations.ts"
   },
   "dependencies": {
     "@branch/shared": "workspace:*",

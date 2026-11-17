@@ -1,8 +1,14 @@
-// Every catalog and roadmap file in the repository must satisfy the shared contracts, and every
-// roadmap must reference only problems its catalog defines.
+// Every catalog, roadmap, and organization file in the repository must satisfy the shared
+// contracts, and every roadmap must reference only problems its catalog defines.
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { catalogSchema, roadmapDefinitionSchema, type Catalog } from "@branch/shared/catalog";
+import {
+  companyListSchema,
+  organizationKind,
+  schoolAliasesSchema,
+  schoolListSchema,
+} from "@branch/shared/organizations";
 import { describe, expect, it } from "vitest";
 
 const dataDir = path.resolve(import.meta.dirname, "../../../../packages/database/prisma/data");
@@ -65,5 +71,36 @@ describe("catalog and roadmaps", () => {
     ]);
     for (const problem of premium)
       expect(problem.freeUrl).toMatch(/^https:\/\/www\.lintcode\.com\//);
+  });
+});
+
+describe("school and company lists", () => {
+  const dir = path.join(dataDir, "organizations");
+  const schools = schoolListSchema.parse(readJson(path.join(dir, "schools.json")));
+  const aliases = schoolAliasesSchema.parse(readJson(path.join(dir, "school-aliases.json")));
+  const companies = companyListSchema.parse(readJson(path.join(dir, "companies.json")));
+
+  it("are valid, cite their pinned source, and alias only listed schools", () => {
+    expect(schools.schools.length).toBeGreaterThan(10_000);
+    expect(schools.source.url).toBe("https://github.com/Hipo/university-domains-list");
+    const domains = new Set(schools.schools.map(([domain]) => domain));
+    expect(Object.keys(aliases).filter((domain) => !domains.has(domain))).toEqual([]);
+    expect(companies.length).toBeGreaterThan(100);
+  });
+
+  it("make every ID a valid organization ID of its kind", () => {
+    for (const [domain] of schools.schools) {
+      expect(organizationKind(`school:${domain}`), domain).toBe("SCHOOL");
+    }
+    for (const { slug } of companies)
+      expect(organizationKind(`company:${slug}`), slug).toBe("COMPANY");
+  });
+
+  it("keep the corrected names and the schools people asked about", () => {
+    const name = (domain: string) => schools.schools.find(([d]) => d === domain)?.[1];
+    expect(name("csulb.edu")).toBe("California State University, Long Beach");
+    expect(name("fullerton.edu")).toBe("California State University, Fullerton");
+    expect(name("stanford.edu")).toBe("Stanford University");
+    expect(name("csueastbay.edu")).toBe("California State University, East Bay");
   });
 });

@@ -1,5 +1,7 @@
 # Data sources
 
+Schools and companies (M32) are at the end of this file.
+
 Branch stores only problem identifiers and metadata: LeetCode slug, title, difficulty, pattern,
 Premium status, and list membership. No problem statements, solutions, or videos.
 
@@ -62,3 +64,39 @@ pnpm db:import-curated -- --catalog prisma/data/catalog.json \
 
 Re-importing is idempotent; changed content becomes a new version. `pnpm db:seed` loads everything
 in this folder for development. Grind 75 is out of scope: it has no openly licensed source.
+
+## Schools and companies (`organizations/`)
+
+| File                                | Contents                                                       |
+| ----------------------------------- | -------------------------------------------------------------- |
+| `organizations/schools.json`        | 10,269 schools: web domain, name, country (built, not edited)  |
+| `organizations/school-aliases.json` | Abbreviations people search for, by domain (Branch's own)      |
+| `organizations/companies.json`      | 123 larger companies people practise interviews for (Branch's) |
+
+- Schools come from [Hipo's university-domains-list](https://github.com/Hipo/university-domains-list),
+  pinned at commit `a8fb652f5032801de7125a814aedf213b262a1a4`, retrieved 2026-11-17.
+  `pnpm --filter @branch/database build-schools -- <file> <commit>` rebuilds `schools.json`: one
+  school per first web domain (the first entry wins when two share one), names with spaces
+  tidied, and two corrections: `csueastbay.edu` is California State University, East Bay, and
+  `humboldt.edu` is California State Polytechnic University, Humboldt (renamed in 2022).
+- Company names and abbreviations are facts, used only to identify where someone works. Branch
+  isn't affiliated with any school or company.
+
+> MIT License
+>
+> Copyright (c) 2014-2025 Hipo
+>
+> Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+> and associated documentation files (the "Software"), to deal in the Software without
+> restriction, including without limitation the rights to use, copy, modify, merge, publish,
+> distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+> Software is furnished to do so, subject to the following conditions:
+>
+> The above copyright notice and this permission notice shall be included in all copies or
+> substantial portions of the Software.
+>
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+> BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+> NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+> DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+> OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

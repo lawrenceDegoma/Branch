@@ -1453,6 +1453,51 @@ means agreeing to both documents.
 - It's a plain-language draft for a small free app, not legal advice: have a lawyer review it
   before any commercial or wider launch.
 
+### M32 — Schools and companies (2026-11-17)
+
+Owner request: people may add their school or company, so Branch can show statistics by school
+and company without exposing anyone. Plan in `docs/PLAN-AFFILIATIONS.md`. Owner decisions: rank
+by total problems solved by members, with a per-member average; this month only (so rankings keep
+changing); an organization is listed only with 5 or more members (applied to companies too, for
+the same reason); choosing one counts you automatically; companies are a fixed list of big names
+(no requests); rankings for signed-in people only; one switch, off by default, shows a person's
+school and company to their groups. People are never ranked. This is an owner change to the PRD's
+"no compulsory leaderboards": these rankings are of organizations, and only of people who opt in.
+
+- **It's personal data.** A school or employer tied to an account is personal information, so it
+  stays private: shown to nobody by default, deleted on removal, described on `/privacy`
+  (effective date 2026-11-17). `/terms` asks people to choose truthfully and says Branch isn't
+  affiliated with any school or company. Choices aren't verified (Branch sends no email).
+- **Lists:** schools from Hipo's university-domains-list (MIT, pinned commit in `SOURCES.md`),
+  10,269 after keeping one per web domain; the domain is the permanent ID (`school:<domain>`).
+  Two names corrected in `build-schools.ts` (California State University, East Bay; Cal Poly
+  Humboldt). About 90 abbreviations in `school-aliases.json` for names a domain doesn't give
+  ("CSUF"). 123 companies in `companies.json` (`company:<slug>`), with aliases ("Alphabet",
+  "Facebook"). Contracts in `@branch/shared/organizations`; loaded by `pnpm
+db:load-organizations` (idempotent, never deletes), also by the seed and the E2E setup.
+- **Database:** `organization` (kind, name, country, aliases); `profile.schoolId`, `companyId`
+  (foreign keys, `Restrict`), `showAffiliation`. CHECKs: an ID's prefix matches its kind, a
+  profile's school is a school and its company a company, names 1–200 characters, country a
+  two-letter code.
+- **Search:** every word of the query must match the name, an alias, or the start of the web
+  address; exact abbreviations and addresses first, then names starting with the query, then the
+  shortest; 20 results; LIKE wildcards escaped. Settings' boxes (`OrganizationSelect`, Base UI
+  combobox) ask the server after a 200 ms pause and drop out-of-date answers.
+- **Rankings** (`/rankings`, linked from Your stats): derived on every read in one query (no
+  cache: the database is awake while people use Branch, so caching saves little and would delay
+  changes). Each person's solves count in their own time zone's month. Competition ranking for
+  ties, then name. The top 50 are shown, and the viewer's own school or company gets a line saying
+  where it stands; a small one says only that it needs 5 people, never how many it has.
+- **Groups:** with the switch on, the member list (group page and group settings) shows
+  "School · Company" under the member's name. Nowhere else.
+- **Limits:** changing the school or company 10 times a day (`takeToken`); the switch alone isn't
+  counted.
+- Tests: unit (IDs, search terms, ranking and ties, ordinals), integration (search, saving,
+  limits, CHECKs, rankings with the 5-member rule and time zones, group visibility, the loader),
+  E2E `e2e/affiliations.spec.ts` (acceptance scenario 14), `/rankings` in the axe and reflow
+  lists. Changelog entry added. Migration `20261117010000_organizations`; production also needs
+  `pnpm db:load-organizations`.
+
 ## Additions summary (M23–M27)
 
 The owner's requests of 2026-11-09, built after Phase 4 and before Phase 5 (plan:

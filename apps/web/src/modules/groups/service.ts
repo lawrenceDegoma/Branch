@@ -4,6 +4,7 @@ import { takeToken } from "@/lib/limits";
 import { isUniqueViolation } from "@/lib/db-errors";
 import { DomainError, ForbiddenError, NotFoundError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
+import { affiliationLabel } from "@/modules/affiliations/organizations";
 import { shownPhoto } from "@/modules/profile/photo";
 import { requireAdmin, requireMembership } from "./access";
 import {
@@ -63,7 +64,16 @@ export async function getGroupOverview(userId: string, groupId: string) {
               id: true,
               name: true,
               image: true,
-              profile: { select: { username: true, photo: true, photoUrl: true } },
+              profile: {
+                select: {
+                  username: true,
+                  photo: true,
+                  photoUrl: true,
+                  showAffiliation: true,
+                  school: { select: { name: true } },
+                  company: { select: { name: true } },
+                },
+              },
             },
           },
         },
@@ -83,6 +93,10 @@ export async function getGroupOverview(userId: string, groupId: string) {
       photo: shownPhoto(m.user),
       role: m.role,
       joinedAt: m.joinedAt,
+      // Only with the member's switch on (M32); the group is the only place it's shown.
+      affiliation: m.user.profile?.showAffiliation
+        ? affiliationLabel(m.user.profile.school, m.user.profile.company)
+        : null,
     })),
   };
 }

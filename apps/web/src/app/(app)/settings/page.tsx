@@ -8,6 +8,7 @@ import { ThemeSelect } from "@/components/theme/theme-select";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/user/avatar";
 import { serverEnv } from "@/lib/env";
+import { getAffiliation } from "@/modules/affiliations/service";
 import { hasPasswordAccount, signInMethods } from "@/modules/auth/accounts";
 import { enabledSocialProviders } from "@/modules/auth/auth";
 import { signOutAction } from "@/modules/auth/actions";
@@ -23,6 +24,7 @@ import { studySharingView } from "@/modules/study/service";
 import { PasswordForm } from "./password-form";
 import { PhotoForm } from "./photo-form";
 import { ProfileForm } from "./profile-form";
+import { AffiliationForm } from "./affiliation-form";
 import { AnalysisForm } from "./analysis-form";
 import { SharingForm } from "./sharing-form";
 import { StudySharingForm } from "./study-sharing-form";
@@ -43,11 +45,12 @@ export default async function SettingsPage({
   const providerPhotoLabel = shownPhoto({ image: user.image ?? null, profile: null })
     ? `Use my ${methods.providers.length === 1 ? PROVIDER_LABEL[methods.providers[0]!] : "Google or GitHub"} photo`
     : null;
-  const [connections, badges, studySharing, blocked] = await Promise.all([
+  const [connections, badges, studySharing, blocked, affiliation] = await Promise.all([
     listConnections(user.id),
     syncBadges([user.id]),
     studySharingView(user.id),
     listBlocked(user.id),
+    getAffiliation(user.id),
   ]);
 
   return (
@@ -77,6 +80,13 @@ export default async function SettingsPage({
             zones={listTimeZones()}
           />
         </div>
+      </SettingsSection>
+      <SettingsSection
+        id="affiliation"
+        title="School and company"
+        description="Optional and private. Remove either one at any time and it's deleted."
+      >
+        <AffiliationForm {...affiliation} />
       </SettingsSection>
       <SettingsSection
         id="badges"

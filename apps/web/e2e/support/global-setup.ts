@@ -7,7 +7,7 @@ const readJson = (file: string): unknown =>
   JSON.parse(readFileSync(path.join(dataDir, file), "utf8"));
 
 // Migrates and empties the test database once before the run, then loads the catalog and every
-// curated roadmap (no accounts).
+// curated roadmap, and the school and company lists (no accounts).
 export default async function globalSetup() {
   if (!process.env.DATABASE_URL?.includes("_test")) {
     throw new Error("E2E tests must run against a database whose name ends in _test.");
@@ -28,5 +28,8 @@ export default async function globalSetup() {
   )) {
     await importCuratedRoadmap(prisma, roadmapDefinitionSchema.parse(readJson(`roadmaps/${file}`)));
   }
+  const { readOrganizationLists, syncOrganizations } =
+    await import("@branch/database/organization-import");
+  await syncOrganizations(prisma, readOrganizationLists());
   await prisma.$disconnect();
 }

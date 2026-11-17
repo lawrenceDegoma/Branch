@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { ConfirmAction } from "@/components/forms/confirm-action";
 import { ProgressBar } from "@/components/progress/progress-bar";
 import { DifficultyPill } from "@/components/roadmaps/difficulty-pill";
 import { PageHeader } from "@/components/shell/page-header";
+import { buttonVariants } from "@/components/ui/button";
 import { CountBars } from "@/components/stats/count-bars";
 import { WeekColumns } from "@/components/stats/week-columns";
 import { formatDateTime, pluralize } from "@/lib/format";
@@ -15,7 +17,10 @@ export const metadata = { title: "Your stats" };
 
 const DIFFICULTY_LABEL = { EASY: "Easy", MEDIUM: "Medium", HARD: "Hard" } as const;
 
-/** Private: the viewer's own progress over time. No streaks, rankings, or comparisons. */
+/**
+ * Private: the viewer's own progress over time. No streaks, rankings, or comparisons; schools
+ * and companies are ranked on their own page (M32), never people.
+ */
 export default async function StatsPage() {
   const { user, profile } = await requireViewer();
   const stats = await getStats(user.id, profile.timezone);
@@ -28,6 +33,11 @@ export default async function StatsPage() {
       <PageHeader
         title="Your stats"
         description="Your progress over time, counted in your time zone. Only you see this page."
+        actions={
+          <Link href="/rankings" className={buttonVariants({ variant: "outline", size: "sm" })}>
+            Rankings
+          </Link>
+        }
       />
       <div className="flex flex-col gap-8">
         <section aria-labelledby="solving-heading" className="flex flex-col gap-4">
