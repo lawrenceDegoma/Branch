@@ -206,24 +206,81 @@ test.describe("feed", () => {
     expect(dialogs).toBe(0);
   });
 
-  test("older posts load page by page", async ({ page, viewer }) => {
+  test("Show more posts adds ten at a time, then older posts load page by page", async ({
+    page,
+    viewer,
+  }) => {
     const group = await createGroupInDb(viewer.id, "Busy crew");
     await prisma.post.createMany({
-      data: Array.from({ length: 23 }, (_, i) => ({
+      data: Array.from({ length: 63 }, (_, i) => ({
         groupId: group.id,
         authorId: viewer.id,
         body: `Update number ${i + 1}`,
-        createdAt: new Date(Date.now() - (23 - i) * 60_000),
+        createdAt: new Date(Date.now() - (63 - i) * 60_000),
       })),
     });
     await page.goto("/home");
+    await ready(page);
+    await expect(posts(page)).toHaveCount(10);
+    await expect(posts(page).first()).toContainText("Update number 63");
+
+    // Ten more in place, with focus on the first new one, and the count kept in the URL.
+    await page.getByRole("link", { name: "Show more posts" }).click();
     await expect(posts(page)).toHaveCount(20);
-    await expect(posts(page).first()).toContainText("Update number 23");
+    await expect(page).toHaveURL(/[?&]show=20#post-/);
+    await expect(page.locator(":focus")).toContainText("Update number 53");
+    await page.reload();
+    await expect(posts(page)).toHaveCount(20);
+
+    for (const shown of [30, 40, 50]) {
+      await page.getByRole("link", { name: "Show more posts" }).click();
+      await expect(posts(page)).toHaveCount(shown);
+    }
+    // At 50, the next ones open as their own page.
+    await expect(page.getByRole("link", { name: "Show more posts" })).toHaveCount(0);
     await page.getByRole("link", { name: "Older posts" }).click();
-    await expect(posts(page)).toHaveCount(3);
+    await expect(posts(page)).toHaveCount(10);
+    await expect(posts(page).first()).toContainText("Update number 13");
+    await page.getByRole("link", { name: "Show more posts" }).click();
+    await expect(posts(page)).toHaveCount(13);
     await expect(posts(page).last()).toContainText("Update number 1");
-    await expect(page.getByRole("link", { name: "Older posts" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /Show more posts|Older posts/ })).toHaveCount(0);
     await page.getByRole("link", { name: "Back to newest" }).click();
-    await expect(posts(page)).toHaveCount(20);
+    await expect(posts(page)).toHaveCount(10);
+  });
+
+  test("a long post folds behind Show more in the feed, and shows whole on its own page", async ({
+    page,
+    viewer,
+  }) => {
+    const group = await createGroupInDb(viewer.id, "Long reads");
+    const lines = Array.from({ length: 40 }, (_, i) => `Paragraph ${i + 1} of my approach.`);
+    const post = await prisma.post.create({
+      data: { groupId: group.id, authorId: viewer.id, body: lines.join("\n\n") },
+    });
+    await page.goto("/home");
+    await ready(page);
+    const card = posts(page).first();
+    const more = card.getByRole("button", { name: "Show more" });
+    await expect(more).toHaveAttribute("aria-expanded", "false");
+    await expect(card.getByText("Paragraph 40 of my approach.")).not.toBeInViewport();
+    const folded = (await card.boundingBox())!.height;
+    await more.click();
+    await expect(card.getByRole("button", { name: "Show less" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    expect((await card.boundingBox())!.height).toBeGreaterThan(folded + 200);
+    await card.getByRole("button", { name: "Show less" }).click();
+    await expect(more).toBeFocused();
+
+    // A short post has no fold at all.
+    await prisma.post.create({ data: { groupId: group.id, authorId: viewer.id, body: "Short." } });
+    await page.reload();
+    await expect(posts(page).first().getByRole("button", { name: "Show more" })).toHaveCount(0);
+
+    await page.goto(`/posts/${post.id}`);
+    await expect(page.getByRole("main").getByText("Paragraph 40 of my approach.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Show more" })).toHaveCount(0);
   });
 });

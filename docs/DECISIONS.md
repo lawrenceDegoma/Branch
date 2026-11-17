@@ -1498,6 +1498,28 @@ db:load-organizations` (idempotent, never deletes), also by the seed and the E2E
   lists. Changelog entry added. Migration `20261117010000_organizations`; production also needs
   `pnpm db:load-organizations`.
 
+### A tidier feed (2026-11-17)
+
+Owner request: a full page of 20 posts looked like a wall. Owner decisions: start with fewer posts
+and add more on request, and fold long posts. Not infinite scroll (the footer becomes unreachable
+and keyboard and screen reader users lose their place).
+
+- **Show more posts:** feeds (Home and group pages) start with 10 posts (`FEED_PAGE_SIZE`).
+  "Show more posts" is a link that adds 10 (`?show=20`, up to `FEED_SHOW_MAX` 50) and points at
+  the first new post (`#post-<id>`, from `FeedPage.firstOlderId`); `FocusFromHash` moves focus
+  there. The count lives in the URL, so the server renders the whole list: deleting, hiding,
+  reloading, and going back all stay correct with no client-side list, and it works without
+  JavaScript. Past 50, "Older posts" opens the next page by cursor as before. Posts are focusable
+  (`tabIndex={-1}`) for this.
+- **Long posts fold:** a text post longer than 12 lines or 900 characters (`modules/feed/fold.ts`)
+  renders in feeds inside `LongPostFold`, clipped at 20rem with "Show more" / "Show less"
+  (`aria-expanded`). The browser drops the fold when the post fits, never folds one again once it
+  fits, and opens it when focus moves inside (so nothing focusable is hidden). Before hydration,
+  the control is "Read the whole post", linking to the post's page, which never folds. No fade:
+  dimming text would break contrast.
+- JavaScript: two small client components. Tests: `e2e/feed.spec.ts` (paging, focus, reload, the
+  fold, the permalink), a unit test for the length rule. Changelog entry added.
+
 ### Client JavaScript: Zod off the client, and budgets that measure downloads (2026-11-17)
 
 After M32 the client chunks reached 1,347 of 1,400 KB. Zod (about 107 KB raw, 27 KB compressed)

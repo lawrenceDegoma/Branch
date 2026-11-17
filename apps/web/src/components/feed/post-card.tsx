@@ -8,10 +8,12 @@ import { Avatar } from "@/components/user/avatar";
 import { formatDateTime, formatRelative } from "@/lib/format";
 import { deletePostAction, hidePostAction } from "@/modules/feed/actions";
 import { formatStudyTime } from "@/modules/study/duration";
+import { mightBeLong } from "@/modules/feed/fold";
 import type { FeedItem } from "@/modules/feed/service";
 import { PostComments } from "./comments";
 import { CommentsDisclosure, CommentsPanel, CommentsToggle } from "./comments-disclosure";
 import { Markdown } from "./markdown";
+import { LongPostFold } from "./long-post-fold";
 import { EditableBody } from "./post-actions";
 import { ReactionBar } from "./reactions";
 
@@ -23,6 +25,7 @@ export function PostCard({
   comments,
   commentsOpen = false,
   returnTo,
+  foldLong = true,
 }: {
   post: FeedItem;
   now: Date;
@@ -33,6 +36,8 @@ export function PostCard({
   commentsOpen?: boolean;
   /** Where to go after deleting or hiding the post, when the current page would be gone. */
   returnTo?: string;
+  /** Fold a long post behind "Show more" (feeds); its own page shows it whole. */
+  foldLong?: boolean;
 }) {
   const headingId = `post-${post.id}-author`;
   const footer = (
@@ -43,8 +48,11 @@ export function PostCard({
   );
   return (
     <article
+      id={`post-${post.id}`}
+      // Focusable, so "Show more posts" can move focus to the first new post.
+      tabIndex={-1}
       aria-labelledby={headingId}
-      className="flex flex-col gap-3 rounded-xl bg-surface p-4 sm:p-5"
+      className="flex scroll-mt-20 flex-col gap-3 rounded-xl bg-surface p-4 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:p-5"
     >
       <CommentsDisclosure defaultOpen={commentsOpen}>
         <header className="flex items-start gap-3">
@@ -103,7 +111,13 @@ export function PostCard({
                 footer={footer}
                 returnTo={returnTo}
               >
-                <Markdown spoiler={post.spoiler}>{post.body ?? ""}</Markdown>
+                {foldLong && mightBeLong(post.body ?? "") ? (
+                  <LongPostFold postId={post.id}>
+                    <Markdown spoiler={post.spoiler}>{post.body ?? ""}</Markdown>
+                  </LongPostFold>
+                ) : (
+                  <Markdown spoiler={post.spoiler}>{post.body ?? ""}</Markdown>
+                )}
               </EditableBody>
             </>
           ) : (

@@ -163,7 +163,12 @@ export type FeedItem = ReturnType<typeof toFeedItem> & {
   /** In a feed: the first top-level comments with their replies, shown inside the post. */
   threads?: CommentThread[];
 };
-export type FeedPage = { items: FeedItem[]; nextCursor: string | null };
+export type FeedPage = {
+  items: FeedItem[];
+  nextCursor: string | null;
+  /** The newest post after this page: where "Show more posts" lands. */
+  firstOlderId: string | null;
+};
 
 /**
  * Newest first across the viewer's groups, or one group when `groupId` is given (404 for a group
@@ -180,7 +185,7 @@ export async function listFeed(
   });
   if (options.groupId) await requireMembership(viewerId, options.groupId);
   const groupIds = options.groupId ? [options.groupId] : memberships.map((m) => m.groupId);
-  if (groupIds.length === 0) return { items: [], nextCursor: null };
+  if (groupIds.length === 0) return { items: [], nextCursor: null, firstOlderId: null };
 
   const posts = await prisma.post.findMany({
     where: {
@@ -214,6 +219,7 @@ export async function listFeed(
       threads: post.comments.map((c) => toThread(c, viewerId, admin.has(post.groupId), blocked)),
     })),
     nextCursor: posts.length > limit ? page.at(-1)!.id : null,
+    firstOlderId: posts[limit]?.id ?? null,
   };
 }
 

@@ -49,6 +49,7 @@ export default async function PostPage({ params, searchParams }: Props) {
         timeZone={profile.timezone}
         showGroup={false}
         commentsOpen
+        foldLong={false}
         returnTo={`/groups/${post.group.id}`}
         comments={
           <PostComments

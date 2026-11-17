@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { EmptyState } from "@/components/states/empty-state";
 import { buttonVariants } from "@/components/ui/button";
+import { FEED_PAGE_SIZE, FEED_SHOW_MAX } from "@/modules/feed/limits";
 import type { ComposerGroup, FeedPage } from "@/modules/feed/service";
 import { Composer } from "./composer";
+import { FocusFromHash } from "./focus-from-hash";
 import { PostCard } from "./post-card";
 
 /**
- * A feed: composer, posts newest first, and a link to older posts. Used on Home (every group,
- * filterable) and on a group page (that group only).
+ * A feed: composer, posts newest first, then "Show more posts", which adds the next ten in place
+ * (the count is in the URL, so reloading or going back keeps it) up to FEED_SHOW_MAX, after which
+ * "Older posts" opens the next page. Used on Home (every group, filterable) and on a group page.
  */
 export function Feed({
   page,
@@ -18,6 +21,8 @@ export function Feed({
   timeZone,
   filter,
   isOlderPage,
+  before,
+  show,
 }: {
   page: FeedPage;
   composerGroups: ComposerGroup[];
@@ -28,11 +33,24 @@ export function Feed({
   timeZone: string;
   filter?: React.ReactNode;
   isOlderPage: boolean;
+  /** The cursor this page starts after, if it's an older page. */
+  before?: string;
+  /** How many posts this page shows. */
+  show: number;
 }) {
   const now = new Date();
-  const older = page.nextCursor
-    ? `${basePath}?${new URLSearchParams({ ...query, before: page.nextCursor })}`
-    : null;
+  const more =
+    page.nextCursor && page.firstOlderId && show < FEED_SHOW_MAX
+      ? `${basePath}?${new URLSearchParams({
+          ...query,
+          ...(before ? { before } : {}),
+          show: String(Math.min(show + FEED_PAGE_SIZE, FEED_SHOW_MAX)),
+        })}#post-${page.firstOlderId}`
+      : null;
+  const older =
+    page.nextCursor && !more
+      ? `${basePath}?${new URLSearchParams({ ...query, before: page.nextCursor })}`
+      : null;
   const newest = `${basePath}${query && Object.keys(query).length ? `?${new URLSearchParams(query)}` : ""}`;
 
   return (
@@ -70,6 +88,15 @@ export function Feed({
           }
         />
       )}
+      {more ? (
+        <Link
+          href={more}
+          scroll={false}
+          className={buttonVariants({ variant: "outline", className: "self-center" })}
+        >
+          Show more posts
+        </Link>
+      ) : null}
       {older ? (
         <Link
           href={older}
@@ -78,6 +105,7 @@ export function Feed({
           Older posts
         </Link>
       ) : null}
+      <FocusFromHash />
     </section>
   );
 }

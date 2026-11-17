@@ -76,7 +76,7 @@ export default async function HomePage({
   // A stale or foreign ?group= falls back to every group rather than revealing anything.
   const selected = groups.some((g) => g.id === query.group) ? query.group : undefined;
   const [page, composerGroups, connections, studying] = await Promise.all([
-    listFeed(user.id, { groupId: selected, before: query.before }),
+    listFeed(user.id, { groupId: selected, before: query.before, limit: query.show }),
     listComposerGroups(user.id),
     profile.gettingStartedHidden ? Promise.resolve([]) : listConnections(user.id),
     runningSession(user.id),
@@ -155,6 +155,8 @@ export default async function HomePage({
             timeZone={profile.timezone}
             filter={<GroupFilter groups={groups} selected={selected} />}
             isOlderPage={Boolean(query.before)}
+            before={query.before}
+            show={query.show}
           />
         </div>
         <div className="[grid-area:backlog]">

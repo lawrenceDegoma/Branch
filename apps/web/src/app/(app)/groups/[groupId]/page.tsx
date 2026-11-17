@@ -29,10 +29,10 @@ export async function generateMetadata({ params }: Params) {
 export default async function GroupPage({ params, searchParams }: Params & SearchParams) {
   const { user, profile } = await requireViewer();
   const group = await orNotFound(getGroupOverview(user.id, (await params).groupId));
-  const { before } = feedQuerySchema.parse(await searchParams);
+  const { before, show } = feedQuerySchema.parse(await searchParams);
   const [{ plan, members }, page, composerGroups] = await Promise.all([
     getGroupProgress(user.id, group.id),
-    listFeed(user.id, { groupId: group.id, before }),
+    listFeed(user.id, { groupId: group.id, before, limit: show }),
     listComposerGroups(user.id),
   ]);
   const isAdmin = group.viewerRole === "ADMIN";
@@ -83,6 +83,8 @@ export default async function GroupPage({ params, searchParams }: Params & Searc
           showGroup={false}
           timeZone={profile.timezone}
           isOlderPage={Boolean(before)}
+          before={before}
+          show={show}
         />
       </div>
       <section aria-labelledby="members-heading" className="rounded-xl bg-surface p-4 sm:p-5">

@@ -13,6 +13,15 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    id: "2026-11-17-shorter-feed",
+    date: "2026-11-17",
+    title: "A tidier feed",
+    summary: "Home shows 10 posts at a time, and long posts fold behind Show more.",
+    details: `Home and group pages now start with the 10 newest posts. **Show more posts** adds the next 10 below them, up to 50, and takes you to the first new one; after that, **Older posts** opens the next page. Reloading keeps what you'd opened.
+
+Long posts fold after about a dozen lines, with **Show more** to read the rest and **Show less** to fold them again. A post's own page always shows it whole.`,
+  },
+  {
     id: "2026-11-17-schools-and-companies",
     date: "2026-11-17",
     title: "Schools, companies, and rankings",

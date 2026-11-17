@@ -1,6 +1,13 @@
 import { z } from "zod";
 import { checkboxSchema } from "@/lib/form";
-import { COMMENT_BODY_MAX, POST_BODY_MAX, REACTIONS, type ReactionKindValue } from "./limits";
+import {
+  COMMENT_BODY_MAX,
+  FEED_PAGE_SIZE,
+  FEED_SHOW_MAX,
+  POST_BODY_MAX,
+  REACTIONS,
+  type ReactionKindValue,
+} from "./limits";
 
 export {
   COMMENT_BODY_MAX,
@@ -37,6 +44,8 @@ export type EditPostInput = Omit<z.infer<typeof editPostSchema>, "postId">;
 export const feedQuerySchema = z.object({
   group: z.uuid().optional().catch(undefined),
   before: z.uuid().optional().catch(undefined),
+  /** How many posts to show: "Show more posts" adds a page at a time, in the URL. */
+  show: z.coerce.number().int().min(FEED_PAGE_SIZE).max(FEED_SHOW_MAX).catch(FEED_PAGE_SIZE),
 });
 
 // ---------------------------------------------------------------------------------------------
